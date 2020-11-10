@@ -1,0 +1,199 @@
+---
+title: "Training basic model classifying a cell type from scRNA-seq data"
+author: "Vy Nguyen"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{2. Training basic model}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+options(rmarkdown.html_vignette.check_title = FALSE)
+```
+
+## Introduction
+
+One of basic functions of the SingleCellClassR package is to provide users 
+easy tools to train their own model classifying new cell types from labeled 
+scRNA-seq data.
+
+From the very beginning, this vignette shows how to train a basic 
+classification model for an independant cell type, which is not a child of 
+any other cell type.
+
+## Preparing train object and test object
+
+The workflow starts from a couple of Seurat objects where cells have been 
+assigned to be different cell types. To do this, users may have annotated 
+scRNA-seq data (by a FACS-sorting process, for example), create a Seurat 
+object based on the sequencing data and assign the predetermined cell types 
+as Seurat meta data. If the scRNA-seq data has not been annotated yet, 
+another possible approach is to follow the basic Seurat workflow until 
+assigning cell type identity to clusters.
+
+To start the training workflow, we first load the neccessary libraries. 
+```{r}
+library(SingleCellClassR)
+library(SingleCellClassR.data)
+```
+
+One Seurat object will be used as train object, while the other is the test 
+object. In this example, we used Sade-Feldman dataset to create the train 
+object.
+
+```{r}
+data("feldman_seurat")
+feldman_seurat
+```
+
+We load Jerby-Arnon dataset for the testing object.
+```{r}
+data("jerby_seurat")
+jerby_seurat
+```
+In our example, the cell type meta data is indicated as the active 
+identification of the Seurat object (in both train object and test 
+object). If cell type is stored in another slot of object meta data, 
+the slot/tag slot name must be then provided as a parameter in the 
+train and test method. 
+```{r}
+head(Idents(feldman_seurat))
+```
+
+## Defining set of features
+
+Next, we define a set of features, which will be used in training the 
+classification model. Supposing we are training a model for classifying 
+B cells, we define the set of features as follows:
+```{r}
+selected_features_B <- c("CD19", "MS4A1", "SDC1", "CD79A", "CD79B", 
+                         "CD38", "CD37", "CD83", "CR2", "MVK", "MME", 
+                         "IL2RA", "PTEN", "POU2AF1", "MEF2C", "IRF8", 
+                         "TCF3", "BACH2", "MZB1", 'VPREB3', 'RASGRP2', 
+                         'CD86', 'CD84', 'LY86', 'CD74', 'SP140', "BLK", 
+                         'FLI1', 'CD14', "DERL3", "LRMP")
+```
+
+## Train model
+
+When the model is being trained, three most important information must be 
+provided are: the Seurat object used for training, the set of applied features
+and the cell type defining the trained model. 
+
+Cell type corresponding to the trained model must exist among identities 
+assigned to cells in the trained Seurat object. Remember if cell types 
+are not indicated as active identification of the trained object, name 
+of the tag slot in object meta data must be provided to the tag_slot parameter. 
+
+When training on a imbalanced dataset, the trained model may bias toward the 
+majority group and ignore the presence of the minority group. To avoid this, 
+the number of positive cells and negative cells will automatically be balanced 
+before training. Therefore, a smaller number cells will be randomly picked  
+from the majority group. To use the same set of cells while training multiple 
+times for one model, users can use set.seed. 
+```{r}
+set.seed(123)
+clf_B <- train_classifier(train_obj = feldman_seurat, 
+features = selected_features_B, cell_type = "B cells")
+```
+```{r}
+clf_B
+```
+The classifying model is a S4 object named SingleCellClassR. 
+Details about the classifying model is accessible via getter methods. 
+For example:
+```{r}
+clf(clf_B)
+```
+
+## Test model
+
+```{r}
+clf_B_test <- test_classifier(test_obj = jerby_seurat, classifier = clf_B)
+```
+
+### Interpreting test model result
+
+Apart from the output exported to console, test classifier function also returns an object, which is a list of:
+  
+  * **test_tag**: actual cell label, this can be different from the label provided by users because of ambiguous characters or the incoherence in cell type and sub cell type label assignment.  
+
+  * **pred**: cell type prediction using current classifier
+
+  * **acc**: prediction accuracy at the fixed probability threshold, the probability threshold value can also be queried using *p_thres(classifier)*
+
+  * **auc**: AUC score of provided by current classifier
+  
+  * **overall_roc**: True Positive Rate and False Positive Rate with a certain number of prediction probability thresholds
+  
+With the same classification model, the sensitivity and the specification of classification can be different because of the prediction probability threshold. To optimize user experience, we have the *overall_roc* as a summary of True Positive Rate (sensitivity) and False Positive Rate (1 - specificity) obtained by the trained model according to different thresholds:
+
+```{r}
+clf_B_test$overall_roc
+```
+
+In this example of B cell classifier, the current threshold is at 0.5. The sensitivity is 0.9932203, and the specificity is 0.9890493 (FPR = 0.010950643). The higher sensitivity (0.9943503) can be reached if we set the p_thres at 0.4. However, we will have lower specificity (FPR = 0.013966037), which means that we misclassify more stranger cells as B cells. In contradiction, we may not retrieve all actual B cells with higher p_thres (0.6, for example).
+
+There is of course a certain trade-off between the sensitivity and the specificity of the model. Depending on the need of the project or the user-own preference, a probability threshold giving higher sensitivity or higher specificity can be chosen. In our perspective, p_thres at 0.5 is a good choice for the current B cell model.
+
+### Plotting ROC curve
+
+Apart from numbers, we also provide a method to plot the ROC curve. 
+```{r}
+roc_curve <- plot_roc_curve(test_result = clf_B_test)
+```
+```{r}
+plot(roc_curve)
+```
+
+### Which model to choose?
+
+Changes in train data, in the set of features and in the prediction probability
+threshold will all lead to a change in model performance.
+
+There are several ways to evaluate the trained model, including the overall 
+accuracy, the AUC score and the sensitivity/specificity of the model when 
+testing on an independent dataset. Here, we export all these statistics to 
+help user have a wider range of choices. In this example, we choose the model
+which has the best AUC score.
+
+*Tip: Using more general markers of the whole population leads to higher 
+sensitivity. This sometimes produces lower specificity because of close 
+cell types (T cells and NK cells, for example). While training some models, 
+we observed that we can use the markers producing high sensitivity but at 
+the same time can improve the specificity by increasing the probability 
+threshold. Of course, this tip can only applied in some cases, because 
+some markers can even have a larger affect on the specificity than the 
+prediction probability threshold.*
+
+## Save classification model for further use
+
+After having obtained a good classification model, users may want to save it 
+for future classification. To do this, we provide a method that helps the user 
+step-by-step store all new classification models.
+
+To use this method, two information must be provided: the to be saved model and
+the directory path where the new model will be stored. This method will then 
+create a small database containing all trained models. Therefore, users must 
+indicate the same path to models in order to use multiple classification models
+at the same time.
+
+Users can also choose whether copy all pretrained models of the packages to the
+new model database. If not, in the future, user can only choose to use either 
+default pretrained models or new models by specifying only one path to models.
+
+```{r}
+# no copy of pretrained models is performed
+save_new_model(new_model = clf_B, path.to.models = getwd(),include.default = FALSE) 
+```
+
+## Session Info
+```{r}
+sessionInfo()
+```

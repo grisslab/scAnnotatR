@@ -1,0 +1,180 @@
+---
+title: "Introduction to SingleCellClassR"
+author: "Vy Nguyen"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{1. Introduction to SingleCellClassR}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+options(rmarkdown.html_vignette.check_title = FALSE)
+```
+
+## Introduction
+
+SingleCellClassR is an R package for cell type prediction on single cell 
+RNA-sequencing data. Currently, this package supports data in the forms 
+of a Seurat object or a SingleCellExperiment object.
+
+More information about Seurat object can be found here: 
+https://satijalab.org/seurat/
+More information about SingleCellExperiment object can be found here: 
+https://osca.bioconductor.org/
+
+SingleCellClassR provides 2 main features with 2 target user groups:
+
+- For basic user: A set of pretrained and robust classifiers for basic 
+immune cells. See the section below.
+- For advanced user (with intermediate computational skills and/or 
+biolgical knowledge): A friendly but also with full user control environment 
+for training and testing new classification models. These models can then be 
+saved and reused in the future. See vignette 2 & 3.
+
+## Versions
+
+The latest version of the SingleCellClassR package is available on GitHub.
+
+## Installation
+
+The `SingleCellClassR` package can be directly installed from Bioconductor:
+
+```{r}
+if (!requireNamespace("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+
+if (!require(SingleCellClassR))
+  BiocManager::install("SingleCellClassR")
+```
+
+For more information, see https://bioconductor.org/install/.
+
+## Included models
+
+The `SingleCellClassR` package comes with several pre-trained models to classify
+cell types.
+
+The models are stored in the `default_models` object:
+
+```{r}
+data("default_models")
+names(default_models)
+```
+
+The `default_models` object is named a list of classifiers. Each classifier 
+is an instance of the `SingleCellClassR S4 class`. For example:
+
+```{r}
+default_models[['B cells']]
+```
+
+## Basic pipeline to identify cell types in a scRNA-seq dataset using SingleCellClassR   
+
+### Preparing the data
+
+To identify cell types available in a dataset, we need to load the dataset as 
+`Seurat` or `SingleCellExperiment` object.
+
+Documentation about Seurat object is available at: 
+https://satijalab.org/seurat/ and about SingleCellExperiment object 
+can be found at: https://osca.bioconductor.org/
+
+For this vignette, we use a small sample datasets that is available as a
+`Seurat` object as part of the package.
+
+```{r}
+# load the example dataset
+data("tirosh_mel80_example")
+tirosh_mel80_example
+```
+
+The example dataset already contains the clustering results as part of the metadata. This is **not** necessary for the
+classification process.
+
+```{r}
+head(tirosh_mel80_example[[]])
+```
+
+### Cell classification
+
+To launch cell type identification, we simply call the `classify_cells` 
+function. A detailed description of all parameters can be found through
+the function's help page `?classify_cells`.
+
+```{r}
+seurat.obj <- classify_cells(classify_obj = tirosh_mel80_example, 
+                             cell_types = 'all', path_to_models = 'default')
+```
+
+#### Parameters
+
+  * The option **cell_types = 'all'** help us to identify cells of all cell types 
+    that can be identified in the set of models. 
+    Alternatively, we can limit the identifiable cell types: 
+    * by specifying: `cell_types = c('B cells', 'T cells')`
+    * or by indicating the applicable classifier using the **classifiers** option: 
+      `classifiers = c(default_models[['B cells']], default_models[['T cells']])`
+
+  * The option **path_to_models = 'default'** is to automatically use the 
+    package-integrated pretrained models (without loading the models into the
+    current working space). This option can be use to load a local database of
+
+## Result interpretation
+
+The `classify_cells` function returns the input object
+but with additional columns in the metadata table.
+
+```{r}
+# display the additional metadata fields
+seurat.obj[[]][c(20:30), c(8:21)]
+```
+New columns are:
+
+  * **predicted_cell_type**: full prediction about cell types
+
+  * **most_probable_cell_type**: simplified prediction if the `simplified_result` 
+    option in the `classify_cells` function was set to TRUE
+
+  * columns with syntax `[celltype]_p`: probability of a cell to belong 
+    to a cell type. Unknown cell types are marked as NAs.
+
+### Result visualization
+
+The predicted cell types can now simply be visualized using the matching
+plotting functions. In this example, we use Seurat's `DimPlot` function:
+
+```{r fig.width = 4, fig.height = 2.5}
+# Visualize the cell types
+Seurat::DimPlot(seurat.obj, group.by = "most_probable_cell_type")
+```
+
+With the current number of cell classifiers, we identify cells belonging to 2 cell types (B cell and T cell) and to 2 phenotypes of T cells (CD4+ T cells and CD8+ T cells). The other cells (red points) are not among the cell types that can be predicted by the predefined classifiers. Hence, they have an empty label.
+
+For a certain cell type, user can also view the prediction probability. Here we show an example of B cell prediction probability:
+
+```{r fig.width = 4, fig.height = 2.5}
+# Visualize the cell types
+Seurat::FeaturePlot(seurat.obj, features = "B_cells_p")
+```
+
+Cells predicted to be B cells with higher probability have darker color, while the lighter color shows lower or even zero probability of a cell to be B cells. For B cell classifier, the threshold for prediction probability is currently at 0.5, which means cells having prediction probability at 0.5 or above will be predicted as B cells. 
+
+The automatic cell identification by SingleCellClassR highly accords to traditional cell assignment, ie. the approach based on cell canonical marker expression. Taking a simple example, we use CD19 and CD20 (MS4A1) to identify B cells:
+
+```{r fig.width = 7.25, fig.height = 2.5}
+# Visualize the cell types
+Seurat::FeaturePlot(seurat.obj, features = c("CD19", "MS4A1"), ncol = 2)
+```
+
+We see that the marker expression of B cells exactly overlaps the B cell prediction made by SingleCellClassR. Remarkably, using SingleCellClassR for cell classification will be even more efficient when applying to large-scale studies. 
+
+## Session Info
+```{r}
+sessionInfo()
+```
