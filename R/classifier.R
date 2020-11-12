@@ -208,6 +208,9 @@ setMethod("train_classifier", c("train_obj" = "SingleCellExperiment"),
                    zscore = TRUE, balance = TRUE, sce_tag_slot = "ident", 
                    sce_parent_tag_slot = "predicted_cell_type", 
                    sce_assay = 'logcounts', ...) {
+  # solve duplication of cell names
+  colnames(train_obj) <- make.unique(colnames(train_obj), sep = '_')
+            
   #--- part of parent cell type
   parent_process <- process_parent_clf(train_obj, sce_parent_tag_slot, 
                                        parent_cell, parent_clf, path_to_models, 
@@ -447,6 +450,8 @@ setMethod("test_classifier", c("test_obj" = "SingleCellExperiment",
                    zscore = TRUE, sce_tag_slot = "ident", 
                    sce_parent_tag_slot = "predicted_cell_type", 
                    sce_assay = 'logcounts', ...) {
+  # solve duplication of cell names
+  colnames(test_obj) <- make.unique(colnames(test_obj), sep = '_')
   . <- fpr <- tpr <- NULL
   
   # target_cell_type check
@@ -693,6 +698,9 @@ setMethod("classify_cells", c("classify_obj" = "SingleCellExperiment"),
                    path_to_models = c("default", "."), 
                    ignore_ambiguous_result = FALSE, 
                    sce_assay = 'logcounts', ...) {
+  # solve duplication of cell names
+  colnames(classify_obj) <- make.unique(colnames(classify_obj), sep = '_')
+  
   mat = SummarizedExperiment::assay(classify_obj, sce_assay)
   
   # create an empty cell type for all cells

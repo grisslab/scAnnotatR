@@ -199,7 +199,7 @@ setMethod("check_parent_child_coherence", c("obj" = "Seurat"),
   # if not, raise warnings
   if (any(!rownames(pos_subtype) %in% pos_parent)) {
     warning(paste0("Some annotated ", cell_type, " are negative to ", 
-    parent_cell, " classifier. They are removed from training for ", 
+    parent_cell, " classifier. They are removed from training/testing for ", 
     cell_type, " classifier.\n"), call. = FALSE, immediate. = TRUE)
   }
   tag_slot <- "new_tag_slot"
@@ -244,7 +244,7 @@ setMethod("check_parent_child_coherence", c("obj" = "SingleCellExperiment"),
   # if not, raise warnings
   if (any(!pos_subtype.names %in% pos_parent)) {
     warning(paste0("Some annotated ", cell_type, " are negative to ", 
-    parent_cell, " classifier. They are removed from training for ", 
+    parent_cell, " classifier. They are removed from training/testing for ", 
     cell_type, " classifier.\n"), call. = FALSE, immediate. = TRUE)
   }
   tag_slot <- "new_tag_slot"
