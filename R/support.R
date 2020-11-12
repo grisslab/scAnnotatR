@@ -335,9 +335,8 @@ setMethod("filter_cells", c("obj" = "SingleCellExperiment"),
   # positive cells must not contain ambiguous chars
   ambiguous <- grepl(paste(ambiguous.chars, collapse="|"), cell.tags)
   n.applicable <- (grepl("not applicable", cell.tags) | is.na(cell.tags))
-  keeping.cells <- colnames(obj)[!(ambiguous | n.applicable)]
   
-  obj <- obj[, keeping.cells]
+  obj <- obj[, !(ambiguous | n.applicable)]
   
   return(obj)
 })
