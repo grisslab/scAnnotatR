@@ -29,4 +29,4 @@ Suggests:
 VignetteBuilder: knitr
 Depends: R (>= 4.0), Seurat, SingleCellExperiment, SummarizedExperiment
 LazyData: true
-RoxygenNote: 7.1.0
+RoxygenNote: 7.1.1
