@@ -29,41 +29,67 @@ any other cell type.
 
 ## Preparing train object and test object
 
-The workflow starts from a couple of Seurat objects where cells have been 
+The workflow starts from a couple of objects where cells have been 
 assigned to be different cell types. To do this, users may have annotated 
-scRNA-seq data (by a FACS-sorting process, for example), create a Seurat 
-object based on the sequencing data and assign the predetermined cell types 
-as Seurat meta data. If the scRNA-seq data has not been annotated yet, 
-another possible approach is to follow the basic Seurat workflow until 
-assigning cell type identity to clusters.
+scRNA-seq data (by a FACS-sorting process, for example), create a Seurat/
+SingleCellExperiment (SCE) object based on the sequencing data and assign the 
+predetermined cell types as cell meta data. If the scRNA-seq data has not 
+been annotated yet, another possible approach is to follow the basic 
+workflow (Seurat, for example) until assigning cell type identity to clusters.
+
+In this vignette, we use the human lung dataset from Zilionis et al., 2019,
+which is available in the scRNAseq (2.4.0) library. The dataset is stored as a
+SCE object.
 
 To start the training workflow, we first load the neccessary libraries. 
 ```{r}
 library(SingleCellClassR)
-library(SingleCellClassR.data)
+library(scRNAseq)
 ```
 
-One Seurat object will be used as train object, while the other is the test 
-object. In this example, we used Sade-Feldman dataset to create the train 
-object.
+Load the dataset:
 
 ```{r}
-data("feldman_seurat")
-feldman_seurat
+zilionis <- ZilionisLungData()
 ```
 
-We load Jerby-Arnon dataset for the testing object.
+We cut this dataset into two parts, one for the training and the other for the testing.
 ```{r}
-data("jerby_seurat")
-jerby_seurat
+pivot = ncol(zilionis)%/%2
+train_set <- zilionis[, 1:pivot]
+test_set <- zilionis[, (1+pivot):ncol(zilionis)]
 ```
-In our example, the cell type meta data is indicated as the active 
-identification of the Seurat object (in both train object and test 
-object). If cell type is stored in another slot of object meta data, 
+
+In this dataset, the cell type meta data is stored in the *Most likely LM22 cell type*
+slot of the SingleCellExperiment object (in both train object and test object). 
+If cell type is stored in another slot of object meta data, 
 the slot/tag slot name must be then provided as a parameter in the 
 train and test method. 
 ```{r}
-head(Idents(feldman_seurat))
+unique(train_set$`Most likely LM22 cell type`)
+```
+```{r}
+unique(test_set$`Most likely LM22 cell type`)
+```
+
+We want to train a classifier for B cells and their phenotypes. Considering memory B cells,
+naive B cells and plasma cells as B cell phenotypes, we convert all those cells to a uniform 
+cell label, ie. B cells. All non B cells are converted into 'others'.
+
+```{r}
+# change cell label
+train_set$B_cell <- unlist(lapply(train_set$`Most likely LM22 cell type`,
+                                  function(x) if (is.na(x)) {'ambiguous'} else if (x %in% c('Plasma cells', 'B cells memory', 'B cells naive')) {'B cells'} else {'others'}))
+
+test_set$B_cell <- unlist(lapply(test_set$`Most likely LM22 cell type`,
+                                 function(x) if (is.na(x)) {'ambiguous'} else if (x %in% c('Plasma cells', 'B cells memory', 'B cells naive')) {'B cells'} else {'others'}))
+```
+
+We observe that there are cells marked NAs. Those can be understood as 1/different from all indicated cell types or 2/any unknown cell types. Here we consider the second case, ie. we don't know whether they are positive or negative to B cells. To avoid the affect of those NAs cells, we can assign them as 'ambiguous'. All cells tagged 'ambiguous' will be ignored by SingleCellClassR from training and testing. 
+
+We may want to check the number of cells in each category:
+```{r}
+table(train_set$B_cell)
 ```
 
 ## Defining set of features
@@ -83,13 +109,13 @@ selected_features_B <- c("CD19", "MS4A1", "SDC1", "CD79A", "CD79B",
 ## Train model
 
 When the model is being trained, three most important information must be 
-provided are: the Seurat object used for training, the set of applied features
+provided are: the Seurat/SCE object used for training, the set of applied features
 and the cell type defining the trained model. 
 
 Cell type corresponding to the trained model must exist among identities 
 assigned to cells in the trained Seurat object. Remember if cell types 
 are not indicated as active identification of the trained object, name 
-of the tag slot in object meta data must be provided to the tag_slot parameter. 
+of the tag slot in object meta data must be provided to the sce_tag_slot parameter. 
 
 When training on a imbalanced dataset, the trained model may bias toward the 
 majority group and ignore the presence of the minority group. To avoid this, 
@@ -99,8 +125,8 @@ from the majority group. To use the same set of cells while training multiple
 times for one model, users can use set.seed. 
 ```{r}
 set.seed(123)
-clf_B <- train_classifier(train_obj = feldman_seurat, 
-features = selected_features_B, cell_type = "B cells")
+clf_B <- train_classifier(train_obj = train_set, cell_type = "B cells", features = selected_features_B,
+                          sce_assay = 'counts', sce_tag_slot = 'B_cell')
 ```
 ```{r}
 clf_B
@@ -115,7 +141,8 @@ clf(clf_B)
 ## Test model
 
 ```{r}
-clf_B_test <- test_classifier(test_obj = jerby_seurat, classifier = clf_B)
+clf_B_test <- test_classifier(test_obj = test_set, classifier = clf_B, 
+                              sce_assay = 'counts', sce_tag_slot = 'B_cell')
 ```
 
 ### Interpreting test model result
@@ -138,7 +165,7 @@ With the same classification model, the sensitivity and the specification of cla
 clf_B_test$overall_roc
 ```
 
-In this example of B cell classifier, the current threshold is at 0.5. The sensitivity is 0.9932203, and the specificity is 0.9890493 (FPR = 0.010950643). The higher sensitivity (0.9943503) can be reached if we set the p_thres at 0.4. However, we will have lower specificity (FPR = 0.013966037), which means that we misclassify more stranger cells as B cells. In contradiction, we may not retrieve all actual B cells with higher p_thres (0.6, for example).
+In this example of B cell classifier, the current threshold is at 0.5. The higher sensitivity can be reached if we set the p_thres at 0.4. However, we will then have lower specificity, which means that we misclassify more stranger cells as B cells. In contradiction, we may not retrieve all actual B cells with higher p_thres (0.6, for example).
 
 There is of course a certain trade-off between the sensitivity and the specificity of the model. Depending on the need of the project or the user-own preference, a probability threshold giving higher sensitivity or higher specificity can be chosen. In our perspective, p_thres at 0.5 is a good choice for the current B cell model.
 

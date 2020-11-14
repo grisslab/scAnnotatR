@@ -615,17 +615,16 @@ make_prediction <- function(mat, classifier, pred_cells, ignore_ambiguous_result
       if(x[1] >= classifier@p_thres) {"yes"} else {"no"}))
   rownames(pred) <- rownames(mat)
   
-  # append a sumary to whole predicted cell type
+  # append a summary to whole predicted cell type
   pred_cells <- unlist(lapply(cells,
   function(i)
     if (i %in% rownames(pred) && pred[i, "class"] == "yes") {
       if (ignore_ambiguous_result == TRUE && !is.na(classifier@parent) &&
           gsub("/", "", pred_cells[i]) == classifier@parent)
-      { classifier@cell_type }
+      { paste0(classifier@cell_type, "/") }
       else { paste0(pred_cells[i], classifier@cell_type, "/") }
     }
     else { pred_cells[i] }))
-  
   names(pred_cells) <- cells
 
   # remove no column and rename yes column to p
@@ -706,12 +705,13 @@ verify_parent <- function(mat, classifier, meta.data) {
   # parent clf, if avai, always has to be applied before children clf.
   parent_slot <- paste0(c(unlist(strsplit(classifier@parent, split = " ")), "class"), collapse = "_")
   if (parent_slot %in% colnames(meta.data)) {
-    parent_pred <- meta.data[, parent_slot, drop = FALSE]
-    pos_parent <- rownames(parent_pred[parent_pred == 'yes', , drop=FALSE]) 
+    parent_pred <- meta.data[, parent_slot]
+    pos_parent <- colnames(mat)[parent_pred == 'yes'] 
   } else {
     warning(paste0('Parent classifier of ', classifier@cell_type, 'cannot be applied.\n 
                    Please list/save parent classifier before child(ren) classifier.\n
-                   Skip applying classification models for ', classifier@cell_type, ' and its parent cell type.\n'), call. = FALSE, immediate. = TRUE)
+                   Skip applying classification models for ', classifier@cell_type, 
+                   ' and its parent cell type.\n'), call. = FALSE, immediate. = TRUE)
   }
   
   if (!is.null(pos_parent)) {

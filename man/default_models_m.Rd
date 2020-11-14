@@ -8,7 +8,7 @@
 a list of \code{\link{SingleCellClassR}} objects
 }
 \usage{
-default_models_n
+default_models_m
 }
 \description{
 Pretrained classifier obtained by training and testing on 

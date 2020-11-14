@@ -50,33 +50,74 @@ clf_B <- default_models[['B cells']]
 clf_B
 ```
 ## Preparing train object and test object
+
 Same as training for basic models, training for a child model also requires 
-a train (Seurat) object and a test (Seurat) object. All Seurat objects must 
+a train (Seurat/SCE) object and a test (Seurat/SCE) object. All objects must 
 have a slot in meta data indicating the type of cells. Tag slot indicating 
 parent cell type can also be provided. In this case, parent cell type tag 
 will further be tested for coherence with the provided parent classifier.
-```{r}
-library(SingleCellClassR.data)
-data("feldman_seurat")
-```
-```{r}
-# view train data
-feldman_seurat
-```
-```{r}
-# tag slot indicating parent cell type, B cells
-head(Idents(feldman_seurat))
-```
-```{r}
-# tag slot indicating cell subset, plasma cells
-head(feldman_seurat[['Plasma_cells']])
-```
-A second object for testing:
-```{r}
-data("jerby_seurat")
 
-# view test data
-jerby_seurat
+Cell tagged as child cell type but incoherent to parent cell type will be 
+removed from training and testing for the child cell type classifier. 
+
+In this vignette, we use the human lung dataset from Zilionis et al., 2019,
+which is available in the scRNAseq (2.4.0) library. The dataset is stored as a
+SCE object.
+
+To start the training workflow, we first load the neccessary libraries. 
+```{r}
+library(scRNAseq)
+```
+
+Load the dataset:
+
+```{r}
+zilionis <- ZilionisLungData()
+```
+
+We cut this dataset into two parts, one for the training and the other for the testing.
+```{r}
+pivot = ncol(zilionis)%/%2
+train_set <- zilionis[, 1:pivot]
+test_set <- zilionis[, (1+pivot):ncol(zilionis)]
+```
+
+In this dataset, the cell type meta data is stored in the *Most likely LM22 cell type*
+slot of the SCE object (in both train object and test object). 
+If cell type is stored in another slot of object meta data, 
+the slot/tag slot name must be then provided as a parameter in the 
+train and test method. 
+
+```{r}
+table(train_set$`Most likely LM22 cell type`)
+```
+```{r}
+table(test_set$`Most likely LM22 cell type`)
+```
+
+Unlike the example of the training basic model, we will remove all NAs cells in order to reduce computationalc complexity.
+
+```{r}
+# remove NAs cells
+train_set <- train_set[, !is.na(train_set$`Most likely LM22 cell type`)]
+test_set <- test_set[, !is.na(test_set$`Most likely LM22 cell type`)]
+```
+
+```{r}
+# convert cell label: 
+# 1 - positive to plasma cells, 
+# 0 - negative to plasma cells
+train_set$plasma <- unlist(lapply(train_set$`Most likely LM22 cell type`,
+                                  function(x) if (x == 'Plasma cells') {1} else {0}))
+
+test_set$plasma <- unlist(lapply(test_set$`Most likely LM22 cell type`,
+                                 function(x) if (x == 'Plasma cells') {1} else {0}))
+```
+
+We may want to check the number of cells in each category:
+```{r}
+table(train_set$plasma)
+# 1: plasma cells, 0: not plasma cells
 ```
 
 ## Defining set of features
@@ -109,17 +150,17 @@ path.to.models = '.'*
 Train the child classifier:
 ```{r}
 set.seed(123)
-clf_plasma <- train_classifier(train_obj = feldman_seurat, 
+clf_plasma <- train_classifier(train_obj = train_set, 
 features = selected_features_plasma, cell_type = "Plasma cells", 
-seurat_tag_slot = 'Plasma_cells', parent_clf = clf_B)
+sce_assay = 'counts', sce_tag_slot = 'plasma', parent_clf = clf_B)
 ```
 If B cells classifier has not been loaded to current working space, 
 an equivalent training process should be:
 ```{r}
 set.seed(123)
-clf_plasma <- train_classifier(train_obj = feldman_seurat, 
+clf_plasma <- train_classifier(train_obj = train_set, 
 features = selected_features_plasma, cell_type = "Plasma cells", 
-seurat_tag_slot = 'Plasma_cells', parent_cell = 'B cells')
+sce_assay = 'counts', sce_tag_slot = 'plasma', parent_cell = 'B cells')
 ```
 ```{r}
 clf_plasma
@@ -132,35 +173,17 @@ clf(clf_plasma)
 
 Parent classifier must be also indicated in test method.
 ```{r}
-clf_plasma_test <- test_classifier(test_obj = jerby_seurat, 
-classifier = clf_plasma, seurat_tag_slot = 'Plasma_cells', parent_clf = clf_B)
+clf_plasma_test <- test_classifier(test_obj = test_set, 
+classifier = clf_plasma, sce_assay = 'counts', sce_tag_slot = 'plasma', 
+parent_clf = clf_B)
 ```
 
 ### Interpreting test model result
+The test result obtained from a child model can be interpreted in the same way
+as we do with the model for basic cell types. We can change the prediction 
+probability threshold according to the research project or personal preference 
+and plot a roc curve.
 
-Same as testing a basic classification models, testing a child classifier also returns an object, which is a list of: *test_tag*, *pred*, *acc*, *auc*, *overall_roc*
-  
-The *overall_roc* is a summary of True Positive Rate (sensitivity) and False Positive Rate (1 - specificity) obtained by the trained model according to different thresholds:
-
-```{r}
-clf_plasma_test$overall_roc
-```
-
-We see that with the same TPR (*= 1.0*), the FPR increases if *p_thres* increases to *0.7*. Therefore, this is the better result as compare to the result produced by *p_thres = 0.5*. We change the prediction probability threshold as:
-
-```{r}
-p_thres(clf_plasma) <- 0.7
-```
-
-Hence the prediction result was changed as:
-```{r}
-clf_plasma_test <- test_classifier(test_obj = jerby_seurat, 
-classifier = clf_plasma, seurat_tag_slot = 'Plasma_cells', parent_clf = clf_B)
-```
-
-Now the specificity increased from *0.963759909399774* to *0.994337485843715* and with the same number of actual plasma cells (*65*), the number of predicted cells decreased from *97* to *70*.
-
-The ROC curve remains the same with the same AUC score:
 ```{r}
 print(clf_plasma_test$auc)
 roc_curve <- plot_roc_curve(test_result = clf_plasma_test)
@@ -172,11 +195,13 @@ plot(roc_curve)
 In order to save child classifier, parent classifier must have existed in the 
 classifier database, either in the package default database or in user-defined 
 database.
+
 ```{r}
 # see list of available model in package
 data("default_models")
 names(default_models)
 ```
+
 In our package, default models include already models classifying plasma cells.
 Therefore, we will save this model to a new local database specified by the 
 *path.to.models* parameter. If you start with a fresh new local database, 
@@ -195,61 +220,39 @@ save_new_model(new_model = clf_plasma, path.to.models = getwd(),
 
 When we save the B cells' classifier and the plasma cells' classifier, a local database is newly created. We can use this new database to classify cells in a Seurat or SingleCellExperiment object.
 
-Let's try to classify Jerby-Arnon dataset:
+Let's try to classify cells in the test set:
 ```{r}
-classified_jerby <- classify_cells(classify_obj = jerby_seurat, 
-                                   cell_types = 'all', path_to_models = getwd())
+classified <- classify_cells(classify_obj = test_set, sce_assay = 'counts', 
+                             cell_types = 'all', path_to_models = getwd())
 ```
 
 Using the *classify_cells()* function, we have to indicate exactly the repository containing the database that the models has recently been saved to. In the previous section, we saved our new models to the current working directory. 
 
-In the *classified_jerby* object, the classification process added new columns to the cell meta data, including the *predicted_cell_type* and *most_probable_cell_type* columns. Let's take a look at the original plasma cells tag:
-
-```{r}
-# get a summary of the plasma cells tag
-table(classified_jerby[['Plasma_cells']][,1])
-# 1 corresponds to cells positive to B cells and 0 corresponds to cells negative to B cells
-```
-65 cells (labeled 1) are plasma cells and 7121 cells are not plasma cells.
+In the *classified* object, the classification process added new columns to the cell meta data, including the *predicted_cell_type* and *most_probable_cell_type* columns. 
 
 If we use the full prediction to compare with actual plasma tag, we obtain this result: 
 ```{r}
 # compare the prediction with actual cell tag
-table(classified_jerby[['predicted_cell_type']][,1], classified_jerby[['Plasma_cells']][,1])
+table(classified$predicted_cell_type, classified$plasma)
+# plasma cell is child cell type of B cell
+# so of course, all predicted plasma cells are predicted B cells 
 ```
 
-We find that 65 actual plasma cells were assigned as B cells and as plasma cells at the same time. This is a reasonable result because in this example, we consider all plasma cells are B cells.
-
-However, comparing the actual tag with the most probable prediction, we obtain: 
+When comparing the actual tag with the most probable prediction, we obtain: 
 ```{r}
 # compare the prediction with actual cell tag
-table(classified_jerby[['most_probable_cell_type']][,1], classified_jerby[['Plasma_cells']][,1])
+table(classified$most_probable_cell_type, classified$plasma)
 ```
 
-This is a quite surprise result. Among the 65 actual plasma cells, only 1 was identified but 64 others were identified as B cells. In contradiction, the testing process of *clf_plasma* proved that this model could detect all plasma cells in the same dataset. Why this can happen? This contradictory can be explained.
-
-The *predicted_cell_type* takes all predictions having the probabilities satisfying the corresponding probability thresholds. In this case, SingleCellClassR takes all predicted B cells having probability from 0.5 and all predicted plasma cells having probability from 0.7. Meanwhile, the *most_probable_cell_type* takes only the cell type which gives highest prediction probability. Here, 64 predicted plasma cells were also predicted as B cells. However, they have a higher probability to be B cells than to be plasma cells. Therefore, they were classified as B cells in the *most_probable_cell_type*.
+The number of identified plasma cells is different in the *predicted_cell_type* slot and in the *most_probable_cell_type*. This is because the *predicted_cell_type* takes all predictions having the probabilities satisfying the corresponding probability thresholds. Meanwhile, the *most_probable_cell_type* takes only the cell type which gives highest prediction probability. 
 
 To have all plasma cells specified as plasma cells, we can set the *ignore_ambiguous_result* to TRUE. This option will actually hide all ambiguous prediction in case we have more distinct cell types. In the parent-chid(ren) relationship of cell types, the more specified cell types/phenotypes will be reported. Of course, we don't obtain the *most_probable_cell_type* in cell meta data.
 
 ```{r}
-classified_jerby <- classify_cells(classify_obj = jerby_seurat, 
-                                   cell_types = 'all', path_to_models = getwd(),
-                                   ignore_ambiguous_result = TRUE)
-table(classified_jerby[['predicted_cell_type']][,1], classified_jerby[['Plasma_cells']][,1])
-```
-
-To check the B cell classification with actual B cells, we can do as follows:
-
-```{r}
-classified_jerby <- classify_cells(classify_obj = jerby_seurat, 
-                                   cell_types = 'all', path_to_models = getwd())
-# convert B cells label to binaries to ignore details of other cell types
-label_B <- Idents(classified_jerby)
-label_B <- unlist(lapply(label_B, function(x) if (x == 'B cells') {1} else 0))
-
-# compare prediction with cell label
-table(classified_jerby[['most_probable_cell_type']][,1], label_B)
+classified <- classify_cells(classify_obj = test_set, sce_assay = 'counts',
+                             cell_types = 'all', path_to_models = getwd(),
+                             ignore_ambiguous_result = TRUE)
+table(classified$predicted_cell_type, classified$plasma)
 ```
 
 ## Session Info

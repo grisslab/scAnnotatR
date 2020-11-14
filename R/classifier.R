@@ -170,7 +170,8 @@ setMethod("train_classifier", c("train_obj" = "Seurat"),
   clf$trainingData <- clf$resample <- clf$resampledCM <- NULL 
   p_thres <- 0.5
   
-  object <- SingleCellClassR(cell_type, clf, features, p_thres, NA_character_)
+  object <- SingleCellClassR(cell_type, clf, labels(clf$terms), p_thres, 
+                             NA_character_)
   
   # only assign parent if pretrained model for parent cell type is avai
   if ((!is.null(parent_process$parent.clf) 
@@ -266,7 +267,7 @@ setMethod("train_classifier", c("train_obj" = "SingleCellExperiment"),
   clf <- train_func(balance_ds$mat, balance_ds$tag)
   
   p_thres <- 0.5
-  object <- SingleCellClassR(cell_type, clf, features, p_thres, 
+  object <- SingleCellClassR(cell_type, clf, labels(clf$terms), p_thres, 
                              NA_character_)
   
   # only assign parent if pretrained model for parent cell type is avai
@@ -665,7 +666,7 @@ setMethod("classify_cells", c("classify_obj" = "Seurat"),
   
   if (any(pred_cells != "")) {
     pred_cells <- gsub("/$", "", pred_cells)
-  
+    
     # ignore ambiguous results
     if (ignore_ambiguous_result == TRUE) {
       pred_cells <- unlist(lapply(pred_cells, 
@@ -728,12 +729,16 @@ setMethod("classify_cells", c("classify_obj" = "SingleCellExperiment"),
     prediction <- make_prediction(filtered_mat, classifier, pred_cells, ignore_ambiguous_result)
     pred <- prediction$pred
     pred_cells <- prediction$pred_cells
-    
     # add prediction to meta data: 2 cols: p, class 
     for (colname in colnames(pred)) {
-      classify_obj[[colname]] <- pred[, colname, drop = FALSE]
+      classify_obj[[colname]] <- unlist(lapply(colnames(classify_obj), 
+                                               function(x) 
+                                                 if (x %in% rownames(pred)) {pred[x, colname]} 
+                                               else {NA}))
+      #pred[, colname, drop = FALSE, ]
     }
   }
+  
   if (any(pred_cells != "")) {
     pred_cells <- gsub("/$", "", pred_cells)
     
