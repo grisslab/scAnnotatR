@@ -73,10 +73,12 @@ test_set <- zilionis[, (1+pivot):ncol(zilionis)]
 ```
 
 In this dataset, the cell type meta data is stored in the *Most likely LM22 cell type*
-slot of the SingleCellExperiment object (in both train object and test object). 
-If cell type is stored in another slot of object meta data, 
-the slot/tag slot name must be then provided as a parameter in the 
-train and test method. 
+slot of the SingleCellExperiment object (in both the train object and test object). 
+
+If the cell type is stored not stored as the default identification (set through
+`Idents` for Seurat object) the slot must be set as a parameter in the training
+and testing function (see below).
+
 ```{r}
 unique(train_set$`Most likely LM22 cell type`)
 ```

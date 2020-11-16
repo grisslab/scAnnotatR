@@ -20,9 +20,9 @@ options(rmarkdown.html_vignette.check_title = FALSE)
 ## Introduction
 
 Apart from a basic model for a basic independent cell type, our methods also 
-serve training of models classifying cell types considered as the children 
-of another cell type. In this case, the so-called parent cell type must have 
-already its classification model.
+supports cell types considered as the children 
+of another cell type. In this case, the so-called parent cell type must already
+be represented by a classification model.
 
 Here we consider the model classifying child cell type as child model and of
 course, parent model is used for classification of parent cell type.
@@ -33,17 +33,28 @@ all cells by parent model before training and testing for child model. Only
 cells that are considered as parent cell type will be used to train and 
 test the new model.
 
+The basis for this approach is that while markers that are very well suited
+to differentiate a CD4+ T cell from a CD8+ T cell, these markers may worsen 
+the differentiation of a T cell *vs.* other cells.
+
 ## Parent model
 A first prerequisite of training for a child model is the parent model. 
 A parent model is of class SingleCellClassR and must be available in the 
 working space, among default pretrained models of the package or among 
-trained models in users' database.
+trained models in a user supplied database.
 
 In this example, we load B cells classifier in the package default 
 models to our working place.
 ```{r}
-library(SingleCellClassR)
+# use BiocManager to install from Bioconductor
+if (!requireNamespace("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+
+# the SingleCellClassR package
+if (!require(SingleCellClassR))
+  BiocManager::install("SingleCellClassR")
 ```
+
 ```{r}
 data("default_models")
 clf_B <- default_models[['B cells']]
@@ -66,7 +77,9 @@ SCE object.
 
 To start the training workflow, we first load the neccessary libraries. 
 ```{r}
-library(scRNAseq)
+# we use the scRNAseq package to load example data
+if (!require(scRNAseq))
+  BiocManager::install("scRNAseq")
 ```
 
 Load the dataset:
@@ -75,18 +88,21 @@ Load the dataset:
 zilionis <- ZilionisLungData()
 ```
 
-We cut this dataset into two parts, one for the training and the other for the testing.
+We split this dataset into two parts, one for the training and the other for the testing.
+
 ```{r}
 pivot = ncol(zilionis)%/%2
 train_set <- zilionis[, 1:pivot]
 test_set <- zilionis[, (1+pivot):ncol(zilionis)]
 ```
 
+
 In this dataset, the cell type meta data is stored in the *Most likely LM22 cell type*
-slot of the SCE object (in both train object and test object). 
-If cell type is stored in another slot of object meta data, 
-the slot/tag slot name must be then provided as a parameter in the 
-train and test method. 
+slot of the SingleCellExperiment object (in both the train object and test object). 
+
+If the cell type is stored not stored as the default identification (set through
+`Idents` for Seurat object) the slot must be set as a parameter in the training
+and testing function (see below).
 
 ```{r}
 table(train_set$`Most likely LM22 cell type`)
@@ -95,7 +111,7 @@ table(train_set$`Most likely LM22 cell type`)
 table(test_set$`Most likely LM22 cell type`)
 ```
 
-Unlike the example of the training basic model, we will remove all NAs cells in order to reduce computationalc complexity.
+Unlike the example of the training basic model, we will remove all NAs cells in order to reduce the computational complexity for this example.
 
 ```{r}
 # remove NAs cells
@@ -122,7 +138,7 @@ table(train_set$plasma)
 
 ## Defining set of features
 
-Next, we define a set of features, which will be used in training the child 
+Next, we define a set of features, which will be used for the child 
 classification model. Supposing we are training a model for classifying plasma 
 cells, we define the set of features as follows:
 
@@ -134,7 +150,7 @@ selected_features_plasma <- c("SDC1", "CD19", "BACH2", "CD74", "CD38", "CD37",
 
 ## Train model
 
-Training for a child model needs more parameters than training for a basic one.
+Training for a child model needs more parameters than training a basic one.
 Users must indicate the parent classifier. There are three ways to indicate the
 parent classifier to the train method:
   
@@ -144,8 +160,7 @@ parent classifier to the train method:
 for example: *parent_cell = 'B cells'*
   
   * Users can give name of a model among models available in users' database 
-AND the path to that database, for example: *parent_cell = 'B cells', 
-path.to.models = '.'*
+AND the path to that database, for example: `parent_cell = 'B cells', path.to.models = '.'`
 
 Train the child classifier:
 ```{r}
@@ -154,7 +169,7 @@ clf_plasma <- train_classifier(train_obj = train_set,
 features = selected_features_plasma, cell_type = "Plasma cells", 
 sce_assay = 'counts', sce_tag_slot = 'plasma', parent_clf = clf_B)
 ```
-If B cells classifier has not been loaded to current working space, 
+If the  cells classifier has not been loaded to the current working space, 
 an equivalent training process should be:
 ```{r}
 set.seed(123)
@@ -171,7 +186,7 @@ clf(clf_plasma)
 
 ## Test model
 
-Parent classifier must be also indicated in test method.
+The parent classifier must be also set in test method.
 ```{r}
 clf_plasma_test <- test_classifier(test_obj = test_set, 
 classifier = clf_plasma, sce_assay = 'counts', sce_tag_slot = 'plasma', 
@@ -192,8 +207,8 @@ plot(roc_curve)
 
 ## Save child classification model for further use
 
-In order to save child classifier, parent classifier must have existed in the 
-classifier database, either in the package default database or in user-defined 
+In order to save child classifier, the parent classifier must already exist in the 
+classifier database, either in the package default database or in the user-defined 
 database.
 
 ```{r}
@@ -202,7 +217,7 @@ data("default_models")
 names(default_models)
 ```
 
-In our package, default models include already models classifying plasma cells.
+In our package, the default models already include a model classifying plasma cells.
 Therefore, we will save this model to a new local database specified by the 
 *path.to.models* parameter. If you start with a fresh new local database, 
 there is no available parent classifier of plasma cells' classifier. Therefore,
@@ -246,7 +261,7 @@ table(classified$most_probable_cell_type, classified$plasma)
 
 The number of identified plasma cells is different in the *predicted_cell_type* slot and in the *most_probable_cell_type*. This is because the *predicted_cell_type* takes all predictions having the probabilities satisfying the corresponding probability thresholds. Meanwhile, the *most_probable_cell_type* takes only the cell type which gives highest prediction probability. 
 
-To have all plasma cells specified as plasma cells, we can set the *ignore_ambiguous_result* to TRUE. This option will actually hide all ambiguous prediction in case we have more distinct cell types. In the parent-chid(ren) relationship of cell types, the more specified cell types/phenotypes will be reported. Of course, we don't obtain the *most_probable_cell_type* in cell meta data.
+To have all plasma cells specified as plasma cells, we can set the *ignore_ambiguous_result* to TRUE. This option will hide all ambiguous predictions where we have more than one possible cell type. In the parent-chid(ren) relationship of cell types, the more specified cell types/phenotypes will be reported.
 
 ```{r}
 classified <- classify_cells(classify_obj = test_set, sce_assay = 'counts',
