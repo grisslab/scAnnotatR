@@ -19,18 +19,21 @@ options(rmarkdown.html_vignette.check_title = FALSE)
 
 ## Introduction
 
-One of basic functions of the SingleCellClassR package is to provide users 
+One of key functions of the SingleCellClassR package is to provide users 
 easy tools to train their own model classifying new cell types from labeled 
 scRNA-seq data.
 
-From the very beginning, this vignette shows how to train a basic 
+This vignette shows how to train a basic 
 classification model for an independant cell type, which is not a child of 
 any other cell type.
 
 ## Preparing train object and test object
 
-The workflow starts from a couple of objects where cells have been 
-assigned to be different cell types. To do this, users may have annotated 
+The workflow starts with either a [Seurat](https://satijalab.org/seurat/) or 
+[SingleCellExperiment](https://osca.bioconductor.org/) object where cells have already
+been assigned to different cell types. 
+
+To do this, users may have annotated 
 scRNA-seq data (by a FACS-sorting process, for example), create a Seurat/
 SingleCellExperiment (SCE) object based on the sequencing data and assign the 
 predetermined cell types as cell meta data. If the scRNA-seq data has not 
@@ -41,10 +44,19 @@ In this vignette, we use the human lung dataset from Zilionis et al., 2019,
 which is available in the scRNAseq (2.4.0) library. The dataset is stored as a
 SCE object.
 
-To start the training workflow, we first load the neccessary libraries. 
+To start the training workflow, we first install and load the necessary libraries. 
 ```{r}
-library(SingleCellClassR)
-library(scRNAseq)
+# use BiocManager to install from Bioconductor
+if (!requireNamespace("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+
+# the SingleCellClassR package
+if (!require(SingleCellClassR))
+  BiocManager::install("SingleCellClassR")
+
+# we use the scRNAseq package to load example data
+if (!require(scRNAseq))
+  BiocManager::install("scRNAseq")
 ```
 
 Load the dataset:
@@ -53,7 +65,7 @@ Load the dataset:
 zilionis <- ZilionisLungData()
 ```
 
-We cut this dataset into two parts, one for the training and the other for the testing.
+We split this dataset into two parts, one for the training and the other for the testing.
 ```{r}
 pivot = ncol(zilionis)%/%2
 train_set <- zilionis[, 1:pivot]
@@ -85,14 +97,14 @@ test_set$B_cell <- unlist(lapply(test_set$`Most likely LM22 cell type`,
                                  function(x) if (is.na(x)) {'ambiguous'} else if (x %in% c('Plasma cells', 'B cells memory', 'B cells naive')) {'B cells'} else {'others'}))
 ```
 
-We observe that there are cells marked NAs. Those can be understood as 1/different from all indicated cell types or 2/any unknown cell types. Here we consider the second case, ie. we don't know whether they are positive or negative to B cells. To avoid the affect of those NAs cells, we can assign them as 'ambiguous'. All cells tagged 'ambiguous' will be ignored by SingleCellClassR from training and testing. 
+We observe that there are cells marked NAs. Those can be understood as 1/different from all indicated cell types or 2/any unknown cell types. Here we consider the second case, ie. we don't know whether they are positive or negative to B cells. To avoid any effect of these cells, we can assign them as 'ambiguous'. All cells tagged 'ambiguous' will be ignored by SingleCellClassR from training and testing. 
 
 We may want to check the number of cells in each category:
 ```{r}
 table(train_set$B_cell)
 ```
 
-## Defining set of features
+## Defining features
 
 Next, we define a set of features, which will be used in training the 
 classification model. Supposing we are training a model for classifying 
@@ -108,21 +120,27 @@ selected_features_B <- c("CD19", "MS4A1", "SDC1", "CD79A", "CD79B",
 
 ## Train model
 
-When the model is being trained, three most important information must be 
-provided are: the Seurat/SCE object used for training, the set of applied features
-and the cell type defining the trained model. 
+When the model is being trained, three pieces of information must be 
+provided: 
 
-Cell type corresponding to the trained model must exist among identities 
-assigned to cells in the trained Seurat object. Remember if cell types 
-are not indicated as active identification of the trained object, name 
-of the tag slot in object meta data must be provided to the sce_tag_slot parameter. 
+  * the Seurat/SCE object used for training
+  * the set of applied features
+  * the cell type defining the trained model
 
-When training on a imbalanced dataset, the trained model may bias toward the 
+In case the dataset does not contain any cell classified as the target
+cell type, the function will fail. 
+
+If the cell type annotation is not set in the default identification slot
+(`Idents` for `Seurat` objects) the name 
+of the metadata field must be provided to the `sce_tag_slot parameter`. 
+
+When training on an imbalanced dataset (f.e. a datasets containing 90% B cells and
+only very few other cell types), the trained model may bias toward the 
 majority group and ignore the presence of the minority group. To avoid this, 
-the number of positive cells and negative cells will automatically be balanced 
+the number of positive cells and negative cells will be automatically balanced 
 before training. Therefore, a smaller number cells will be randomly picked  
 from the majority group. To use the same set of cells while training multiple 
-times for one model, users can use set.seed. 
+times for one model, users can use `set.seed`. 
 ```{r}
 set.seed(123)
 clf_B <- train_classifier(train_obj = train_set, cell_type = "B cells", features = selected_features_B,
@@ -131,14 +149,19 @@ clf_B <- train_classifier(train_obj = train_set, cell_type = "B cells", features
 ```{r}
 clf_B
 ```
-The classifying model is a S4 object named SingleCellClassR. 
-Details about the classifying model is accessible via getter methods. 
+The classification model is a `SingleCellClassR` object. 
+Details about the classification model are accessible via getter methods. 
+
 For example:
+
 ```{r}
 clf(clf_B)
 ```
 
 ## Test model
+
+The `test_classifier` model automatically tests a classifier's performance
+against another dataset. Here, we used the `test_set` created before:
 
 ```{r}
 clf_B_test <- test_classifier(test_obj = test_set, classifier = clf_B, 
@@ -155,17 +178,18 @@ Apart from the output exported to console, test classifier function also returns
 
   * **acc**: prediction accuracy at the fixed probability threshold, the probability threshold value can also be queried using *p_thres(classifier)*
 
-  * **auc**: AUC score of provided by current classifier
+  * **auc**: AUC score provided by current classifier
   
   * **overall_roc**: True Positive Rate and False Positive Rate with a certain number of prediction probability thresholds
   
-With the same classification model, the sensitivity and the specification of classification can be different because of the prediction probability threshold. To optimize user experience, we have the *overall_roc* as a summary of True Positive Rate (sensitivity) and False Positive Rate (1 - specificity) obtained by the trained model according to different thresholds:
+Every classifier internally consists of a trained SVM and a probability threshold. Only cells that are classified with a probability exceeding
+this threshold are classified as the respective cell type. The *overall_roc* slot summarizes the True Positive Rate (sensitivity) and False Positive Rate (1 - specificity) obtained by the trained model according to different thresholds.
 
 ```{r}
 clf_B_test$overall_roc
 ```
 
-In this example of B cell classifier, the current threshold is at 0.5. The higher sensitivity can be reached if we set the p_thres at 0.4. However, we will then have lower specificity, which means that we misclassify more stranger cells as B cells. In contradiction, we may not retrieve all actual B cells with higher p_thres (0.6, for example).
+In this example of B cell classifier, the current threshold is at 0.5. The higher sensitivity can be reached if we set the p_thres at 0.4. However, we will then have lower specificity, which means that we will incorrectly classify some cells as B cells. At the sime time, we may not retrieve all actual B cells with higher p_thres (0.6, for example).
 
 There is of course a certain trade-off between the sensitivity and the specificity of the model. Depending on the need of the project or the user-own preference, a probability threshold giving higher sensitivity or higher specificity can be chosen. In our perspective, p_thres at 0.5 is a good choice for the current B cell model.
 
@@ -181,13 +205,12 @@ plot(roc_curve)
 
 ### Which model to choose?
 
-Changes in train data, in the set of features and in the prediction probability
+Changes in the training data, in the set of features and in the prediction probability
 threshold will all lead to a change in model performance.
 
 There are several ways to evaluate the trained model, including the overall 
 accuracy, the AUC score and the sensitivity/specificity of the model when 
-testing on an independent dataset. Here, we export all these statistics to 
-help user have a wider range of choices. In this example, we choose the model
+testing on an independent dataset. In this example, we choose the model
 which has the best AUC score.
 
 *Tip: Using more general markers of the whole population leads to higher 
@@ -195,29 +218,36 @@ sensitivity. This sometimes produces lower specificity because of close
 cell types (T cells and NK cells, for example). While training some models, 
 we observed that we can use the markers producing high sensitivity but at 
 the same time can improve the specificity by increasing the probability 
-threshold. Of course, this tip can only applied in some cases, because 
+threshold. Of course, this can only applied in some cases, because 
 some markers can even have a larger affect on the specificity than the 
 prediction probability threshold.*
 
 ## Save classification model for further use
 
-After having obtained a good classification model, users may want to save it 
-for future classification. To do this, we provide a method that helps the user 
-step-by-step store all new classification models.
+New classification models can be stored using the `save_new_model` function:
 
-To use this method, two information must be provided: the to be saved model and
-the directory path where the new model will be stored. This method will then 
-create a small database containing all trained models. Therefore, users must 
-indicate the same path to models in order to use multiple classification models
-at the same time.
+```{r}
+# no copy of pretrained models is performed
+save_new_model(new_model = clf_B, path.to.models = getwd(),include.default = FALSE) 
+```
+
+Parameters:
+
+  * **new_model**: The new model that should be added to the database in the
+                   specified directory.
+  * **path.to.models**: The directory where the new models should be stored.
+  * **include.default**: If set, the default models shipped with the package
+                         are added to the database.
 
 Users can also choose whether copy all pretrained models of the packages to the
 new model database. If not, in the future, user can only choose to use either 
 default pretrained models or new models by specifying only one path to models.
 
+Models can be deleted from the model database using the `delete_model` function:
+
 ```{r}
-# no copy of pretrained models is performed
-save_new_model(new_model = clf_B, path.to.models = getwd(),include.default = FALSE) 
+# delete the "B cells" model from the new database
+delete_model("B cells", path.to.models = getwd())
 ```
 
 ## Session Info
