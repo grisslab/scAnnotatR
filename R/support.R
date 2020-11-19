@@ -78,7 +78,10 @@ train_func <- function(mat, tag) {
                       tuneGrid = data.frame(.C = 1,
                                             .sigma = sigma),
                       metrix = "Accuracy",
-                      trControl = trainControl(classProbs = TRUE)) 
+                      trControl = trainControl(classProbs = TRUE,
+                                               trim = TRUE,
+                                               returnData = FALSE,
+                                               returnResamp = 'none')) 
   return(clf)
 }
 
