@@ -167,7 +167,7 @@ setMethod("train_classifier", c("train_obj" = "Seurat"),
   clf <- train_func(balance_ds$mat, balance_ds$tag)
   
   # remove this info to reduce memory
-  clf$trainingData <- clf$resample <- clf$resampledCM <- NULL 
+  clf$resampledCM <- NULL 
   p_thres <- 0.5
   
   object <- SingleCellClassR(cell_type, clf, labels(clf$terms), p_thres, 
