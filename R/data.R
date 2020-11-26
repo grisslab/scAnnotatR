@@ -20,14 +20,3 @@
 #' @author Vy Nguyen, November 2020
 #' @keywords datasets
 "default_models"
-
-#' @name default_models_m
-#' @title Pretrained classifiers for murine cells
-#' @description Pretrained classifier obtained by training and testing on 
-#' The Tabula Muris Consortium.
-#' @docType data
-#' @usage default_models_m
-#' @format a list of \code{\link{SingleCellClassR}} objects
-#' @author Vy Nguyen, November 2020
-#' @keywords datasets
-"default_models_m"
