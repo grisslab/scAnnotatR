@@ -666,7 +666,7 @@ setMethod("simplify_prediction", c("classify_obj" = "Seurat"),
   noparent_idx <- which(is.na(parents))
   noparent_cell <- names(noparent_idx)
   noparent_pcol <- paste0(gsub(' ', '_', noparent_cell), '_p')
-  noparent_p <- classify_obj[[]][, noparent_pcol]
+  noparent_p <- classify_obj[[]][, noparent_pcol, drop = FALSE]
   
   # create most probable pred from cell types having no parent
   max_p <- colnames(noparent_p)[unlist(apply(noparent_p, 1, which.max))]
@@ -726,7 +726,7 @@ setMethod("simplify_prediction", c("classify_obj" = "SingleCellExperiment"),
   noparent_idx <- which(is.na(parents))
   noparent_cell <- names(noparent_idx)
   noparent_pcol <- paste0(gsub(' ', '_', noparent_cell), '_p')
-  noparent_p <- SummarizedExperiment::colData(classify_obj)[, noparent_pcol]
+  noparent_p <- SummarizedExperiment::colData(classify_obj)[, noparent_pcol, drop = FALSE]
   
   # create most probable pred from cell types having no parent
   max_p <- colnames(noparent_p)[unlist(apply(noparent_p, 1, which.max))]

@@ -81,7 +81,7 @@ setMethod("save_new_model", c("new_model" = "SingleCellClassR"),
   names(new_models) <- names
   
   # save to rda file
-  save(new_models, file = new_models.file.path, compress = 'xzs')
+  save(new_models, file = new_models.file.path, compress = 'xz')
   cat("Finished saving new model\n")
 })
 
