@@ -1,4 +1,4 @@
-Package: SingleCellClassR
+Package: scTypeR
 Type: Package
 Title: Pretrained learning models for cell type prediction on single cell RNA-sequencing data 
 Version: 0.0.1

@@ -2,7 +2,7 @@
 % Please edit documentation in R/class.R
 \name{checkObjectValidity}
 \alias{checkObjectValidity}
-\title{Check if a SingleCellClassR object is valid}
+\title{Check if a scTypeR object is valid}
 \usage{
 checkObjectValidity(object)
 }
@@ -13,5 +13,5 @@ checkObjectValidity(object)
 TRUE if the classifier is valid or the reason why it is not
 }
 \description{
-Check if a SingleCellClassR object is valid
+Check if a scTypeR object is valid
 }

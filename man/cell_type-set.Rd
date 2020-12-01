@@ -8,13 +8,13 @@ Change cell type for a classifier}
 cell_type(classifier) <- value
 }
 \arguments{
-\item{classifier}{SingleCellClassR object. 
+\item{classifier}{scTypeR object. 
 The object is returned from the train_classifier function.}
 
 \item{value}{the new cell type}
 }
 \value{
-SingleCellClassR object with the new cell type.
+scTypeR object with the new cell type.
 }
 \description{
 Setter for cell_type

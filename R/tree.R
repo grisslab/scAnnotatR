@@ -42,7 +42,7 @@ setGeneric("save_new_model",
 #' 
 #' @importFrom utils data
 #' @rdname save_new_model
-setMethod("save_new_model", c("new_model" = "SingleCellClassR"), 
+setMethod("save_new_model", c("new_model" = "scTypeR"), 
           function(new_model, 
                    include.default = TRUE, 
                    path.to.models = ".") {

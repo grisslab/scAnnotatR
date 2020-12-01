@@ -47,7 +47,7 @@ indicating pre-assigned/predicted parent cell type}
 
 \item{parent_cell_type}{name of parent cell type}
 
-\item{parent_clf}{\code{\link{SingleCellClassR}} object corresponding 
+\item{parent_clf}{\code{\link{scTypeR}} object corresponding 
 to classification model for the parent cell type}
 
 \item{path_to_models}{path to databases, or by default}

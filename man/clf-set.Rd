@@ -8,13 +8,13 @@ Change of clf will also lead to change of features.}
 clf(classifier) <- value
 }
 \arguments{
-\item{classifier}{SingleCellClassR object. 
+\item{classifier}{scTypeR object. 
 The object is returned from the train_classifier function.}
 
 \item{value}{the new classifier}
 }
 \value{
-SingleCellClassR object with the new trained classifier.
+scTypeR object with the new trained classifier.
 }
 \description{
 Setter for clf.

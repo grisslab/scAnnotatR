@@ -1,10 +1,10 @@
 ---
-title: "Introduction to SingleCellClassR"
+title: "Introduction to scTypeR"
 author: "Vy Nguyen"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{1. Introduction to SingleCellClassR}
+  %\VignetteIndexEntry{1. Introduction to scTypeR}
   %\VignetteEngine{knitr::rmarkdown}
   \usepackage[utf8]{inputenc}
 ---
@@ -19,7 +19,7 @@ options(rmarkdown.html_vignette.check_title = FALSE)
 
 ## Introduction
 
-SingleCellClassR is an R package for cell type prediction on single cell 
+scTypeR is an R package for cell type prediction on single cell 
 RNA-sequencing data. Currently, this package supports data in the forms 
 of a Seurat object or a SingleCellExperiment object.
 
@@ -28,7 +28,7 @@ https://satijalab.org/seurat/
 More information about SingleCellExperiment object can be found here: 
 https://osca.bioconductor.org/
 
-SingleCellClassR provides 2 main features:
+scTypeR provides 2 main features:
 
 - A set of pretrained and robust classifiers for basic 
 immune cells. See the section below.
@@ -39,21 +39,21 @@ in vignettes 2 and 3.
 
 ## Installation
 
-The `SingleCellClassR` package can be directly installed from Bioconductor:
+The `scTypeR` package can be directly installed from Bioconductor:
 
 ```{r}
 if (!requireNamespace("BiocManager", quietly = TRUE))
     install.packages("BiocManager")
 
-if (!require(SingleCellClassR))
-  BiocManager::install("SingleCellClassR")
+if (!require(scTypeR))
+  BiocManager::install("scTypeR")
 ```
 
 For more information, see https://bioconductor.org/install/.
 
 ## Included models
 
-The `SingleCellClassR` package comes with several pre-trained models to classify
+The `scTypeR` package comes with several pre-trained models to classify
 cell types.
 
 The models are stored in the `default_models` object:
@@ -64,13 +64,13 @@ names(default_models)
 ```
 
 The `default_models` object is named a list of classifiers. Each classifier 
-is an instance of the `SingleCellClassR S4 class`. For example:
+is an instance of the `scTypeR S4 class`. For example:
 
 ```{r}
 default_models[['B cells']]
 ```
 
-## Basic pipeline to identify cell types in a scRNA-seq dataset using SingleCellClassR   
+## Basic pipeline to identify cell types in a scRNA-seq dataset using scTypeR   
 
 ### Preparing the data
 
@@ -161,14 +161,14 @@ Seurat::FeaturePlot(seurat.obj, features = "B_cells_p")
 
 Cells predicted to be B cells with higher probability have darker color, while the lighter color shows lower or even zero probability of a cell to be B cells. For B cell classifier, the threshold for prediction probability is currently at 0.5, which means cells having prediction probability at 0.5 or above will be predicted as B cells. 
 
-The automatic cell identification by SingleCellClassR matches the traditional cell assignment, ie. the approach based on cell canonical marker expression. Taking a simple example, we use CD19 and CD20 (MS4A1) to identify B cells:
+The automatic cell identification by scTypeR matches the traditional cell assignment, ie. the approach based on cell canonical marker expression. Taking a simple example, we use CD19 and CD20 (MS4A1) to identify B cells:
 
 ```{r fig.width = 7.25, fig.height = 2.5}
 # Visualize the cell types
 Seurat::FeaturePlot(seurat.obj, features = c("CD19", "MS4A1"), ncol = 2)
 ```
 
-We see that the marker expression of B cells exactly overlaps the B cell prediction made by SingleCellClassR.
+We see that the marker expression of B cells exactly overlaps the B cell prediction made by scTypeR.
 
 ## Session Info
 ```{r}

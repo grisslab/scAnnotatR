@@ -7,14 +7,14 @@
 clf(classifier)
 }
 \arguments{
-\item{classifier}{\code{\link{SingleCellClassR}} object}
+\item{classifier}{\code{\link{scTypeR}} object}
 }
 \value{
 Classifier is the object returned by caret SVM learning process.
 More information about the caret package: https://topepo.github.io/caret/
 }
 \description{
-Returns the classifier of the \code{\link{SingleCellClassR}} object
+Returns the classifier of the \code{\link{scTypeR}} object
 }
 \examples{
 data("tirosh_mel80_example")

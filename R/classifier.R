@@ -1,7 +1,7 @@
 #' Train cell type classifier
 #' 
 #' @description Train a classifier for a new cell type. 
-#' If cell type has a parent, only available for \code{\link{SingleCellClassR}}
+#' If cell type has a parent, only available for \code{\link{scTypeR}}
 #' object as parent cell classifying model.
 #' 
 #' @param train_obj object that can be used for training the new model. 
@@ -27,7 +27,7 @@
 #' @param balance whether applying balancing on training set before training
 #' @param ... arguments passed to other methods
 #' 
-#' @return \code{\link{SingleCellClassR}} object
+#' @return \code{\link{scTypeR}} object
 #'
 #' @note Only one cell type is expected for each cell in object. 
 #' Ambiguous cell type, such as: "T cells/NK cells/ILC", 
@@ -170,7 +170,7 @@ setMethod("train_classifier", c("train_obj" = "Seurat"),
   clf$resampledCM <- NULL 
   p_thres <- 0.5
   
-  object <- SingleCellClassR(cell_type, clf, labels(clf$terms), p_thres, 
+  object <- scTypeR(cell_type, clf, labels(clf$terms), p_thres, 
                              NA_character_)
   
   # only assign parent if pretrained model for parent cell type is avai
@@ -271,7 +271,7 @@ setMethod("train_classifier", c("train_obj" = "SingleCellExperiment"),
   clf$resampledCM <- NULL 
   p_thres <- 0.5
   
-  object <- SingleCellClassR(cell_type, clf, labels(clf$terms), p_thres, 
+  object <- scTypeR(cell_type, clf, labels(clf$terms), p_thres, 
                              NA_character_)
   
   # only assign parent if pretrained model for parent cell type is avai
@@ -295,7 +295,7 @@ setMethod("train_classifier", c("train_obj" = "SingleCellExperiment"),
 #' that can be considered as the main cell type in classifier, 
 #' for example, c("plasma cell", "b cell", "b cells", "activating b cell"). 
 #' Default as NULL.
-#' @param parent_clf \code{\link{SingleCellClassR}} object
+#' @param parent_clf \code{\link{scTypeR}} object
 #' corresponding to classification model for the parent cell type
 #' @param path_to_models path to the folder containing the list of models. 
 #' As default, the pretrained models in the package will be used. 
@@ -363,7 +363,7 @@ setGeneric("test_classifier", function(test_obj, classifier,
 #'
 #' @rdname test_classifier
 setMethod("test_classifier", c("test_obj" = "Seurat", 
-                               "classifier" = "SingleCellClassR"), 
+                               "classifier" = "scTypeR"), 
           function(test_obj, classifier, target_cell_type = NULL, 
                    parent_clf = NULL, path_to_models = c("default", "."), 
                    zscore = TRUE, seurat_tag_slot = "active.ident", 
@@ -449,7 +449,7 @@ setMethod("test_classifier", c("test_obj" = "Seurat",
 #' 
 #' @rdname test_classifier
 setMethod("test_classifier", c("test_obj" = "SingleCellExperiment", 
-                               "classifier" = "SingleCellClassR"), 
+                               "classifier" = "scTypeR"), 
           function(test_obj, classifier, target_cell_type = NULL, 
                    parent_clf = NULL, path_to_models = c("default", "."), 
                    zscore = TRUE, sce_tag_slot = "ident", 
