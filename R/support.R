@@ -644,18 +644,12 @@ make_prediction <- function(mat, classifier, pred_cells, ignore_ambiguous_result
 
 #' Simplify prediction
 #'
-#' @param classify_obj classified object
+#' @param meta.data cell meta data
+#' @param mat expression mat
 #' @param classifiers classifiers 
 #' 
 #' @return simplified prediction
-setGeneric("simplify_prediction", function(classify_obj, classifiers) 
-  standardGeneric("simplify_prediction"))
-
-#' @inherit simplify_prediction
-#' 
-#' @rdname simplify_prediction
-setMethod("simplify_prediction", c("classify_obj" = "Seurat"), 
-          function(classify_obj, classifiers) {
+simplify_prediction <- function(meta.data, mat, classifiers) {
   if (is.null(names(classifiers)))
     names(classifiers) <- unlist(lapply(classifiers, function(x) cell_type(x)))
             
@@ -666,7 +660,7 @@ setMethod("simplify_prediction", c("classify_obj" = "Seurat"),
   noparent_idx <- which(is.na(parents))
   noparent_cell <- names(noparent_idx)
   noparent_pcol <- paste0(gsub(' ', '_', noparent_cell), '_p')
-  noparent_p <- classify_obj[[]][, noparent_pcol, drop = FALSE]
+  noparent_p <- meta.data[, noparent_pcol, drop = FALSE]
   
   # create most probable pred from cell types having no parent
   max_p <- colnames(noparent_p)[unlist(apply(noparent_p, 1, which.max))]
@@ -675,7 +669,7 @@ setMethod("simplify_prediction", c("classify_obj" = "Seurat"),
   simplified <- unlist(lapply(1:nrow(noparent_p), function(i) 
     if (noparent_p[i, max_p[i]] >= p_thres(classifiers[[max_clf[i]]])) 
       {max_clf[i]} else {'unknown'}))
-  names(simplified) <- colnames(classify_obj)
+  names(simplified) <- colnames(mat)
   
   # continue to deeper level: children
   simplified.copy <- NULL
@@ -687,8 +681,8 @@ setMethod("simplify_prediction", c("classify_obj" = "Seurat"),
         
         children_pcol <- paste0(gsub(' ', '_', children), '_p')
         # extract prediction probabilities of children
-        children_p <- classify_obj[[]][simplified == parent, 
-                                       children_pcol, drop = FALSE]
+        children_p <- meta.data[simplified == parent, 
+                                children_pcol, drop = FALSE]
         max_p <- colnames(children_p)[unlist(apply(children_p, 1, which.max))]
         names(max_p) <- rownames(children_p)
         max_child <- gsub('_p', '', max_p)
@@ -698,75 +692,13 @@ setMethod("simplify_prediction", c("classify_obj" = "Seurat"),
           if (simplified[i] == parent 
               && children_p[i, max_p[i]] >= p_thres(classifiers[[max_child[i]]])) 
           {max_child[i]} else {simplified[i]})) # change simplified
-        names(simplified) <- colnames(classify_obj)
+        names(simplified) <- colnames(mat)
       }
     }
   }
   
-  classify_obj[['most_probable_cell_type']] <- simplified  
-  
-  return(classify_obj)
-})
-
-#' @inherit simplify_prediction
-#' 
-#' @import SingleCellExperiment
-#' @importFrom SummarizedExperiment colData
-#' 
-#' @rdname simplify_prediction
-setMethod("simplify_prediction", c("classify_obj" = "SingleCellExperiment"), 
-          function(classify_obj, classifiers) {
-  if (is.null(names(classifiers)))
-    names(classifiers) <- unlist(lapply(classifiers, function(x) cell_type(x)))
-  
-  # list of parents named by children
-  parents <- unlist(lapply(classifiers, function(x) parent(x)))
-  
-  # create simplified result for the first level: no parent
-  noparent_idx <- which(is.na(parents))
-  noparent_cell <- names(noparent_idx)
-  noparent_pcol <- paste0(gsub(' ', '_', noparent_cell), '_p')
-  noparent_p <- SummarizedExperiment::colData(classify_obj)[, noparent_pcol, drop = FALSE]
-  
-  # create most probable pred from cell types having no parent
-  max_p <- colnames(noparent_p)[unlist(apply(noparent_p, 1, which.max))]
-  max_clf <- gsub('_p', '', max_p)
-  max_clf <- gsub('_', ' ', max_clf)
-  simplified <- unlist(lapply(1:nrow(noparent_p), function(i) 
-    if (noparent_p[i, max_p[i]] >= p_thres(classifiers[[max_clf[i]]])) 
-    {max_clf[i]} else {'unknown'}))
-  names(simplified) <- colnames(classify_obj)
-  
-  # continue to deeper level: children
-  simplified.copy <- NULL
-  while (!identical(simplified, simplified.copy)) {
-    simplified.copy <- simplified # copy simplified
-    for (parent in unique(simplified)) {
-      if (parent %in% parents) {
-        children <- names(which(parents == parent))
-        
-        children_pcol <- paste0(gsub(' ', '_', children), '_p')
-        # extract prediction probabilities of children
-        children_p <- SummarizedExperiment::colData(classify_obj)[simplified == parent, 
-                                            children_pcol, drop = FALSE]
-        max_p <- colnames(children_p)[unlist(apply(children_p, 1, which.max))]
-        names(max_p) <- rownames(children_p)
-        max_child <- gsub('_p', '', max_p)
-        max_child <- gsub('_', ' ', max_child)
-        names(max_child) <- rownames(children_p)
-        simplified <- unlist(lapply(names(simplified), function(i) 
-          if (simplified[i] == parent 
-              && children_p[i, max_p[i]] >= p_thres(classifiers[[max_child[i]]])) 
-          {max_child[i]} else {simplified[i]})) # change simplified
-        names(simplified) <- colnames(classify_obj)
-      }
-    }
-  }
-  
-  SummarizedExperiment::colData(classify_obj)[, 'most_probable_cell_type'] <- simplified  
-  
-  return(classify_obj)
-})
+  return(simplified)
+}
 
 #' Verify parent prediction
 #'
