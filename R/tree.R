@@ -42,7 +42,7 @@ setGeneric("save_new_model",
 #' 
 #' @importFrom utils data
 #' @rdname save_new_model
-setMethod("save_new_model", c("new_model" = "SingleCellClassR"), 
+setMethod("save_new_model", c("new_model" = "scTypeR"), 
           function(new_model, 
                    include.default = TRUE, 
                    path.to.models = ".") {
@@ -81,7 +81,7 @@ setMethod("save_new_model", c("new_model" = "SingleCellClassR"),
   names(new_models) <- names
   
   # save to rda file
-  save(new_models, file = new_models.file.path)
+  save(new_models, file = new_models.file.path, compress = 'xz')
   cat("Finished saving new model\n")
 })
 
@@ -90,7 +90,8 @@ setMethod("save_new_model", c("new_model" = "SingleCellClassR"),
 #' @param models.file.path list of models. If not provided, 
 #' list of default pretrained models in the package will be used.
 #'  
-#' @return tree structure
+#' @return tree structure and plot of tree 
+#'
 #' @examples
 #' 
 #' # to create the tree of classifiers 
@@ -143,27 +144,12 @@ setMethod("plant_tree", , function(models.file.path = c("default", ".")) {
     }
   }
   
+  if (!is.null(tree)) {
+    tree <- data.tree::as.Node(tree)
+    print(tree)
+  } else stop('Tree not available.')
+  
   return(tree)
-})
-
-#' View cell type tree
-#' 
-#' @param tree data frame, tree to be visualize
-#' 
-#' @return visualization of the tree in console
-#' @examples
-#' t <- plant_tree()
-#' visualize_tree(t)
-#' @import data.tree
-#' @export
-setGeneric("visualize_tree", function(tree) 
-  standardGeneric("visualize_tree"))
-
-#' @inherit visualize_tree
-setMethod("visualize_tree", c("tree" = "data.frame"), 
-          function(tree) {
-  tree <- data.tree::as.Node(tree)
-  print(tree)
 })
 
 #' Delete model/branch from package

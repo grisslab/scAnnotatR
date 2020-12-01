@@ -1,11 +1,11 @@
-# SingleCellClassR class definition ----
+# scTypeR class definition ----
 
 setOldClass("train")
 
-#' SingleCellClassR class. 
+#' scTypeR class. 
 #' 
 #' This class is returned by the \code{\link{train_classifier}} function.
-#' Generally, SingleCellClassR objects are never created directly.
+#' Generally, scTypeR objects are never created directly.
 #' 
 #' @slot cell_type character. Name of the cell type.
 #' @slot clf list. Trained model returned by caret train function.
@@ -14,7 +14,7 @@ setOldClass("train")
 #' @slot p_thres numeric. 
 #' Probability threshold for the cell type to be assigned for a cell.
 #' @slot parent character. Parent cell type.
-#' @return A SingleCellClassR object.
+#' @return A scTypeR object.
 #' @import methods
 #' @examples
 #' # load small example dataset
@@ -27,7 +27,7 @@ setOldClass("train")
 #'                           features = selected_features_B, cell_type = "B cells")
 #'
 #' clf_b
-SingleCellClassR <- setClass("SingleCellClassR",
+scTypeR <- setClass("scTypeR",
                             slots = list(cell_type = "character", 
                             clf = "train", 
                             features = "character", 
@@ -42,8 +42,8 @@ SingleCellClassR <- setClass("SingleCellClassR",
 #' @param p_thres numeric. 
 #' Probability threshold for the cell type to be assigned for a cell.
 #' @param parent character. Parent cell type.
-SingleCellClassR <- function(cell_type, clf, features, p_thres, parent) {
-    classifier <- methods::new("SingleCellClassR",
+scTypeR <- function(cell_type, clf, features, p_thres, parent) {
+    classifier <- methods::new("scTypeR",
                             cell_type = cell_type,
                             clf = clf,
                             features = features,
@@ -52,7 +52,7 @@ SingleCellClassR <- function(cell_type, clf, features, p_thres, parent) {
     return(classifier)
 }
 
-#' Check if a SingleCellClassR object is valid
+#' Check if a scTypeR object is valid
 #'
 #' @param object The request classifier to check.
 #'
@@ -195,11 +195,11 @@ checkClassifierValidity <- function(clf) {
   return(TRUE)
 }
 
-setValidity("SingleCellClassR", checkObjectValidity)
+setValidity("scTypeR", checkObjectValidity)
 
 #' Show object
 #' 
-#' @param object SingleCellClassR object
+#' @param object scTypeR object
 #' 
 #' @return print to console information about the object
 #' 
@@ -212,8 +212,8 @@ setValidity("SingleCellClassR", checkObjectValidity)
 #' clf_b
 #' 
 #' @export
-setMethod("show", c("object" = "SingleCellClassR"), function(object) {
-  cat(paste0("An object of class SingleCellClassR for ", 
+setMethod("show", c("object" = "scTypeR"), function(object) {
+  cat(paste0("An object of class scTypeR for ", 
              object@cell_type, 
              "\n"))
   cat(paste0("* ", toString(length(object@features)), 
@@ -234,7 +234,7 @@ setMethod("show", c("object" = "SingleCellClassR"), function(object) {
 #' 
 #' Returns the cell type for the given classifier.
 #' 
-#' @param classifier \code{\link{SingleCellClassR}} object
+#' @param classifier \code{\link{scTypeR}} object
 #' 
 #' @return cell type of object
 #' 
@@ -250,14 +250,14 @@ setMethod("show", c("object" = "SingleCellClassR"), function(object) {
 setGeneric("cell_type", function(classifier) standardGeneric("cell_type"))
 
 #' @inherit cell_type
-setMethod("cell_type", c("classifier" = "SingleCellClassR"), 
+setMethod("cell_type", c("classifier" = "scTypeR"), 
           function(classifier) classifier@cell_type)
 
 #' clf
 #' 
-#' Returns the classifier of the \code{\link{SingleCellClassR}} object
+#' Returns the classifier of the \code{\link{scTypeR}} object
 #' 
-#' @param classifier \code{\link{SingleCellClassR}} object
+#' @param classifier \code{\link{scTypeR}} object
 #' 
 #' @return Classifier is the object returned by caret SVM learning process.
 #' More information about the caret package: https://topepo.github.io/caret/
@@ -274,14 +274,14 @@ setMethod("cell_type", c("classifier" = "SingleCellClassR"),
 setGeneric("clf", function(classifier) standardGeneric("clf"))
 
 #' @inherit clf
-setMethod("clf", c("classifier" = "SingleCellClassR"), 
+setMethod("clf", c("classifier" = "scTypeR"), 
           function(classifier) classifier@clf)
 
 #' features
 #' 
 #' Returns the set of features for the given classifier.
 #' 
-#' @param classifier SingleCellClassR object
+#' @param classifier scTypeR object
 #' 
 #' @return Applied features of object
 #' 
@@ -297,14 +297,14 @@ setMethod("clf", c("classifier" = "SingleCellClassR"),
 setGeneric("features", function(classifier) standardGeneric("features"))
 
 #' @inherit features
-setMethod("features", c("classifier" = "SingleCellClassR"), 
+setMethod("features", c("classifier" = "scTypeR"), 
           function(classifier) classifier@features)
 
 #' p_thres
 #' 
 #' Returns the probability threshold for the given classifier.
 #' 
-#' @param classifier SingleCellClassR object
+#' @param classifier scTypeR object
 #' 
 #' @return Predicting probability threshold of object
 #' 
@@ -320,14 +320,14 @@ setMethod("features", c("classifier" = "SingleCellClassR"),
 setGeneric("p_thres", function(classifier) standardGeneric("p_thres"))
 
 #' @inherit p_thres
-setMethod("p_thres", c("classifier" = "SingleCellClassR"), 
+setMethod("p_thres", c("classifier" = "scTypeR"), 
           function(classifier) classifier@p_thres)
 
 #' parent
 #' 
 #' Returns the parent of the cell type corresponding to the given classifier.
 #' 
-#' @param classifier SingleCellClassR object
+#' @param classifier scTypeR object
 #' 
 #' @return Parent model of object
 #' 
@@ -343,7 +343,7 @@ setMethod("p_thres", c("classifier" = "SingleCellClassR"),
 setGeneric("parent", function(classifier) standardGeneric("parent"))
 
 #' @inherit parent
-setMethod("parent", c("classifier" = "SingleCellClassR"), 
+setMethod("parent", c("classifier" = "scTypeR"), 
           function(classifier) classifier@parent)
 
 #--- setters
@@ -351,11 +351,11 @@ setMethod("parent", c("classifier" = "SingleCellClassR"),
 #' Setter for cell_type
 #' Change cell type for a classifier
 #' 
-#' @param classifier SingleCellClassR object. 
+#' @param classifier scTypeR object. 
 #' The object is returned from the train_classifier function.
 #' @param value the new cell type
 #' 
-#' @return SingleCellClassR object with the new cell type.
+#' @return scTypeR object with the new cell type.
 #' @examples
 #' data("tirosh_mel80_example")
 #' selected_features_B = c("CD19", "MS4A1", "CD79A")
@@ -368,7 +368,7 @@ setGeneric("cell_type<-", function(classifier, value)
   standardGeneric("cell_type<-"))
 
 #' @inherit cell_type<-
-setMethod("cell_type<-", c("classifier" = "SingleCellClassR"), 
+setMethod("cell_type<-", c("classifier" = "scTypeR"), 
           function(classifier, value) {
   # check if new thres is a string
   if (is.character(value) && nchar(value) > 0 && length(value) == 1)
@@ -382,11 +382,11 @@ setMethod("cell_type<-", c("classifier" = "SingleCellClassR"),
 
 #' Setter for predicting probability threshold
 #' 
-#' @param classifier SingleCellClassR object. 
+#' @param classifier scTypeR object. 
 #' The object is returned from the train_classifier function.
 #' @param value the new threshold
 #' 
-#' @return SingleCellClassR object with the new threshold.
+#' @return scTypeR object with the new threshold.
 #' @examples
 #' data("tirosh_mel80_example")
 #' selected_features_B = c("CD19", "MS4A1", "CD79A")
@@ -402,7 +402,7 @@ setGeneric("p_thres<-", function(classifier, value)
   standardGeneric("p_thres<-"))
 
 #' @inherit p_thres<-
-setMethod("p_thres<-", c("classifier" = "SingleCellClassR"), 
+setMethod("p_thres<-", c("classifier" = "scTypeR"), 
           function(classifier, value) {
   # check if new thres > 0
   if (is.numeric(value) && value > 0)
@@ -416,15 +416,15 @@ setMethod("p_thres<-", c("classifier" = "SingleCellClassR"),
 
 #' Setter for parent
 #' 
-#' @param classifier SingleCellClassR object. 
+#' @param classifier scTypeR object. 
 #' The object is returned from the train_classifier function.
 #' @param value the new parent
 #' 
-#' @return SingleCellClassR object with the new parent.
+#' @return scTypeR object with the new parent.
 setGeneric("parent<-", function(classifier, value) standardGeneric("parent<-"))
 
 #' @inherit parent<-
-setMethod("parent<-", c("classifier" = "SingleCellClassR"), 
+setMethod("parent<-", c("classifier" = "scTypeR"), 
           function(classifier, value) {
   # check if new thres > 0
   if (!is.character(value) || nchar(value) == 0 || length(value) != 1)
@@ -439,15 +439,15 @@ setMethod("parent<-", c("classifier" = "SingleCellClassR"),
 #' Setter for clf.
 #' Change of clf will also lead to change of features.
 #' 
-#' @param classifier SingleCellClassR object. 
+#' @param classifier scTypeR object. 
 #' The object is returned from the train_classifier function.
 #' @param value the new classifier
 #' 
-#' @return SingleCellClassR object with the new trained classifier.
+#' @return scTypeR object with the new trained classifier.
 setGeneric("clf<-", function(classifier, value) standardGeneric("clf<-"))
 
 #' @inherit clf<-
-setMethod("clf<-", c("classifier" = "SingleCellClassR"), 
+setMethod("clf<-", c("classifier" = "scTypeR"), 
           function(classifier, value) {
   # set new classifier
   if (is.na(classifier@parent)) {
@@ -468,16 +468,16 @@ setMethod("clf<-", c("classifier" = "SingleCellClassR"),
 
 #' Setter for features. Users are not allowed to change features. 
 #' 
-#' @param classifier SingleCellClassR object. 
+#' @param classifier scTypeR object. 
 #' The object is returned from the train_classifier function.
 #' @param value the new classifier
 #' 
-#' @return SingleCellClassR object with the new features.
+#' @return scTypeR object with the new features.
 setGeneric("features<-", function(classifier, value) 
   standardGeneric("features<-"))
 
 #' @inherit features<-
-setMethod("features<-", c("classifier" = "SingleCellClassR"), 
+setMethod("features<-", c("classifier" = "scTypeR"), 
           function(classifier, value) {
   # set new features
   if (is.character(value) && any(nchar(value)) > 0)

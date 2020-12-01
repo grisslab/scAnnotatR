@@ -7,7 +7,7 @@
 parent(classifier)
 }
 \arguments{
-\item{classifier}{SingleCellClassR object}
+\item{classifier}{scTypeR object}
 }
 \value{
 Parent model of object

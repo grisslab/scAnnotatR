@@ -7,13 +7,13 @@
 features(classifier) <- value
 }
 \arguments{
-\item{classifier}{SingleCellClassR object. 
+\item{classifier}{scTypeR object. 
 The object is returned from the train_classifier function.}
 
 \item{value}{the new classifier}
 }
 \value{
-SingleCellClassR object with the new features.
+scTypeR object with the new features.
 }
 \description{
 Setter for features. Users are not allowed to change features.

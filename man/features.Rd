@@ -7,7 +7,7 @@
 features(classifier)
 }
 \arguments{
-\item{classifier}{SingleCellClassR object}
+\item{classifier}{scTypeR object}
 }
 \value{
 Applied features of object

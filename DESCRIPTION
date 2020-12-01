@@ -1,4 +1,4 @@
-Package: SingleCellClassR
+Package: scTypeR
 Type: Package
 Title: Pretrained learning models for cell type prediction on single cell RNA-sequencing data 
 Version: 0.99.0
@@ -8,7 +8,7 @@ Authors@R:
 Description: The package comprises a set of pretrained machine learning models to predict basic immune cell types. This enables all users to quickly get a first annotation of the cell types present in their dataset without requiring prior knowledge. SingleCellClassR also allows users to train their own models to predict new cell types based on specific research needs.
 License: MIT + file LICENSE
 Encoding: UTF-8
-bioCviews: SingleCell, Transcriptomics, GeneExpression, SupportVectorMachine, Classification
+biocViews: SingleCell, Transcriptomics, GeneExpression, SupportVectorMachine, Classification, Software
 Imports: 
     dplyr,
     ggplot2,

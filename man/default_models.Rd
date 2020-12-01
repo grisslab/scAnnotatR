@@ -5,7 +5,7 @@
 \alias{default_models}
 \title{Pretrained classifiers for human cells}
 \format{
-a list of \code{\link{SingleCellClassR}} objects
+a list of \code{\link{scTypeR}} objects
 }
 \usage{
 default_models

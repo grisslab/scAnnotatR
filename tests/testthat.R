@@ -1,4 +1,4 @@
 library(testthat)
-library(SingleCellClassR)
+library(scTypeR)
 
-test_check("SingleCellClassR")
+test_check("scTypeR")

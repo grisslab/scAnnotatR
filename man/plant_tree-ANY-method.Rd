@@ -11,7 +11,7 @@
 list of default pretrained models in the package will be used.}
 }
 \value{
-tree structure
+tree structure and plot of tree
 }
 \description{
 Plant tree from list of models

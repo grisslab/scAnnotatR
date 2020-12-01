@@ -19,7 +19,7 @@ options(rmarkdown.html_vignette.check_title = FALSE)
 
 ## Introduction
 
-One of key functions of the SingleCellClassR package is to provide users 
+One of key functions of the scTypeR package is to provide users 
 easy tools to train their own model classifying new cell types from labeled 
 scRNA-seq data.
 
@@ -50,9 +50,9 @@ To start the training workflow, we first install and load the necessary librarie
 if (!requireNamespace("BiocManager", quietly = TRUE))
     install.packages("BiocManager")
 
-# the SingleCellClassR package
-if (!require(SingleCellClassR))
-  BiocManager::install("SingleCellClassR")
+# the scTypeR package
+if (!require(scTypeR))
+  BiocManager::install("scTypeR")
 
 # we use the scRNAseq package to load example data
 if (!require(scRNAseq))
@@ -99,7 +99,7 @@ test_set$B_cell <- unlist(lapply(test_set$`Most likely LM22 cell type`,
                                  function(x) if (is.na(x)) {'ambiguous'} else if (x %in% c('Plasma cells', 'B cells memory', 'B cells naive')) {'B cells'} else {'others'}))
 ```
 
-We observe that there are cells marked NAs. Those can be understood as 1/different from all indicated cell types or 2/any unknown cell types. Here we consider the second case, ie. we don't know whether they are positive or negative to B cells. To avoid any effect of these cells, we can assign them as 'ambiguous'. All cells tagged 'ambiguous' will be ignored by SingleCellClassR from training and testing. 
+We observe that there are cells marked NAs. Those can be understood as 1/different from all indicated cell types or 2/any unknown cell types. Here we consider the second case, ie. we don't know whether they are positive or negative to B cells. To avoid any effect of these cells, we can assign them as 'ambiguous'. All cells tagged 'ambiguous' will be ignored by scTypeR from training and testing. 
 
 We may want to check the number of cells in each category:
 ```{r}
@@ -151,7 +151,7 @@ clf_B <- train_classifier(train_obj = train_set, cell_type = "B cells", features
 ```{r}
 clf_B
 ```
-The classification model is a `SingleCellClassR` object. 
+The classification model is a `scTypeR` object. 
 Details about the classification model are accessible via getter methods. 
 
 For example:

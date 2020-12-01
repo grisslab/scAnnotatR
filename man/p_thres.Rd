@@ -7,7 +7,7 @@
 p_thres(classifier)
 }
 \arguments{
-\item{classifier}{SingleCellClassR object}
+\item{classifier}{scTypeR object}
 }
 \value{
 Predicting probability threshold of object
