@@ -42,6 +42,7 @@ scTypeR <- setClass("scTypeR",
 #' @param p_thres numeric. 
 #' Probability threshold for the cell type to be assigned for a cell.
 #' @param parent character. Parent cell type.
+#' @export
 scTypeR <- function(cell_type, clf, features, p_thres, parent) {
     classifier <- methods::new("scTypeR",
                             cell_type = cell_type,
