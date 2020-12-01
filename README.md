@@ -1,6 +1,6 @@
-# SingleCellClassR
+# scTypeR
 
-The `SingleCellClassR` package automatically classifies cells in scRNA-seq datasets. It is simple to use with a clear infrastructure to easily add additional cell type classification models. `SingleCellClassR` support both `Seurat` and `SingleCellExperiment` objects as input.
+The `scTypeR` package automatically classifies cells in scRNA-seq datasets. It is simple to use with a clear infrastructure to easily add additional cell type classification models. `scTypeR` support both `Seurat` and `SingleCellExperiment` objects as input.
 
 ## Installation
 
@@ -13,7 +13,7 @@ if (!require(devtools)) {
 }
 
 # install the ReactomeGSA package
-if (!require(SingleCellClassR)) {
+if (!require(scTypeR)) {
   install_github("grisslab/SingleCellClassR")
 }
 ```
