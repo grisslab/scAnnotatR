@@ -642,6 +642,24 @@ make_prediction <- function(mat, classifier, pred_cells, ignore_ambiguous_result
   return(return_val)
 }
 
+#' Get the cell type having the highest average expression
+#'
+#' @param types list of possible cell types
+#' @param cell_exp cell expression
+#' @param classifiers classifiers 
+#' 
+#' @return cell type having the highest average expression
+highest_expressed_ctype <- function(types, cell_exp, classifiers) {
+  avgs <- NULL
+  for (type in types) {
+    avg <- mean(select_features(cell_exp, features(classifiers[[type]])), 
+                na.rm = TRUE)
+    avgs <- c(avgs, avg)
+  }
+  max_exp <- which.max(avgs)
+  return(types[max_exp])
+}
+
 #' Simplify prediction
 #'
 #' @param meta.data cell meta data
@@ -659,17 +677,19 @@ simplify_prediction <- function(meta.data, mat, classifiers) {
   # create simplified result for the first level: no parent
   noparent_idx <- which(is.na(parents))
   noparent_cell <- names(noparent_idx)
-  noparent_pcol <- paste0(gsub(' ', '_', noparent_cell), '_p')
-  noparent_p <- meta.data[, noparent_pcol, drop = FALSE]
+  noparent_ccol <- paste0(gsub(' ', '_', noparent_cell), '_class')
   
-  # create most probable pred from cell types having no parent
-  max_p <- colnames(noparent_p)[unlist(apply(noparent_p, 1, which.max))]
-  max_clf <- gsub('_p', '', max_p)
-  max_clf <- gsub('_', ' ', max_clf)
-  simplified <- unlist(lapply(1:nrow(noparent_p), function(i) 
-    if (noparent_p[i, max_p[i]] >= p_thres(classifiers[[max_clf[i]]])) 
-      {max_clf[i]} else {'unknown'}))
+  simplified <- c(rep('unknown', ncol(mat)))
   names(simplified) <- colnames(mat)
+  for (cell in colnames(mat)) {
+    pos_index <- which(meta.data[cell, noparent_ccol, drop = FALSE] == 'yes')
+    if (length(pos_index) == 0) simplified[cell]
+    else if (length(pos_index) == 1) 
+      simplified[cell] <- noparent_cell[pos_index]
+    else
+      simplified[cell] <- highest_expressed_ctype(noparent_cell[pos_index], 
+                                       mat[, cell, drop = FALSE], classifiers)
+  }
   
   # continue to deeper level: children
   simplified.copy <- NULL
@@ -678,21 +698,19 @@ simplify_prediction <- function(meta.data, mat, classifiers) {
     for (parent in unique(simplified)) {
       if (parent %in% parents) {
         children <- names(which(parents == parent))
+        children_ccol <- paste0(gsub(' ', '_', children), '_class')
         
-        children_pcol <- paste0(gsub(' ', '_', children), '_p')
-        # extract prediction probabilities of children
-        children_p <- meta.data[simplified == parent, 
-                                children_pcol, drop = FALSE]
-        max_p <- colnames(children_p)[unlist(apply(children_p, 1, which.max))]
-        names(max_p) <- rownames(children_p)
-        max_child <- gsub('_p', '', max_p)
-        max_child <- gsub('_', ' ', max_child)
-        names(max_child) <- rownames(children_p)
-        simplified <- unlist(lapply(names(simplified), function(i) 
-          if (simplified[i] == parent 
-              && children_p[i, max_p[i]] >= p_thres(classifiers[[max_child[i]]])) 
-          {max_child[i]} else {simplified[i]})) # change simplified
-        names(simplified) <- colnames(mat)
+        parent_pos <- names(simplified)[simplified == parent]
+        for (cell in parent_pos) {
+          pos_index <- which(meta.data[cell, children_ccol, drop = FALSE] == 'yes')
+          if (length(pos_index) == 0) simplified[cell]
+          else if (length(pos_index) == 1) 
+            simplified[cell] <- children[pos_index]
+          else
+            simplified[cell] <- highest_expressed_ctype(children[pos_index],
+                                                        mat[, cell, drop = FALSE], 
+                                                        classifiers)
+        }
       }
     }
   }
