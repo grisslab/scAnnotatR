@@ -59,10 +59,11 @@ if (!require(scRNAseq))
   BiocManager::install("scRNAseq")
 ```
 
-Load the dataset:
+First, we load the dataset. To reduce the computational complexity of this vignette, we only use the first 5000 cells of the dataset.
 
 ```{r}
 zilionis <- ZilionisLungData()
+zilionis <- zilionis[, 1:5000]
 ```
 
 We split this dataset into two parts, one for the training and the other for the testing.
@@ -112,12 +113,8 @@ Next, we define a set of features, which will be used in training the
 classification model. Supposing we are training a model for classifying 
 B cells, we define the set of features as follows:
 ```{r}
-selected_features_B <- c("CD19", "MS4A1", "SDC1", "CD79A", "CD79B", 
-                         "CD38", "CD37", "CD83", "CR2", "MVK", "MME", 
-                         "IL2RA", "PTEN", "POU2AF1", "MEF2C", "IRF8", 
-                         "TCF3", "BACH2", "MZB1", 'VPREB3', 'RASGRP2', 
-                         'CD86', 'CD84', 'LY86', 'CD74', 'SP140', "BLK", 
-                         'FLI1', 'CD14', "DERL3", "LRMP")
+selected_features_B <- c("CD19", "MS4A1", "CD79A", "CD79B", 'CD27', 'IGHG1', 'IGHG2', 'IGHM',
+                         "CR2", "MEF2C", 'VPREB3', 'CD86', 'LY86', "BLK", "DERL3")
 ```
 
 ## Train model

@@ -2,18 +2,14 @@
 % Please edit documentation in R/support.R
 \name{simplify_prediction}
 \alias{simplify_prediction}
-\alias{simplify_prediction,Seurat-method}
-\alias{simplify_prediction,SingleCellExperiment-method}
 \title{Simplify prediction}
 \usage{
-simplify_prediction(classify_obj, classifiers)
-
-\S4method{simplify_prediction}{Seurat}(classify_obj, classifiers)
-
-\S4method{simplify_prediction}{SingleCellExperiment}(classify_obj, classifiers)
+simplify_prediction(meta.data, mat, classifiers)
 }
 \arguments{
-\item{classify_obj}{classified object}
+\item{meta.data}{cell meta data}
+
+\item{mat}{expression mat}
 
 \item{classifiers}{classifiers}
 }

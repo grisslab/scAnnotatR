@@ -682,7 +682,7 @@ setMethod("classify_cells", c("classify_obj" = "Seurat"),
     
     # simplify result can only happen when not ignore ambiguous results
     if (ignore_ambiguous_result == FALSE) 
-      classify_obj <- simplify_prediction(classify_obj, classifiers)
+      classify_obj[['most_probable_cell_type']] <- simplify_prediction(classify_obj[[]], as.matrix(mat), classifiers)
   }
   
   return(classify_obj)
@@ -757,7 +757,8 @@ setMethod("classify_cells", c("classify_obj" = "SingleCellExperiment"),
     
     # this will be ignored if ignore ambiguous result is on
     if (ignore_ambiguous_result == FALSE) 
-      classify_obj <- simplify_prediction(classify_obj, classifiers)
+      classify_obj$most_probable_cell_type <- simplify_prediction(as.matrix(SummarizedExperiment::colData(classify_obj)), 
+                                                                  as.matrix(mat), classifiers)
   }
   return(classify_obj)
 })
