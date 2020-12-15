@@ -105,6 +105,7 @@ setGeneric("plant_tree", function(models.file.path = c("default", "."))
 #' @inherit plant_tree
 #' 
 #' @importFrom utils data
+#' @import data.tree
 setMethod("plant_tree", , function(models.file.path = c("default", ".")) {
   new_models <- default_models <- NULL
   
