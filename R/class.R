@@ -63,31 +63,31 @@ scTypeR <- function(cell_type, clf, features, p_thres, parent) {
 #' 
 checkObjectValidity <- function(object) {
     # check cell_type
-    cell_type.val <- checkCellTypeValidity(object@cell_type)
+    cell_type.val <- checkCellTypeValidity(cell_type(object))
     if (is.character(cell_type.val)) {
     return(cell_type.val)
     }
   
   # check clf
-  clf.val <- checkClassifierValidity(object@clf)
+  clf.val <- checkClassifierValidity(clf(object))
   if (is.character(clf.val)) {
     return(clf.val)
   }
   
   # check features
-  features.val <- checkFeaturesValidity(object@features)
+  features.val <- checkFeaturesValidity(features(object))
   if (is.character(features.val)) {
     return(features.val)
   }
   
   # check p_thres
-  p_thres.val <- checkPThresValidity(object@p_thres)
+  p_thres.val <- checkPThresValidity(p_thres(object))
   if (is.character(p_thres.val)) {
     return(p_thres.val)
   }
   
   # check parent
-  parent.val <- checkParentValidity(object@parent)
+  parent.val <- checkParentValidity(parent(object))
   if (is.character(parent.val)) {
     return(parent.val)
   }
@@ -223,12 +223,12 @@ setValidity("scTypeR", checkObjectValidity)
 #' @export
 #' @rdname show
 setMethod("show", c("object" = "scTypeR"), function(object) {
-  cat("An object of class scTypeR for ", object@cell_type, "\n")
-  cat("* ", toString(length(object@features)), " features applied: ", 
-                     paste(object@features, collapse = ', '), "\n")
-  cat("* Predicting probability threshold: ", toString(object@p_thres), "\n")
-  if (!is.na(object@parent) && length(object@parent) == 1) {
-    cat("* A child model of: ", object@parent, "\n")
+  cat("An object of class scTypeR for ", cell_type(object), "\n")
+  cat("* ", toString(length(features(object))), " features applied: ", 
+                     paste(features(object), collapse = ', '), "\n")
+  cat("* Predicting probability threshold: ", toString(p_thres(object)), "\n")
+  if (!is.na(parent(object)) && length(parent(object)) == 1) {
+    cat("* A child model of: ", parent(object), "\n")
   } else {
     cat("* No parent model\n")
   }
@@ -475,7 +475,7 @@ setGeneric("clf<-", function(classifier, value) standardGeneric("clf<-"))
 setMethod("clf<-", c("classifier" = "scTypeR"), 
           function(classifier, value) {
   # set new classifier
-  if (is.na(classifier@parent)) {
+  if (is.na(parent(classifier))) {
     classifier@clf <- value
     
     # set new features

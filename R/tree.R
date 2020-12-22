@@ -64,19 +64,19 @@ setMethod("save_new_model", c("new_model" = "scTypeR"),
   }
   
   # check if new cell type already existed
-  if (new_model@cell_type %in% names(new_models)) {
+  if (cell_type(new_model) %in% names(new_models)) {
     stop("A model already existed for the cell type. 
          Please delete the old model to add a new one.", call. = FALSE)
   } 
   
-  if (!is.na(new_model@parent) && !new_model@parent %in% names(new_models)) {
+  if (!is.na(parent(new_model)) && !parent(new_model) %in% names(new_models)) {
     stop("Model for parent cell type has not been added. 
          Please save the model classifying parent cell type into tree first.", 
          call. = FALSE)
   }
   
   # add new model to list
-  names <- append(names(new_models), new_model@cell_type)
+  names <- append(names(new_models), cell_type(new_model))
   new_models <- append(new_models, new_model)
   names(new_models) <- names
   
@@ -130,13 +130,13 @@ setMethod("plant_tree", , function(models.file.path = c("default", ".")) {
   
   if (!is.null(model_list)) {
     for (model in model_list) {
-      if (is.na(model@parent))
+      if (is.na(parent(model)))
         parent.pathString = root.name
       else 
-        parent.pathString <- tree[tree$cell_type == model@parent,]$pathString
+        parent.pathString <- tree[tree$cell_type == parent(model),]$pathString
       
-      cell.info <- c(model@cell_type, model@parent, 
-                     paste0(parent.pathString, "/", model@cell_type))
+      cell.info <- c(cell_type(model), parent(model), 
+                     paste0(parent.pathString, "/", cell_type(model)))
       cell.info <- as.data.frame(matrix(cell.info, nrow = 1))
       colnames(cell.info) <- c("cell_type", "parent_cell_type", "pathString")
       
@@ -208,8 +208,8 @@ setMethod("delete_model", , function(cell_type, path.to.models = ".") {
   else {
     # get a list of models to delete
     for (model in new_models) {
-      if (model@parent %in% to.be.removed) {
-        to.be.removed <- append(to.be.removed, model@cell_type)
+      if (parent(model) %in% to.be.removed) {
+        to.be.removed <- append(to.be.removed, cell_type(model))
       }
     }
     

@@ -175,7 +175,7 @@ setMethod("train_classifier", c("train_obj" = "Seurat"),
   
   # only assign parent if pretrained model for parent cell type is avai
   if ((!is.null(parent_process$parent.clf) 
-       && tolower(parent_process$parent.clf@cell_type) == tolower(parent_process$parent_cell)) 
+       && tolower(cell_type(parent_process$parent.clf)) == tolower(parent_process$parent_cell)) 
        || (tolower(parent_process$parent_cell) %in% tolower(names(parent_process$model_list)))) { 
     parent(object) <- parent_process$parent_cell
   }
@@ -276,7 +276,7 @@ setMethod("train_classifier", c("train_obj" = "SingleCellExperiment"),
   
   # only assign parent if pretrained model for parent cell type is avai
   if ((!is.null(parent_process$parent.clf) 
-       && tolower(parent_process$parent.clf@cell_type) == tolower(parent_process$parent_cell)) # clf provided
+       && tolower(cell_type(parent_process$parent.clf)) == tolower(parent_process$parent_cell)) # clf provided
        || (tolower(parent_process$parent_cell) %in% tolower(names(parent_process$model_list)))) { 
     # found in model list
     parent(object) <- parent_process$parent_cell
@@ -372,14 +372,14 @@ setMethod("test_classifier", c("test_obj" = "Seurat",
   . <- fpr <- tpr <- NULL
   
   # target_cell_type check
-  if (!tolower(classifier@cell_type) %in% tolower(target_cell_type)) {
-    target_cell_type <- append(target_cell_type, classifier@cell_type)
+  if (!tolower(cell_type(classifier)) %in% tolower(target_cell_type)) {
+    target_cell_type <- append(target_cell_type, cell_type(classifier))
   }
   
   #--- parent cell type
   # process parent clf
   parent_process <- process_parent_clf(test_obj, seurat_parent_tag_slot, 
-                                       classifier@parent, parent_clf, 
+                                       parent(classifier), parent_clf, 
                                        path_to_models, zscore, seurat_assay, 
                                        seurat_slot)
   
@@ -387,8 +387,8 @@ setMethod("test_classifier", c("test_obj" = "Seurat",
   if (!is.null(parent_process$pos_parent)) {
     check_res <- check_parent_child_coherence(test_obj, 
                                               parent_process$pos_parent, 
-                                              classifier@parent, 
-                                              classifier@cell_type, 
+                                              parent(classifier), 
+                                              cell_type(classifier), 
                                               target_cell_type, 
                                               seurat_tag_slot)
     test_obj <- check_res$adjusted_object
@@ -404,7 +404,7 @@ setMethod("test_classifier", c("test_obj" = "Seurat",
                                   assay = seurat_assay, slot = seurat_slot)
   
   # perform features selection
-  test_mat <- select_features(test_mat, classifier@features)
+  test_mat <- select_features(test_mat, features(classifier))
   
   # transpose mat
   test_mat <- t(as.matrix(test_mat))
@@ -417,7 +417,7 @@ setMethod("test_classifier", c("test_obj" = "Seurat",
   
   # if cell type not found in tag
   if (all(test_tag != "yes")) {
-    stop("Cell type ", classifier@cell_type, 
+    stop("Cell type ", cell_type(classifier), 
     " is not available in the test data. 
     Overwrite the target cell type using the target_cell_type parameter 
     or verify that you chose the correct test dataset.", 
@@ -460,22 +460,22 @@ setMethod("test_classifier", c("test_obj" = "SingleCellExperiment",
   . <- fpr <- tpr <- NULL
   
   # target_cell_type check
-  if (!tolower(classifier@cell_type) %in% tolower(target_cell_type)) {
-    target_cell_type <- append(target_cell_type, classifier@cell_type)
+  if (!tolower(cell_type(classifier)) %in% tolower(target_cell_type)) {
+    target_cell_type <- append(target_cell_type, cell_type(classifier))
   }
   
   #--- parent cell type
   # process parent clf
   parent_process <- process_parent_clf(test_obj, sce_parent_tag_slot, 
-                                       classifier@parent, parent_clf, 
+                                       parent(classifier), parent_clf, 
                                        path_to_models, zscore, sce_assay)
   
   # check parent-child coherence
   if (!is.null(parent_process$pos_parent)) {
     check_res <- check_parent_child_coherence(test_obj, 
                                               parent_process$pos_parent, 
-                                              classifier@parent, 
-                                              classifier@cell_type, 
+                                              parent(classifier), 
+                                              cell_type(classifier), 
                                               target_cell_type, sce_tag_slot)
     test_obj <- check_res$adjusted_object
     sce_tag_slot <- check_res$adjusted_tag_slot
@@ -489,7 +489,7 @@ setMethod("test_classifier", c("test_obj" = "SingleCellExperiment",
   test_mat = SummarizedExperiment::assay(test_obj, sce_assay)
   
   # perform features selection
-  test_mat <- select_features(test_mat, classifier@features)
+  test_mat <- select_features(test_mat, features(classifier))
   
   # transpose mat
   test_mat <- t(as.matrix(test_mat))
@@ -502,7 +502,7 @@ setMethod("test_classifier", c("test_obj" = "SingleCellExperiment",
   
   # if cell type not found in tag
   if (all(test_tag != "yes")) {
-    stop("Cell type ", classifier@cell_type, " is not available in the test data. 
+    stop("Cell type ", cell_type(classifier), " is not available in the test data. 
           Overwrite the target cell type using the target_cell_type parameter or verify that you chose the correct test dataset.", 
          call. = FALSE)
   }
@@ -651,12 +651,12 @@ setMethod("classify_cells", c("classify_obj" = "Seurat"),
   
   # run predictors
   for (classifier in classifiers) {
-    if (!is.na(classifier@parent)) {
+    if (!is.na(parent(classifier))) {
       applicable_mat <- verify_parent(mat, classifier, classify_obj[[]])
       if (is.null(applicable_mat)) next # no parent clf provided or no positive to parent clf
     } else applicable_mat <- mat
 
-    filtered_mat <- select_features(applicable_mat, classifier@features)
+    filtered_mat <- select_features(applicable_mat, features(classifier))
     filtered_mat <- t(as.matrix(filtered_mat))
     filtered_mat <- transform_to_zscore(filtered_mat)
     
@@ -723,12 +723,12 @@ setMethod("classify_cells", c("classify_obj" = "SingleCellExperiment"),
   
   # run predictors
   for (classifier in classifiers) {
-    if (!is.na(classifier@parent)) { 
+    if (!is.na(parent(classifier))) { 
       applicable_mat <- verify_parent(mat, classifier, colData(classify_obj))
       if (is.null(applicable_mat)) next # no parent clf provided or no positive to parent clf
     } else applicable_mat <- mat
 
-    filtered_mat <- select_features(applicable_mat, classifier@features)
+    filtered_mat <- select_features(applicable_mat, features(classifier))
     filtered_mat <- t(as.matrix(filtered_mat))
     filtered_mat <- transform_to_zscore(filtered_mat)
     
