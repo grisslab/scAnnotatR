@@ -223,16 +223,12 @@ setValidity("scTypeR", checkObjectValidity)
 #' @export
 #' @rdname show
 setMethod("show", c("object" = "scTypeR"), function(object) {
-  cat(paste0("An object of class scTypeR for ", 
-             object@cell_type, 
-             "\n"))
-  cat(paste0("* ", toString(length(object@features)), 
-             " features applied: ", 
-             paste(object@features, collapse=', '), "\n"))
-  cat(paste0("* Predicting probability threshold: ", 
-             toString(object@p_thres), "\n"))
+  cat("An object of class scTypeR for ", object@cell_type, "\n")
+  cat("* ", toString(length(object@features)), " features applied: ", 
+                     paste(object@features, collapse = ', '), "\n")
+  cat("* Predicting probability threshold: ", toString(object@p_thres), "\n")
   if (!is.na(object@parent) && length(object@parent) == 1) {
-    cat(paste0("* A child model of: ", object@parent, "\n"))
+    cat("* A child model of: ", object@parent, "\n")
   } else {
     cat("* No parent model\n")
   }

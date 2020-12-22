@@ -417,10 +417,10 @@ setMethod("test_classifier", c("test_obj" = "Seurat",
   
   # if cell type not found in tag
   if (all(test_tag != "yes")) {
-    stop(paste0("Cell type ", classifier@cell_type, 
+    stop("Cell type ", classifier@cell_type, 
     " is not available in the test data. 
     Overwrite the target cell type using the target_cell_type parameter 
-    or verify that you chose the correct test dataset."), 
+    or verify that you chose the correct test dataset.", 
          call. = FALSE)
   }
   
@@ -502,8 +502,8 @@ setMethod("test_classifier", c("test_obj" = "SingleCellExperiment",
   
   # if cell type not found in tag
   if (all(test_tag != "yes")) {
-    stop(paste0("Cell type ", classifier@cell_type, " is not available in the test data. 
-                Overwrite the target cell type using the target_cell_type parameter or verify that you chose the correct test dataset."), 
+    stop("Cell type ", classifier@cell_type, " is not available in the test data. 
+          Overwrite the target cell type using the target_cell_type parameter or verify that you chose the correct test dataset.", 
          call. = FALSE)
   }
   

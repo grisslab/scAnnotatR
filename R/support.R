@@ -10,7 +10,7 @@
 #' and corresponding tags of balanced count matrix
 #' @rdname internal
 balance_dataset <- function(mat, tag) {
-  print(paste0("Imbalanced dataset has: ", toString(nrow(mat)), " cells."))
+  cat("Imbalanced dataset has: ", toString(nrow(mat)), " cells.")
   
   n_pos = length(tag[tag == 'yes'])
   n_neg = length(tag[tag == 'no'])
@@ -39,8 +39,8 @@ balance_dataset <- function(mat, tag) {
   balanced_mat = rbind(cut_mat, mat[!rownames(mat) %in% cut_idx,, drop = FALSE])
   balanced_tag = append(cut_tag, tag[tag != cut_val])
   
-  print(paste0("Balanced dataset has: ", 
-               toString(nrow(balanced_mat)), " cells."))
+  cat("Balanced dataset has: ", 
+      toString(nrow(balanced_mat)), " cells.")
   
   return_val = list("mat" = balanced_mat, "tag" = balanced_tag)
 
@@ -207,9 +207,9 @@ setMethod("check_parent_child_coherence", c("obj" = "Seurat"),
   # ie. cell, which is cell_type, must also be cell_parent
   # if not, raise warnings
   if (any(!rownames(pos_subtype) %in% pos_parent)) {
-    warning(paste0("Some annotated ", cell_type, " are negative to ", 
+    warning("Some annotated ", cell_type, " are negative to ", 
     parent_cell, " classifier. They are removed from training/testing for ", 
-    cell_type, " classifier.\n"), call. = FALSE, immediate. = TRUE)
+    cell_type, " classifier.\n", call. = FALSE, immediate. = TRUE)
   }
   tag_slot <- "new_tag_slot"
   
@@ -252,9 +252,9 @@ setMethod("check_parent_child_coherence", c("obj" = "SingleCellExperiment"),
   # ie. cell, which is cell_type, must also be cell_parent
   # if not, raise warnings
   if (any(!pos_subtype.names %in% pos_parent)) {
-    warning(paste0("Some annotated ", cell_type, " are negative to ", 
+    warning("Some annotated ", cell_type, " are negative to ", 
     parent_cell, " classifier. They are removed from training/testing for ", 
-    cell_type, " classifier.\n"), call. = FALSE, immediate. = TRUE)
+    cell_type, " classifier.\n", call. = FALSE, immediate. = TRUE)
   }
   tag_slot <- "new_tag_slot"
   
@@ -752,10 +752,10 @@ verify_parent <- function(mat, classifier, meta.data) {
     parent_pred <- meta.data[, parent_slot]
     pos_parent <- colnames(mat)[parent_pred == 'yes'] 
   } else {
-    warning(paste0('Parent classifier of ', classifier@cell_type, 'cannot be applied.\n 
-                   Please list/save parent classifier before child(ren) classifier.\n
-                   Skip applying classification models for ', classifier@cell_type, 
-                   ' and its parent cell type.\n'), call. = FALSE, immediate. = TRUE)
+    warning('Parent classifier of ', classifier@cell_type, 'cannot be applied.\n 
+             Please list/save parent classifier before child(ren) classifier.\n
+             Skip applying classification models for ', classifier@cell_type, 
+             ' and its parent cell type.\n', call. = FALSE, immediate. = TRUE)
   }
   
   if (!is.null(pos_parent)) {
@@ -798,27 +798,27 @@ test_performance <- function(mat, classifier, tag) {
     
     if (thres == classifier@p_thres) {
       pred <- test_pred
-      cat(paste0('Current probability threshold: ', toString(classifier@p_thres), '\n'))
+      cat('Current probability threshold: ', toString(classifier@p_thres), '\n')
       # accuracy
-      cat(paste0(" ", "\t\tPositive", "\tNegative", "\tTotal\n"))
-      cat(paste0("Actual", "\t\t", toString(length(tag[tag == 1])), 
-                 "\t\t", toString(length(tag[tag == 0])), 
-                 "\t\t", toString(length(tag)), "\n"))
-      cat(paste0("Predicted", "\t", 
-                 toString(nrow(test_pred[test_pred$class == 1,])), 
-                 "\t\t", toString(nrow(test_pred[test_pred$class == 0,])), 
-                 "\t\t", toString(nrow(test_pred)), "\n"))
+      cat(" ", "\t\tPositive", "\tNegative", "\tTotal\n")
+      cat("Actual", "\t\t", toString(length(tag[tag == 1])), 
+          "\t\t", toString(length(tag[tag == 0])), 
+          "\t\t", toString(length(tag)), "\n")
+      cat("Predicted", "\t", 
+          toString(nrow(test_pred[test_pred$class == 1,])), 
+          "\t\t", toString(nrow(test_pred[test_pred$class == 0,])), 
+          "\t\t", toString(nrow(test_pred)), "\n")
       count <- 0
       for (i in seq_len(length(tag))) { # can improve this later
         if (tag[i] == test_pred$class[i]) 
           count <- count + 1 
       }
       acc <- count/length(tag)
-      cat(paste0("Accuracy: ", toString(acc), "\n\n"))
-      cat(paste0("Sensivity (True Positive Rate) for ", 
-                 classifier@cell_type, ": ", toString(roc.data[2, 2]), "\n"))
-      cat(paste0("Specificity (1 - False Positive Rate) for ", 
-                 classifier@cell_type, ": ", toString(1 - roc.data[2, 1]), "\n"))
+      cat("Accuracy: ", toString(acc), "\n\n")
+      cat("Sensivity (True Positive Rate) for ", 
+          classifier@cell_type, ": ", toString(roc.data[2, 2]), "\n")
+      cat("Specificity (1 - False Positive Rate) for ", 
+          classifier@cell_type, ": ", toString(1 - roc.data[2, 1]), "\n")
     }
     
     # add new result to overall
@@ -828,7 +828,7 @@ test_performance <- function(mat, classifier, tag) {
   # calculate AUC
   roc_obj <- pROC::roc(tag, test_pred$yes, levels = c(0, 1), direction = "<")
   auc_obj = pROC::auc(roc_obj)
-  cat(paste0("Area under the curve: ", toString(auc_obj), "\n"))
+  cat("Area under the curve: ", toString(auc_obj), "\n")
   
   colnames(overall.roc) <- c('p_thres', 'fpr', 'tpr')
   return_val = list("pred" = pred, "acc" = acc, "test_tag" = tag, 
