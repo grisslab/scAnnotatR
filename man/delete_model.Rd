@@ -2,9 +2,12 @@
 % Please edit documentation in R/tree.R
 \name{delete_model}
 \alias{delete_model}
+\alias{delete_model,ANY-method}
 \title{Delete model/branch from package}
 \usage{
 delete_model(cell_type, path.to.models = ".")
+
+\S4method{delete_model}{ANY}(cell_type, path.to.models = ".")
 }
 \arguments{
 \item{cell_type}{string indicating the cell type of which 

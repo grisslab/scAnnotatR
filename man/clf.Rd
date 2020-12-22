@@ -2,9 +2,12 @@
 % Please edit documentation in R/class.R
 \name{clf}
 \alias{clf}
+\alias{clf,scTypeR-method}
 \title{clf}
 \usage{
 clf(classifier)
+
+\S4method{clf}{scTypeR}(classifier)
 }
 \arguments{
 \item{classifier}{\code{\link{scTypeR}} object}
@@ -23,5 +26,5 @@ set.seed(123)
 clf_b <- train_classifier(train_obj = tirosh_mel80_example, 
 features = selected_features_B, cell_type = "B cells")
 clf(clf_b)
-
+ 
 }

@@ -2,9 +2,12 @@
 % Please edit documentation in R/class.R
 \name{cell_type}
 \alias{cell_type}
+\alias{cell_type,scTypeR-method}
 \title{cell_type}
 \usage{
 cell_type(classifier)
+
+\S4method{cell_type}{scTypeR}(classifier)
 }
 \arguments{
 \item{classifier}{\code{\link{scTypeR}} object}

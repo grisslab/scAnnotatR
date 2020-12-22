@@ -539,6 +539,8 @@ setGeneric("plot_roc_curve", function(test_result)
   standardGeneric("plot_roc_curve"))
 
 #' @inherit plot_roc_curve
+#' 
+#' @rdname plot_roc_curve
 setMethod("plot_roc_curve", c("test_result" = "list"), function(test_result) {
   fpr <- tpr <- NULL
   

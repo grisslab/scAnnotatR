@@ -8,6 +8,7 @@
 #' 
 #' @return a list of balanced count matrix
 #' and corresponding tags of balanced count matrix
+#' @rdname internal
 balance_dataset <- function(mat, tag) {
   print(paste0("Imbalanced dataset has: ", toString(nrow(mat)), " cells."))
   
@@ -62,6 +63,7 @@ balance_dataset <- function(mat, tag) {
 #' @import e1071
 #' @import ape 
 #' @rawNamespace import(kernlab, except = c(alpha, predict))
+#' @rdname internal
 train_func <- function(mat, tag) {
   
   # calculate sigma
@@ -93,6 +95,7 @@ train_func <- function(mat, tag) {
 #' @return row wise center-scaled count matrix
 #' 
 #' @importFrom stats sd
+#' @rdname internal
 transform_to_zscore <- function(mat) {
   # z_mat = scale(mat) # this cause NaN when column has zero variance
   z_mat <- apply(mat, 2, function(y) 
@@ -107,6 +110,7 @@ transform_to_zscore <- function(mat) {
 #' @return list of classifiers
 #' 
 #' @importFrom utils data
+#' @rdname internal
 load_models <- function(path_to_models) {
   # prevents R CMD check note
   model_list <- new_models <- default_models <- NULL
@@ -135,6 +139,7 @@ load_models <- function(path_to_models) {
 #' @param features list of selected features
 #' 
 #' @return filtered matrix
+#' @rdname internal
 select_features <- function(mat, features) {
   filtered_mat <- mat[rownames(mat) %in% features,, drop = FALSE]
   
@@ -164,6 +169,7 @@ select_features <- function(mat, features) {
 #' @param ... arguments passed to other methods
 #' 
 #' @return list of adjusted object and adjusted tag slot
+#' @rdname internal
 setGeneric("check_parent_child_coherence", 
            function(obj, pos_parent, parent_cell, cell_type, 
                     target_cell_type, ...) 
@@ -268,7 +274,7 @@ setMethod("check_parent_child_coherence", c("obj" = "SingleCellExperiment"),
 #' 
 #' @param obj object
 #' @param tag_slot slot in cell meta data indicating cell type
-#' 
+#' @rdname internal
 setGeneric("filter_cells", function(obj, tag_slot) 
   standardGeneric("filter_cells"))
 
@@ -278,8 +284,8 @@ setGeneric("filter_cells", function(obj, tag_slot)
 #' non applicable cells in a \code{\link{Seurat}} object
 #' 
 #' @return adjusted \code{\link{Seurat}} object
-#'  
-#' @rdname filter_cells
+#'
+#' @rdname internal
 setMethod("filter_cells", c("obj" = "Seurat"), function(obj, tag_slot) {
   # define characters usually included in ambiguous cell types
   # this is to avoid considering ambiguous cell types as negative cell_type
@@ -322,7 +328,7 @@ setMethod("filter_cells", c("obj" = "Seurat"), function(obj, tag_slot) {
 #' 
 #' @importFrom SingleCellExperiment colData
 #' 
-#' @rdname filter_cells
+#' @rdname internal
 setMethod("filter_cells", c("obj" = "SingleCellExperiment"), 
           function(obj, tag_slot) {
   # define characters usually included in ambiguous cell types
@@ -353,6 +359,8 @@ setMethod("filter_cells", c("obj" = "SingleCellExperiment"),
 #' @importFrom stats setNames
 #' 
 #' @return a binary vector for cell tag
+#' 
+#' @rdname internal
 setGeneric("construct_tag_vect", 
            function(obj, cell_type, ...) 
   standardGeneric("construct_tag_vect"))
@@ -364,7 +372,7 @@ setGeneric("construct_tag_vect",
 #'
 #' @param tag_slot tag slot in \code{\link{Seurat}} object indicating cell type
 #' 
-#' @rdname construct_tag_vect
+#' @rdname internal
 setMethod("construct_tag_vect", c("obj" = "Seurat"), 
           function(obj, cell_type, tag_slot) {
   pos.val <- c(1, "yes", TRUE)
@@ -395,7 +403,7 @@ setMethod("construct_tag_vect", c("obj" = "Seurat"),
 #' 
 #' @importFrom SummarizedExperiment colData
 #' 
-#' @rdname construct_tag_vect
+#' @rdname internal
 setMethod("construct_tag_vect", 
           c("obj" = "SingleCellExperiment"), function(obj, cell_type, tag_slot)
 {
@@ -427,6 +435,8 @@ setMethod("construct_tag_vect",
 #' 
 #' @importFrom stats predict
 #' @import dplyr
+#' 
+#' @rdname internal
 setGeneric("process_parent_clf", 
            function(obj, parent_tag_slot, parent_cell_type, parent_clf, 
                     path_to_models, zscore = TRUE, ...) 
@@ -442,7 +452,7 @@ setGeneric("process_parent_clf",
 #' 
 #' @importFrom Seurat GetAssayData
 #' 
-#' @rdname process_parent_clf
+#' @rdname internal
 setMethod("process_parent_clf", c("obj" = "Seurat"), 
           function(obj, parent_tag_slot, parent_cell_type, 
                    parent_clf, path_to_models, zscore = TRUE, 
@@ -528,7 +538,7 @@ setMethod("process_parent_clf", c("obj" = "Seurat"),
 #' @import SingleCellExperiment
 #' @importFrom SummarizedExperiment assay
 #' 
-#' @rdname process_parent_clf
+#' @rdname internal
 setMethod("process_parent_clf", c("obj" = "SingleCellExperiment"), 
           function(obj, parent_tag_slot, parent_cell_type, parent_clf, 
                    path_to_models, zscore = TRUE, sce_assay, ...) {
@@ -608,6 +618,8 @@ setMethod("process_parent_clf", c("obj" = "SingleCellExperiment"),
 #' 
 #' @import dplyr
 #' @importFrom stats predict
+#' 
+#' @rdname internal
 make_prediction <- function(mat, classifier, pred_cells, ignore_ambiguous_result = TRUE) {
   . <- NULL
   cells <- names(pred_cells)
@@ -649,6 +661,8 @@ make_prediction <- function(mat, classifier, pred_cells, ignore_ambiguous_result
 #' @param classifiers classifiers 
 #' 
 #' @return cell type having the highest average expression
+#' 
+#' @rdname internal
 highest_expressed_ctype <- function(types, cell_exp, classifiers) {
   avgs <- NULL
   for (type in types) {
@@ -667,6 +681,8 @@ highest_expressed_ctype <- function(types, cell_exp, classifiers) {
 #' @param classifiers classifiers 
 #' 
 #' @return simplified prediction
+#' 
+#' @rdname internal
 simplify_prediction <- function(meta.data, mat, classifiers) {
   if (is.null(names(classifiers)))
     names(classifiers) <- unlist(lapply(classifiers, function(x) cell_type(x)))
@@ -725,6 +741,8 @@ simplify_prediction <- function(meta.data, mat, classifiers) {
 #' @param meta.data object meta data
 #' 
 #' @return applicable matrix
+#' 
+#' @rdname internal
 verify_parent <- function(mat, classifier, meta.data) {
   pos_parent <- applicable_mat <- NULL
   
@@ -757,6 +775,8 @@ verify_parent <- function(mat, classifier, meta.data) {
 #' @import dplyr
 #' @import pROC
 #' @importFrom stats predict
+#' 
+#' @rdname internal
 test_performance <- function(mat, classifier, tag) {
   overall.roc <- . <- NULL
   

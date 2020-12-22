@@ -2,9 +2,12 @@
 % Please edit documentation in R/tree.R
 \name{plant_tree}
 \alias{plant_tree}
+\alias{plant_tree,ANY-method}
 \title{Plant tree from list of models}
 \usage{
 plant_tree(models.file.path = c("default", "."))
+
+\S4method{plant_tree}{ANY}(models.file.path = c("default", "."))
 }
 \arguments{
 \item{models.file.path}{list of models. If not provided, 

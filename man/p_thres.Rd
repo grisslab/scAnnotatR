@@ -2,9 +2,12 @@
 % Please edit documentation in R/class.R
 \name{p_thres}
 \alias{p_thres}
+\alias{p_thres,scTypeR-method}
 \title{p_thres}
 \usage{
 p_thres(classifier)
+
+\S4method{p_thres}{scTypeR}(classifier)
 }
 \arguments{
 \item{classifier}{scTypeR object}

@@ -106,6 +106,8 @@ setGeneric("plant_tree", function(models.file.path = c("default", "."))
 #' 
 #' @importFrom utils data
 #' @import data.tree
+#' 
+#' @rdname plant_tree
 setMethod("plant_tree", , function(models.file.path = c("default", ".")) {
   new_models <- default_models <- NULL
   
@@ -183,6 +185,8 @@ setGeneric("delete_model", function(cell_type, path.to.models = ".")
   standardGeneric("delete_model"))
 
 #' @inherit delete_model
+#' 
+#' @rdname delete_model
 setMethod("delete_model", , function(cell_type, path.to.models = ".") {
   new_models <- NULL
   

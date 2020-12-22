@@ -42,7 +42,6 @@ scTypeR <- setClass("scTypeR",
 #' @param p_thres numeric. 
 #' Probability threshold for the cell type to be assigned for a cell.
 #' @param parent character. Parent cell type.
-#' @export
 scTypeR <- function(cell_type, clf, features, p_thres, parent) {
     classifier <- methods::new("scTypeR",
                             cell_type = cell_type,
@@ -53,11 +52,15 @@ scTypeR <- function(cell_type, clf, features, p_thres, parent) {
     return(classifier)
 }
 
+#' Internal functions of scTypeR package
+#'
 #' Check if a scTypeR object is valid
 #'
 #' @param object The request classifier to check.
 #'
 #' @return TRUE if the classifier is valid or the reason why it is not
+#' @rdname internal
+#' 
 checkObjectValidity <- function(object) {
     # check cell_type
     cell_type.val <- checkCellTypeValidity(object@cell_type)
@@ -97,6 +100,7 @@ checkObjectValidity <- function(object) {
 #' @param cell_type Classifier cell type to check.
 #'
 #' @return TRUE if the cell type is valid or the reason why it is not.
+#' @rdname internal
 checkCellTypeValidity <- function(cell_type) {
   # cell_type must be a string
   if (!is(cell_type, "character")) {
@@ -121,6 +125,7 @@ checkCellTypeValidity <- function(cell_type) {
 #' @param features Classifier features to check.
 #'
 #' @return TRUE if the features is valid or the reason why it is not.
+#' @rdname internal
 checkFeaturesValidity <- function(features) {
   # features must be a vector
   if (!is(features, "character")) {
@@ -145,6 +150,7 @@ checkFeaturesValidity <- function(features) {
 #' @param parent Classifier parent to check.
 #'
 #' @return TRUE if the parent is valid or the reason why it is not.
+#' @rdname internal
 checkParentValidity <- function(parent) {
   # parent must be a string/vector
   if (!is(parent, "character")) {
@@ -166,6 +172,7 @@ checkParentValidity <- function(parent) {
 #' @param p_thres Classifier probability threshold to check.
 #'
 #' @return TRUE if the p_thres is valid or the reason why it is not.
+#' @rdname internal
 checkPThresValidity <- function(p_thres) {
   # p_thres must be a numeric
   if (!is(p_thres, "numeric")) {
@@ -185,6 +192,7 @@ checkPThresValidity <- function(p_thres) {
 #' @param clf Classifier to check.
 #'
 #' @return TRUE if the classifier is valid or the reason why it is not.
+#' @rdname internal
 checkClassifierValidity <- function(clf) {
   # clf must be a list
   if (!is.list(clf)) {
@@ -213,6 +221,7 @@ setValidity("scTypeR", checkObjectValidity)
 #' clf_b
 #' 
 #' @export
+#' @rdname show
 setMethod("show", c("object" = "scTypeR"), function(object) {
   cat(paste0("An object of class scTypeR for ", 
              object@cell_type, 
@@ -251,6 +260,7 @@ setMethod("show", c("object" = "scTypeR"), function(object) {
 setGeneric("cell_type", function(classifier) standardGeneric("cell_type"))
 
 #' @inherit cell_type
+#' @rdname cell_type
 setMethod("cell_type", c("classifier" = "scTypeR"), 
           function(classifier) classifier@cell_type)
 
@@ -270,11 +280,12 @@ setMethod("cell_type", c("classifier" = "scTypeR"),
 #' clf_b <- train_classifier(train_obj = tirosh_mel80_example, 
 #' features = selected_features_B, cell_type = "B cells")
 #' clf(clf_b)
-#' 
+#'  
 #' @export
 setGeneric("clf", function(classifier) standardGeneric("clf"))
 
 #' @inherit clf
+#' @rdname clf
 setMethod("clf", c("classifier" = "scTypeR"), 
           function(classifier) classifier@clf)
 
@@ -295,9 +306,12 @@ setMethod("clf", c("classifier" = "scTypeR"),
 #' features(clf_b)
 #' 
 #' @export
+#' 
 setGeneric("features", function(classifier) standardGeneric("features"))
 
 #' @inherit features
+#' 
+#' @rdname features
 setMethod("features", c("classifier" = "scTypeR"), 
           function(classifier) classifier@features)
 
@@ -318,9 +332,12 @@ setMethod("features", c("classifier" = "scTypeR"),
 #' p_thres(clf_b)
 #' 
 #' @export
+#' 
 setGeneric("p_thres", function(classifier) standardGeneric("p_thres"))
 
 #' @inherit p_thres
+#' 
+#' @rdname p_thres
 setMethod("p_thres", c("classifier" = "scTypeR"), 
           function(classifier) classifier@p_thres)
 
@@ -344,6 +361,7 @@ setMethod("p_thres", c("classifier" = "scTypeR"),
 setGeneric("parent", function(classifier) standardGeneric("parent"))
 
 #' @inherit parent
+#' @rdname parent
 setMethod("parent", c("classifier" = "scTypeR"), 
           function(classifier) classifier@parent)
 
@@ -369,6 +387,7 @@ setGeneric("cell_type<-", function(classifier, value)
   standardGeneric("cell_type<-"))
 
 #' @inherit cell_type<-
+#' @rdname cell_type-set
 setMethod("cell_type<-", c("classifier" = "scTypeR"), 
           function(classifier, value) {
   # check if new thres is a string
@@ -403,6 +422,7 @@ setGeneric("p_thres<-", function(classifier, value)
   standardGeneric("p_thres<-"))
 
 #' @inherit p_thres<-
+#' @rdname p_thres-set
 setMethod("p_thres<-", c("classifier" = "scTypeR"), 
           function(classifier, value) {
   # check if new thres > 0
@@ -422,9 +442,13 @@ setMethod("p_thres<-", c("classifier" = "scTypeR"),
 #' @param value the new parent
 #' 
 #' @return scTypeR object with the new parent.
+#' @rdname internal
+#' 
 setGeneric("parent<-", function(classifier, value) standardGeneric("parent<-"))
 
 #' @inherit parent<-
+#' 
+#' @rdname internal
 setMethod("parent<-", c("classifier" = "scTypeR"), 
           function(classifier, value) {
   # check if new thres > 0
@@ -445,9 +469,13 @@ setMethod("parent<-", c("classifier" = "scTypeR"),
 #' @param value the new classifier
 #' 
 #' @return scTypeR object with the new trained classifier.
+#' @rdname internal
 setGeneric("clf<-", function(classifier, value) standardGeneric("clf<-"))
 
 #' @inherit clf<-
+#' 
+#' @rdname internal
+#' 
 setMethod("clf<-", c("classifier" = "scTypeR"), 
           function(classifier, value) {
   # set new classifier
@@ -474,10 +502,14 @@ setMethod("clf<-", c("classifier" = "scTypeR"),
 #' @param value the new classifier
 #' 
 #' @return scTypeR object with the new features.
+#' @rdname internal
+#' 
 setGeneric("features<-", function(classifier, value) 
   standardGeneric("features<-"))
 
 #' @inherit features<-
+#' @rdname internal
+#' 
 setMethod("features<-", c("classifier" = "scTypeR"), 
           function(classifier, value) {
   # set new features
