@@ -45,7 +45,7 @@ trained models in a user supplied database.
 
 In this example, we load B cells classifier in the package default 
 models to our working place.
-```{r}
+```{r, eval = FALSE}
 # use BiocManager to install from Bioconductor
 if (!requireNamespace("BiocManager", quietly = TRUE))
     install.packages("BiocManager")
@@ -53,6 +53,10 @@ if (!requireNamespace("BiocManager", quietly = TRUE))
 # the scTypeR package
 if (!require(scTypeR))
   BiocManager::install("scTypeR")
+```
+
+```{r}
+library(scTypeR)
 ```
 
 ```{r}
@@ -76,10 +80,14 @@ which is available in the scRNAseq (2.4.0) library. The dataset is stored as a
 SCE object.
 
 To start the training workflow, we first load the neccessary libraries. 
-```{r}
+```{r, eval = FALSE}
 # we use the scRNAseq package to load example data
 if (!require(scRNAseq))
   BiocManager::install("scRNAseq")
+```
+
+```{r}
+library(scRNAseq)
 ```
 
 First, we load the dataset. To reduce the computational complexity of this vignette, we only use the first 5000 cells of the dataset.

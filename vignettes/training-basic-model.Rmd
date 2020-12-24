@@ -45,7 +45,7 @@ which is available in the scRNAseq (2.4.0) library. The dataset is stored as a
 SCE object.
 
 To start the training workflow, we first install and load the necessary libraries. 
-```{r}
+```{r, eval = FALSE}
 # use BiocManager to install from Bioconductor
 if (!requireNamespace("BiocManager", quietly = TRUE))
     install.packages("BiocManager")
@@ -57,6 +57,11 @@ if (!require(scTypeR))
 # we use the scRNAseq package to load example data
 if (!require(scRNAseq))
   BiocManager::install("scRNAseq")
+```
+
+```{r}
+library(scRNAseq)
+library(scTypeR)
 ```
 
 First, we load the dataset. To reduce the computational complexity of this vignette, we only use the first 5000 cells of the dataset.

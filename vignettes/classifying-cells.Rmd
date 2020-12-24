@@ -41,7 +41,7 @@ in vignettes 2 and 3.
 
 The `scTypeR` package can be directly installed from Bioconductor:
 
-```{r}
+```{r, eval = FALSE}
 if (!requireNamespace("BiocManager", quietly = TRUE))
     install.packages("BiocManager")
 
@@ -55,6 +55,11 @@ For more information, see https://bioconductor.org/install/.
 
 The `scTypeR` package comes with several pre-trained models to classify
 cell types.
+
+```{r}
+# load scTypeR into working space
+library(scTypeR)
+```
 
 The models are stored in the `default_models` object:
 
