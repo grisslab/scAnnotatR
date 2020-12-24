@@ -10,7 +10,7 @@
 #' and corresponding tags of balanced count matrix
 #' @rdname internal
 balance_dataset <- function(mat, tag) {
-  cat("Imbalanced dataset has: ", toString(nrow(mat)), " cells.")
+  message("Imbalanced dataset has: ", toString(nrow(mat)), " cells.")
   
   n_pos = length(tag[tag == 'yes'])
   n_neg = length(tag[tag == 'no'])
@@ -40,8 +40,7 @@ balance_dataset <- function(mat, tag) {
     cut_mat, mat[!rownames(mat) %in% cut_idx,, drop = FALSE])
   balanced_tag = append(cut_tag, tag[tag != cut_val])
   
-  cat("Balanced dataset has: ", 
-      toString(nrow(balanced_mat)), " cells.")
+  message("Balanced dataset has: ", toString(nrow(balanced_mat)), " cells.")
   
   return_val = list("mat" = balanced_mat, "tag" = balanced_tag)
 
@@ -195,16 +194,14 @@ setMethod("check_parent_child_coherence", c("obj" = "Seurat"),
   # prepare (sub) cell type tag  
   if (tag_slot == "active.ident") {
     subtype <- Seurat::Idents(obj)
-    subtype <- as.data.frame(subtype)
-    rownames(subtype) <- names(Seurat::Idents(obj))
-    pos_subtype <- subtype[
-      tolower(subtype[, 1]) %in% tolower(target_cell_type)
-      | subtype[, 1] %in% pos.val, , drop=FALSE]
+    test <- tolower(subtype) %in% tolower(target_cell_type) | 
+      subtype %in% pos.val
+    pos_subtype <- subtype[test]
   } else {
     subtype <- obj[[tag_slot]]
-    pos_subtype <- subtype[
-      tolower(subtype[, tag_slot]) %in% tolower(target_cell_type) 
-      | subtype[, tag_slot] %in% pos.val, , drop=FALSE]
+    test <- tolower(subtype[, 1]) %in% tolower(target_cell_type) | 
+      subtype[, 1] %in% pos.val
+    pos_subtype <- subtype[test, , drop=FALSE]
   }
   
   #-- compare with cell type with parent cell type, 
@@ -218,11 +215,10 @@ setMethod("check_parent_child_coherence", c("obj" = "Seurat"),
   tag_slot <- "new_tag_slot"
   
   # join parent cell type and child cell type
-  new.tag_slot <- unlist(
-    lapply(colnames(obj), function(x) 
-      if (x %in% rownames(pos_subtype) && x %in% pos_parent) {"yes"}
-      else{"no"})
-    )
+  test <- 
+    (colnames(obj) %in% rownames(pos_subtype)) & 
+    (colnames(obj) %in% pos_parent)
+  new.tag_slot <- ifelse(test, 'yes', 'no')
   new.tag_slot <- unlist(
     lapply(seq_len(length(new.tag_slot)), function(i) 
       if (!colnames(obj)[i] %in% pos_parent) {"not applicable"} 
@@ -252,11 +248,8 @@ setMethod("check_parent_child_coherence", c("obj" = "SingleCellExperiment"),
   pos.val <- c(1, "yes", TRUE)
   
   # prepare (sub) cell type tag  
-  subtype.bin <- (
-    tolower(SummarizedExperiment::colData(obj)[, tag_slot]) %in% 
-      tolower(target_cell_type) 
-    | SummarizedExperiment::colData(obj)[, tag_slot] %in% pos.val
-  )
+  x <- SummarizedExperiment::colData(obj)[, tag_slot]
+  subtype.bin <- ( tolower(x) %in% tolower(target_cell_type) | x %in% pos.val)
   pos_subtype.names <- colnames(obj)[subtype.bin]
   
   #-- compare with cell type with parent cell type, 
@@ -391,17 +384,15 @@ setMethod("construct_tag_vect", c("obj" = "Seurat"),
   pos.val <- c(1, "yes", TRUE)
   
   # construct new tag
-  if (tag_slot == "active.ident") {
-    tag = unlist(lapply(Seurat::Idents(obj), function(x) 
-      if (x %in% pos.val || tolower(x) %in% tolower(cell_type)) 
-        {"yes"} else {"no"}))
-    named_tag = setNames(tag, names(Seurat::Idents(obj)))
-  } else {
-    tag = apply(obj[[tag_slot]], 1, function(x) 
-      if (x %in% pos.val || tolower(x) %in% tolower(cell_type)) 
-        {"yes"} else {"no"})
-    named_tag = setNames(tag, rownames(obj[[tag_slot]]))
-  }
+  if (tag_slot == "active.ident") 
+    x <- Seurat::Idents(obj)
+  else 
+    x <- obj[[tag_slot]][, 1]
+  
+  test <- (x %in% pos.val) | (tolower(x) %in% tolower(cell_type))
+  tag <- ifelse(test, "yes", "no")
+  
+  named_tag = setNames(tag, colnames(obj))
   
   return(named_tag)
 })
@@ -421,14 +412,12 @@ setMethod("construct_tag_vect", c("obj" = "SingleCellExperiment"),
           function(obj, cell_type, tag_slot) {
   pos.val <- c(1, "yes", TRUE)
   
-  # construct new tag
-  tag = unlist(
-    lapply(SummarizedExperiment::colData(obj)[, tag_slot], function(x) 
-      if (x %in% pos.val | tolower(x) %in% tolower(cell_type)) {"yes"} 
-      else {"no"})
-    )
+  x <- SummarizedExperiment::colData(obj)[, tag_slot] 
+  test <- (x %in% pos.val) | (tolower(x) %in% tolower(cell_type))
+  tag <- ifelse(test, "yes", "no")
+  
   named_tag = setNames(tag, colnames(obj))
-
+  
   return(named_tag)
 })
 
@@ -650,10 +639,14 @@ make_prediction <- function(mat, classifier, pred_cells,
   pred_cells <- unlist(lapply(cells,
   function(i)
     if (i %in% rownames(pred) && pred[i, "class"] == "yes") {
-      if (ignore_ambiguous_result == TRUE && !is.na(parent(classifier)) 
-          && gsub("/", "", pred_cells[i]) == parent(classifier))
-      { paste0(cell_type(classifier), "/") }
-      else { paste0(pred_cells[i], cell_type(classifier), "/") }
+      test <- 
+        ignore_ambiguous_result == TRUE && 
+        !is.na(parent(classifier)) && 
+        gsub("/", "", pred_cells[i]) == parent(classifier)
+      if (test)
+        paste0(cell_type(classifier), "/")
+      else
+        paste0(pred_cells[i], cell_type(classifier), "/")
     }
     else { pred_cells[i] }))
   names(pred_cells) <- cells

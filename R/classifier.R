@@ -646,7 +646,8 @@ setMethod("classify_cells", c("classify_obj" = "Seurat"),
   if (is.null(classifiers)) { 
     model_list <- load_models(path_to_models)
     
-    if (cell_types>=1 && cell_types!="all") classifiers = model_list[cell_types]
+    if (cell_types >= 1 && cell_types != "all") 
+      classifiers = model_list[cell_types]
     else classifiers <- model_list
   }
   
@@ -769,7 +770,7 @@ setMethod("classify_cells", c("classify_obj" = "SingleCellExperiment"),
     } 
     
     # add cell type to meta data
-    SummarizedExperiment::colData(classify_obj)[, 'predicted_cell_type'] <- pred_cells
+    classify_obj$predicted_cell_type <- pred_cells
     
     # this will be ignored if ignore ambiguous result is on
     if (ignore_ambiguous_result == FALSE) 
