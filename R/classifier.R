@@ -173,11 +173,16 @@ setMethod("train_classifier", c("train_obj" = "Seurat"),
                              NA_character_)
   
   # only assign parent if pretrained model for parent cell type is avai
-  if ((!is.null(parent_process$parent.clf) 
-       && tolower(cell_type(parent_process$parent.clf)) == tolower(parent_process$parent_cell)) 
-       || (tolower(parent_process$parent_cell) %in% tolower(names(parent_process$model_list)))) { 
-    parent(object) <- parent_process$parent_cell
-  }
+  parent_check <- 
+    (
+      !is.null(parent_process$parent.clf) && 
+        tolower(cell_type(parent_process$parent.clf)) == 
+        tolower(parent_process$parent_cell)
+    ) || (
+      tolower(parent_process$parent_cell) %in% 
+        tolower(names(parent_process$model_list))
+    )
+  if (parent_check) parent(object) <- parent_process$parent_cell
   
   return(object)
 })
@@ -275,12 +280,16 @@ setMethod("train_classifier", c("train_obj" = "SingleCellExperiment"),
                              NA_character_)
   
   # only assign parent if pretrained model for parent cell type is avai
-  if ((!is.null(parent_process$parent.clf) 
-       && tolower(cell_type(parent_process$parent.clf)) == tolower(parent_process$parent_cell)) # clf provided
-       || (tolower(parent_process$parent_cell) %in% tolower(names(parent_process$model_list)))) { 
-    # found in model list
-    parent(object) <- parent_process$parent_cell
-  }
+  parent_check <-
+    (
+      !is.null(parent_process$parent.clf) && 
+        tolower(cell_type(parent_process$parent.clf)) == 
+        tolower(parent_process$parent_cell)
+    ) || (
+      tolower(parent_process$parent_cell) %in% 
+        tolower(names(parent_process$model_list))
+    )
+  if (parent_check) parent(object) <- parent_process$parent_cell
   
   return(object)
 })
@@ -289,7 +298,7 @@ setMethod("train_classifier", c("train_obj" = "SingleCellExperiment"),
 #' 
 #' @description Testing process. 
 #' 
-#' @param test_obj object that can be used for testing
+#' @param test_obj xxobject that can be used for testing
 #' @param classifier classification model
 #' @param target_cell_type vector indicating other cell types than cell labels 
 #' that can be considered as the main cell type in classifier, 
