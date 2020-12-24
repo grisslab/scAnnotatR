@@ -44,7 +44,7 @@ test_classifier(
 )
 }
 \arguments{
-\item{test_obj}{object that can be used for testing}
+\item{test_obj}{xxobject that can be used for testing}
 
 \item{classifier}{classification model}
 

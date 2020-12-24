@@ -253,7 +253,8 @@ setMethod("check_parent_child_coherence", c("obj" = "SingleCellExperiment"),
   
   # prepare (sub) cell type tag  
   subtype.bin <- (
-    tolower(SummarizedExperiment::colData(obj)[, tag_slot]) %in% tolower(target_cell_type)
+    tolower(SummarizedExperiment::colData(obj)[, tag_slot]) %in% 
+      tolower(target_cell_type) 
     | SummarizedExperiment::colData(obj)[, tag_slot] %in% pos.val
   )
   pos_subtype.names <- colnames(obj)[subtype.bin]
@@ -416,16 +417,15 @@ setMethod("construct_tag_vect", c("obj" = "Seurat"),
 #' @importFrom SummarizedExperiment colData
 #' 
 #' @rdname internal
-setMethod("construct_tag_vect", 
-          c("obj" = "SingleCellExperiment"), function(obj, cell_type, tag_slot)
-{
+setMethod("construct_tag_vect", c("obj" = "SingleCellExperiment"), 
+          function(obj, cell_type, tag_slot) {
   pos.val <- c(1, "yes", TRUE)
   
   # construct new tag
   tag = unlist(
     lapply(SummarizedExperiment::colData(obj)[, tag_slot], function(x) 
-      if (x %in% pos.val | tolower(x) %in% tolower(cell_type)){"yes"} 
-      else{"no"})
+      if (x %in% pos.val | tolower(x) %in% tolower(cell_type)) {"yes"} 
+      else {"no"})
     )
   named_tag = setNames(tag, colnames(obj))
 
@@ -481,14 +481,14 @@ setMethod("process_parent_clf", c("obj" = "Seurat"),
   if (!is.na(parent_cell_type)) {
     #-- apply parent cell classifier
     if (is.null(parent_clf)) {
-      cat("Parent classifier not provided. Try finding available model.\n")
+      message("Parent classifier not provided. Try finding available model.")
       
       model_list <- load_models(path_to_models)
       
       if (parent_cell_type %in% names(model_list)) {
         parent.clf <- model_list[[parent_cell_type]]
       } else {
-        cat("No available model for parent cell type\n")
+        message("No available model for parent cell type")
       }
     }
     else {
@@ -496,7 +496,7 @@ setMethod("process_parent_clf", c("obj" = "Seurat"),
     }
     
     if (!is.null(parent.clf)) {
-      cat("Apply pretrained model for parent cell type.\n")
+      message("Apply pretrained model for parent cell type.")
       
       # convert Seurat object to matrix
       mat = Seurat::GetAssayData(object = obj, 
@@ -518,8 +518,8 @@ setMethod("process_parent_clf", c("obj" = "Seurat"),
       rownames(pred) <- rownames(filtered_mat)
       pos_parent <- rownames(pred[pred$class == "yes",])
     } else if (!is.null(parent_tag_slot)) { # try with predicted tag slot
-      cat("Parent classifier could not be applied. 
-          Try with predicted/pre-assigned cell type.\n")
+      message("Parent classifier could not be applied. 
+              Try with predicted/pre-assigned cell type.")
       if (parent_tag_slot == 'active.ident') {
         cell_type_anno <- Seurat::Idents(obj)
         pos_parent <- names(cell_type_anno[tolower(cell_type_anno) 
@@ -567,14 +567,14 @@ setMethod("process_parent_clf", c("obj" = "SingleCellExperiment"),
     #-- apply parent cell classifier
     # get parent classifier
     if (is.null(parent_clf)) {
-      cat("Parent classifier not provided. Try finding available model.\n")
+      message("Parent classifier not provided. Try finding available model.")
       
       model_list <- load_models(path_to_models)
       
       if (parent_cell_type %in% names(model_list)) {
         parent.clf <- model_list[[parent_cell_type]]
       } else {
-        cat("No available model for parent cell type")
+        message("No available model for parent cell type")
       }
     }
     else {
@@ -582,7 +582,7 @@ setMethod("process_parent_clf", c("obj" = "SingleCellExperiment"),
     }
     
     if (!is.null(parent.clf)) {
-      cat("Apply pretrained model for parent cell type.\n")
+      message("Apply pretrained model for parent cell type.\n")
       
       # convert Seurat object to matrix
       mat = SummarizedExperiment::assay(obj, sce_assay)
@@ -602,8 +602,8 @@ setMethod("process_parent_clf", c("obj" = "SingleCellExperiment"),
       rownames(pred) <- rownames(filtered_mat)
       pos_parent <- rownames(pred[pred$class == "yes",])
     } else if (!is.null(parent_tag_slot)) { # try with predicted tag slot
-      cat("Parent classifier could not be applied. 
-          Try with predicted/pre-assigned cell type.\n")
+      message("Parent classifier could not be applied. 
+              Try with predicted/pre-assigned cell type.")
       cell_type_anno <- colData(obj)[, parent_tag_slot]
       pos_parent <- colnames(obj)[tolower(cell_type_anno) 
                                   == tolower(parent_cell_type)]
@@ -801,27 +801,27 @@ test_performance <- function(mat, classifier, tag) {
     
     if (thres == p_thres(classifier)) {
       pred <- test_pred
-      cat('Current probability threshold: ', toString(p_thres(classifier)), '\n')
+      message('Current probability threshold: ', toString(p_thres(classifier)))
       # accuracy
-      cat(" ", "\t\tPositive", "\tNegative", "\tTotal\n")
-      cat("Actual", "\t\t", toString(length(tag[tag == 1])), 
-          "\t\t", toString(length(tag[tag == 0])), 
-          "\t\t", toString(length(tag)), "\n")
-      cat("Predicted", "\t", 
-          toString(nrow(test_pred[test_pred$class == 1,])), 
-          "\t\t", toString(nrow(test_pred[test_pred$class == 0,])), 
-          "\t\t", toString(nrow(test_pred)), "\n")
+      message(" ", "\t\tPositive", "\tNegative", "\tTotal")
+      message("Actual", "\t\t", toString(length(tag[tag == 1])), 
+              "\t\t", toString(length(tag[tag == 0])), 
+              "\t\t", toString(length(tag)))
+      message("Predicted", "\t", 
+              toString(nrow(test_pred[test_pred$class == 1,])),
+              "\t\t", toString(nrow(test_pred[test_pred$class == 0,])), 
+              "\t\t", toString(nrow(test_pred)), "\n")
       count <- 0
       for (i in seq_len(length(tag))) { # can improve this later
         if (tag[i] == test_pred$class[i]) 
           count <- count + 1 
       }
       acc <- count/length(tag)
-      cat("Accuracy: ", toString(acc), "\n\n")
-      cat("Sensivity (True Positive Rate) for ", 
-          cell_type(classifier), ": ", toString(roc.data[2, 2]), "\n")
-      cat("Specificity (1 - False Positive Rate) for ", 
-          cell_type(classifier), ": ", toString(1 - roc.data[2, 1]), "\n")
+      message("Accuracy: ", toString(acc), "\n")
+      message("Sensivity (True Positive Rate) for ", 
+              cell_type(classifier), ": ", toString(roc.data[2, 2]))
+      message("Specificity (1 - False Positive Rate) for ", 
+              cell_type(classifier), ": ", toString(1 - roc.data[2, 1]))
     }
     
     # add new result to overall
@@ -831,7 +831,7 @@ test_performance <- function(mat, classifier, tag) {
   # calculate AUC
   roc_obj <- pROC::roc(tag, test_pred$yes, levels = c(0, 1), direction = "<")
   auc_obj = pROC::auc(roc_obj)
-  cat("Area under the curve: ", toString(auc_obj), "\n")
+  message("Area under the curve: ", toString(auc_obj))
   
   colnames(overall.roc) <- c('p_thres', 'fpr', 'tpr')
   return_val = list("pred" = pred, "acc" = acc, "test_tag" = tag, 

@@ -72,7 +72,7 @@ save_new_model <- function(new_model, include.default = TRUE,
   
   # save to rda file
   save(new_models, file = new_models.file.path, compress = 'xz')
-  cat("Finished saving new model\n")
+  message("Finished saving new model")
 } 
 
 #' Plant tree from list of models
