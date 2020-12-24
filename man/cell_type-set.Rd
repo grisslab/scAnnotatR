@@ -2,13 +2,10 @@
 % Please edit documentation in R/class.R
 \name{cell_type<-}
 \alias{cell_type<-}
-\alias{cell_type<-,scTypeR-method}
 \title{Setter for cell_type
 Change cell type for a classifier}
 \usage{
 cell_type(classifier) <- value
-
-\S4method{cell_type}{scTypeR}(classifier) <- value
 }
 \arguments{
 \item{classifier}{scTypeR object. 

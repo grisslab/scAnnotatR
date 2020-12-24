@@ -8,11 +8,8 @@
 \alias{checkPThresValidity}
 \alias{checkClassifierValidity}
 \alias{parent<-}
-\alias{parent<-,scTypeR-method}
 \alias{clf<-}
-\alias{clf<-,scTypeR-method}
 \alias{features<-}
-\alias{features<-,scTypeR-method}
 \alias{balance_dataset}
 \alias{train_func}
 \alias{transform_to_zscore}
@@ -49,15 +46,9 @@ checkClassifierValidity(clf)
 
 parent(classifier) <- value
 
-\S4method{parent}{scTypeR}(classifier) <- value
-
 clf(classifier) <- value
 
-\S4method{clf}{scTypeR}(classifier) <- value
-
 features(classifier) <- value
-
-\S4method{features}{scTypeR}(classifier) <- value
 
 balance_dataset(mat, tag)
 

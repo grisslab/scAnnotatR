@@ -13,6 +13,8 @@
 #' 
 #' @return no return value, but the model is now saved to database
 #' 
+#' @importFrom utils data
+#' 
 #' @examples
 #' # load small example dataset
 #' data("tirosh_mel80_example")
@@ -32,20 +34,8 @@
 #' delete_model("t cells")
 #' 
 #' @export
-setGeneric("save_new_model", 
-           function(new_model, 
-                    include.default = TRUE, 
-                    path.to.models = ".") 
-  standardGeneric("save_new_model"))
-
-#' @inherit save_new_model
-#' 
-#' @importFrom utils data
-#' @rdname save_new_model
-setMethod("save_new_model", c("new_model" = "scTypeR"), 
-          function(new_model, 
-                   include.default = TRUE, 
-                   path.to.models = ".") {
+save_new_model <- function(new_model, include.default = TRUE, 
+                    path.to.models = ".") {
   default_models <- NULL
   
   utils::data("default_models")
@@ -83,7 +73,7 @@ setMethod("save_new_model", c("new_model" = "scTypeR"),
   # save to rda file
   save(new_models, file = new_models.file.path, compress = 'xz')
   cat("Finished saving new model\n")
-})
+} 
 
 #' Plant tree from list of models
 #' 
@@ -92,6 +82,9 @@ setMethod("save_new_model", c("new_model" = "scTypeR"),
 #'  
 #' @return tree structure and plot of tree 
 #'
+#' @importFrom utils data
+#' @import data.tree
+#'
 #' @examples
 #' 
 #' # to create the tree of classifiers 
@@ -99,16 +92,7 @@ setMethod("save_new_model", c("new_model" = "scTypeR"),
 #' plant_tree()
 #' 
 #' @export
-setGeneric("plant_tree", function(models.file.path = c("default", ".")) 
-  standardGeneric("plant_tree"))
-
-#' @inherit plant_tree
-#' 
-#' @importFrom utils data
-#' @import data.tree
-#' 
-#' @rdname plant_tree
-setMethod("plant_tree", , function(models.file.path = c("default", ".")) {
+plant_tree <- function(models.file.path = c("default", ".")) { 
   new_models <- default_models <- NULL
   
   root.name <- "cell types"
@@ -153,7 +137,7 @@ setMethod("plant_tree", , function(models.file.path = c("default", ".")) {
   } else stop('Tree not available.')
   
   return(tree)
-})
+}
 
 #' Delete model/branch from package
 #' 
@@ -181,13 +165,7 @@ setMethod("plant_tree", , function(models.file.path = c("default", ".")) {
 #' # delete classifier from system
 #' delete_model("t cells")
 #' @export
-setGeneric("delete_model", function(cell_type, path.to.models = ".") 
-  standardGeneric("delete_model"))
-
-#' @inherit delete_model
-#' 
-#' @rdname delete_model
-setMethod("delete_model", , function(cell_type, path.to.models = ".") {
+delete_model <- function(cell_type, path.to.models = ".") {
   new_models <- NULL
   
   new_models.file.path <- paste0(path.to.models, "/new_models.rda")
@@ -219,4 +197,4 @@ setMethod("delete_model", , function(cell_type, path.to.models = ".") {
   # save models after remove
   if (!is.null(new_models))
     save(new_models, file = new_models.file.path)
-})
+}

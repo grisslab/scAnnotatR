@@ -2,12 +2,9 @@
 % Please edit documentation in R/class.R
 \name{p_thres<-}
 \alias{p_thres<-}
-\alias{p_thres<-,scTypeR-method}
 \title{Setter for predicting probability threshold}
 \usage{
 p_thres(classifier) <- value
-
-\S4method{p_thres}{scTypeR}(classifier) <- value
 }
 \arguments{
 \item{classifier}{scTypeR object. 

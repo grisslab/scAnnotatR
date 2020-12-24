@@ -2,12 +2,9 @@
 % Please edit documentation in R/classifier.R
 \name{plot_roc_curve}
 \alias{plot_roc_curve}
-\alias{plot_roc_curve,list-method}
 \title{Plot roc curve}
 \usage{
 plot_roc_curve(test_result)
-
-\S4method{plot_roc_curve}{list}(test_result)
 }
 \arguments{
 \item{test_result}{result of test_classifier function}

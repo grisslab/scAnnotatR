@@ -2,12 +2,9 @@
 % Please edit documentation in R/class.R
 \name{features}
 \alias{features}
-\alias{features,scTypeR-method}
 \title{features}
 \usage{
 features(classifier)
-
-\S4method{features}{scTypeR}(classifier)
 }
 \arguments{
 \item{classifier}{scTypeR object}

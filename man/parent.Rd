@@ -2,12 +2,9 @@
 % Please edit documentation in R/class.R
 \name{parent}
 \alias{parent}
-\alias{parent,scTypeR-method}
 \title{parent}
 \usage{
 parent(classifier)
-
-\S4method{parent}{scTypeR}(classifier)
 }
 \arguments{
 \item{classifier}{scTypeR object}

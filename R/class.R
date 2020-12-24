@@ -253,12 +253,9 @@ setMethod("show", c("object" = "scTypeR"), function(object) {
 #' cell_type(clf_b)
 #' 
 #' @export
-setGeneric("cell_type", function(classifier) standardGeneric("cell_type"))
-
-#' @inherit cell_type
-#' @rdname cell_type
-setMethod("cell_type", c("classifier" = "scTypeR"), 
-          function(classifier) classifier@cell_type)
+cell_type <- function(classifier) {
+  return(classifier@cell_type) 
+}
 
 #' clf
 #' 
@@ -278,12 +275,9 @@ setMethod("cell_type", c("classifier" = "scTypeR"),
 #' clf(clf_b)
 #'  
 #' @export
-setGeneric("clf", function(classifier) standardGeneric("clf"))
-
-#' @inherit clf
-#' @rdname clf
-setMethod("clf", c("classifier" = "scTypeR"), 
-          function(classifier) classifier@clf)
+clf <- function(classifier) {
+  return(classifier@clf)
+}
 
 #' features
 #' 
@@ -303,13 +297,9 @@ setMethod("clf", c("classifier" = "scTypeR"),
 #' 
 #' @export
 #' 
-setGeneric("features", function(classifier) standardGeneric("features"))
-
-#' @inherit features
-#' 
-#' @rdname features
-setMethod("features", c("classifier" = "scTypeR"), 
-          function(classifier) classifier@features)
+features <- function(classifier) {
+  return(classifier@features)
+}
 
 #' p_thres
 #' 
@@ -329,13 +319,9 @@ setMethod("features", c("classifier" = "scTypeR"),
 #' 
 #' @export
 #' 
-setGeneric("p_thres", function(classifier) standardGeneric("p_thres"))
-
-#' @inherit p_thres
-#' 
-#' @rdname p_thres
-setMethod("p_thres", c("classifier" = "scTypeR"), 
-          function(classifier) classifier@p_thres)
+p_thres <- function(classifier) {
+  return (classifier@p_thres)
+}
 
 #' parent
 #' 
@@ -354,12 +340,9 @@ setMethod("p_thres", c("classifier" = "scTypeR"),
 #' parent(clf_b)
 #' 
 #' @export
-setGeneric("parent", function(classifier) standardGeneric("parent"))
-
-#' @inherit parent
-#' @rdname parent
-setMethod("parent", c("classifier" = "scTypeR"), 
-          function(classifier) classifier@parent)
+parent <- function(classifier) {
+  return(classifier@parent)
+}
 
 #--- setters
 
@@ -379,13 +362,7 @@ setMethod("parent", c("classifier" = "scTypeR"),
 #' features = selected_features_B, cell_type = "B cells")
 #' cell_type(clf_b) <- "B cell"
 #' @export
-setGeneric("cell_type<-", function(classifier, value) 
-  standardGeneric("cell_type<-"))
-
-#' @inherit cell_type<-
-#' @rdname cell_type-set
-setMethod("cell_type<-", c("classifier" = "scTypeR"), 
-          function(classifier, value) {
+'cell_type<-' <- function(classifier, value) {
   # check if new thres is a string
   if (is.character(value) && nchar(value) > 0 && length(value) == 1)
     classifier@cell_type <- value
@@ -394,7 +371,7 @@ setMethod("cell_type<-", c("classifier" = "scTypeR"),
   
   # return or not?
   classifier
-})
+}
 
 #' Setter for predicting probability threshold
 #' 
@@ -414,13 +391,7 @@ setMethod("cell_type<-", c("classifier" = "scTypeR"),
 #' # assign a new threhold probability for prediction
 #' p_thres(clf_b) <- 0.4
 #' @export
-setGeneric("p_thres<-", function(classifier, value) 
-  standardGeneric("p_thres<-"))
-
-#' @inherit p_thres<-
-#' @rdname p_thres-set
-setMethod("p_thres<-", c("classifier" = "scTypeR"), 
-          function(classifier, value) {
+"p_thres<-" <- function(classifier, value) {
   # check if new thres > 0
   if (is.numeric(value) && value > 0)
     classifier@p_thres <- value
@@ -429,7 +400,7 @@ setMethod("p_thres<-", c("classifier" = "scTypeR"),
   
   # return or not?
   classifier
-})
+}
 
 #' Setter for parent
 #' 
@@ -440,13 +411,7 @@ setMethod("p_thres<-", c("classifier" = "scTypeR"),
 #' @return scTypeR object with the new parent.
 #' @rdname internal
 #' 
-setGeneric("parent<-", function(classifier, value) standardGeneric("parent<-"))
-
-#' @inherit parent<-
-#' 
-#' @rdname internal
-setMethod("parent<-", c("classifier" = "scTypeR"), 
-          function(classifier, value) {
+"parent<-" <- function(classifier, value) {
   # check if new thres > 0
   if (!is.character(value) || nchar(value) == 0 || length(value) != 1)
     stop("New parent must be a non empty string.", call. = FALSE)
@@ -455,7 +420,7 @@ setMethod("parent<-", c("classifier" = "scTypeR"),
     
   # return or not?
   classifier
-})
+}
 
 #' Setter for clf.
 #' Change of clf will also lead to change of features.
@@ -466,14 +431,7 @@ setMethod("parent<-", c("classifier" = "scTypeR"),
 #' 
 #' @return scTypeR object with the new trained classifier.
 #' @rdname internal
-setGeneric("clf<-", function(classifier, value) standardGeneric("clf<-"))
-
-#' @inherit clf<-
-#' 
-#' @rdname internal
-#' 
-setMethod("clf<-", c("classifier" = "scTypeR"), 
-          function(classifier, value) {
+"clf<-" <- function(classifier, value) {
   # set new classifier
   if (is.na(parent(classifier))) {
     classifier@clf <- value
@@ -489,7 +447,7 @@ setMethod("clf<-", c("classifier" = "scTypeR"),
   
   # return or not?
   classifier
-})
+}
 
 #' Setter for features. Users are not allowed to change features. 
 #' 
@@ -500,18 +458,11 @@ setMethod("clf<-", c("classifier" = "scTypeR"),
 #' @return scTypeR object with the new features.
 #' @rdname internal
 #' 
-setGeneric("features<-", function(classifier, value) 
-  standardGeneric("features<-"))
-
-#' @inherit features<-
-#' @rdname internal
-#' 
-setMethod("features<-", c("classifier" = "scTypeR"), 
-          function(classifier, value) {
+"features<-" <- function(classifier, value) {
   # set new features
   if (is.character(value) && any(nchar(value)) > 0)
     classifier@features <- value
   
   # return or not?
   classifier
-})
+}

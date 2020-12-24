@@ -2,12 +2,9 @@
 % Please edit documentation in R/class.R
 \name{clf}
 \alias{clf}
-\alias{clf,scTypeR-method}
 \title{clf}
 \usage{
 clf(classifier)
-
-\S4method{clf}{scTypeR}(classifier)
 }
 \arguments{
 \item{classifier}{\code{\link{scTypeR}} object}

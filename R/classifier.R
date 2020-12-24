@@ -535,13 +535,7 @@ setMethod("test_classifier", c("test_obj" = "SingleCellExperiment",
 #' @import ROCR
 #' @import ggplot2
 #' @export
-setGeneric("plot_roc_curve", function(test_result) 
-  standardGeneric("plot_roc_curve"))
-
-#' @inherit plot_roc_curve
-#' 
-#' @rdname plot_roc_curve
-setMethod("plot_roc_curve", c("test_result" = "list"), function(test_result) {
+plot_roc_curve <- function(test_result) {
   fpr <- tpr <- NULL
   
   data <- rbind(c(0, 0), test_result$overall_roc[, c(2:3)], c(1, 1))
@@ -554,7 +548,7 @@ setMethod("plot_roc_curve", c("test_result" = "list"), function(test_result) {
   q <- q + ggplot2::ylab("True Positive Rate (Sensitivity)") 
   q
   return(q)
-})
+}
 
 #' Classify cells from multiple models
 #' 
