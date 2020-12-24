@@ -119,8 +119,10 @@ plant_tree <- function(models.file.path = c("default", ".")) {
       else 
         parent.pathString <- tree[tree$cell_type == parent(model),]$pathString
       
-      cell.info <- c(cell_type(model), parent(model), 
-                     paste0(parent.pathString, "/", cell_type(model)))
+      cell.info <- c(
+        cell_type(model), parent(model), 
+        paste0(parent.pathString, "/", cell_type(model))
+      )
       cell.info <- as.data.frame(matrix(cell.info, nrow = 1))
       colnames(cell.info) <- c("cell_type", "parent_cell_type", "pathString")
       

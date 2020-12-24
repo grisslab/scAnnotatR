@@ -36,7 +36,8 @@ balance_dataset <- function(mat, tag) {
   cut_tag = tag[random_idx]
   
   # refabricate the balanced dataset
-  balanced_mat = rbind(cut_mat, mat[!rownames(mat) %in% cut_idx,, drop = FALSE])
+  balanced_mat = rbind(
+    cut_mat, mat[!rownames(mat) %in% cut_idx,, drop = FALSE])
   balanced_tag = append(cut_tag, tag[tag != cut_val])
   
   cat("Balanced dataset has: ", 
@@ -77,13 +78,13 @@ train_func <- function(mat, tag) {
   mat$tag <- tag
   clf <- caret::train(form = tag ~ ., data = mat, 
                       method = "svmRadial",
-                      tuneGrid = data.frame(.C = 1,
-                                            .sigma = sigma),
+                      tuneGrid = data.frame(
+                        .C = 1, .sigma = sigma),
                       metrix = "Accuracy",
-                      trControl = trainControl(classProbs = TRUE,
-                                               trim = TRUE,
-                                               returnData = FALSE,
-                                               returnResamp = 'none')) 
+                      trControl = trainControl(
+                        classProbs = TRUE, trim = TRUE,
+                        returnData = FALSE, returnResamp = 'none')
+                      ) 
   return(clf)
 }
 
@@ -196,13 +197,14 @@ setMethod("check_parent_child_coherence", c("obj" = "Seurat"),
     subtype <- Seurat::Idents(obj)
     subtype <- as.data.frame(subtype)
     rownames(subtype) <- names(Seurat::Idents(obj))
-    pos_subtype <- subtype[tolower(subtype[, 1]) %in% tolower(target_cell_type)
-                           | subtype[, 1] %in% pos.val, , drop=FALSE]
+    pos_subtype <- subtype[
+      tolower(subtype[, 1]) %in% tolower(target_cell_type)
+      | subtype[, 1] %in% pos.val, , drop=FALSE]
   } else {
     subtype <- obj[[tag_slot]]
-    pos_subtype <- subtype[tolower(subtype[, tag_slot]) 
-                           %in% tolower(target_cell_type) 
-                           | subtype[, tag_slot] %in% pos.val, , drop=FALSE]
+    pos_subtype <- subtype[
+      tolower(subtype[, tag_slot]) %in% tolower(target_cell_type) 
+      | subtype[, tag_slot] %in% pos.val, , drop=FALSE]
   }
   
   #-- compare with cell type with parent cell type, 
@@ -216,11 +218,16 @@ setMethod("check_parent_child_coherence", c("obj" = "Seurat"),
   tag_slot <- "new_tag_slot"
   
   # join parent cell type and child cell type
-  new.tag_slot <- unlist(lapply(colnames(obj), function(x) 
-    if (x %in% rownames(pos_subtype) && x %in% pos_parent) {"yes"}else{"no"}))
-  new.tag_slot <- unlist(lapply(seq_len(length(new.tag_slot)), function(i) 
-    if (!colnames(obj)[i] %in% pos_parent) {"not applicable"} 
-    else {new.tag_slot[i]}))
+  new.tag_slot <- unlist(
+    lapply(colnames(obj), function(x) 
+      if (x %in% rownames(pos_subtype) && x %in% pos_parent) {"yes"}
+      else{"no"})
+    )
+  new.tag_slot <- unlist(
+    lapply(seq_len(length(new.tag_slot)), function(i) 
+      if (!colnames(obj)[i] %in% pos_parent) {"not applicable"} 
+      else {new.tag_slot[i]})
+    )
   names(new.tag_slot) <- colnames(obj)
   obj[[tag_slot]] <- new.tag_slot
   
@@ -245,9 +252,10 @@ setMethod("check_parent_child_coherence", c("obj" = "SingleCellExperiment"),
   pos.val <- c(1, "yes", TRUE)
   
   # prepare (sub) cell type tag  
-  subtype.bin <- (tolower(SummarizedExperiment::colData(obj)[, tag_slot]) 
-                  %in% tolower(target_cell_type) 
-                  | SummarizedExperiment::colData(obj)[, tag_slot]%in%pos.val)
+  subtype.bin <- (
+    tolower(SummarizedExperiment::colData(obj)[, tag_slot]) %in% tolower(target_cell_type)
+    | SummarizedExperiment::colData(obj)[, tag_slot] %in% pos.val
+  )
   pos_subtype.names <- colnames(obj)[subtype.bin]
   
   #-- compare with cell type with parent cell type, 
@@ -414,9 +422,11 @@ setMethod("construct_tag_vect",
   pos.val <- c(1, "yes", TRUE)
   
   # construct new tag
-  tag = unlist(lapply(SummarizedExperiment::colData(obj)[, tag_slot], 
-        function(x) if (x %in% pos.val 
-                       | tolower(x) %in% tolower(cell_type)){"yes"}else{"no"}))
+  tag = unlist(
+    lapply(SummarizedExperiment::colData(obj)[, tag_slot], function(x) 
+      if (x %in% pos.val | tolower(x) %in% tolower(cell_type)){"yes"} 
+      else{"no"})
+    )
   named_tag = setNames(tag, colnames(obj))
 
   return(named_tag)
@@ -625,7 +635,8 @@ setMethod("process_parent_clf", c("obj" = "SingleCellExperiment"),
 #' @importFrom stats predict
 #' 
 #' @rdname internal
-make_prediction <- function(mat, classifier, pred_cells, ignore_ambiguous_result = TRUE) {
+make_prediction <- function(mat, classifier, pred_cells, 
+                            ignore_ambiguous_result = TRUE) {
   . <- NULL
   cells <- names(pred_cells)
   
@@ -639,8 +650,8 @@ make_prediction <- function(mat, classifier, pred_cells, ignore_ambiguous_result
   pred_cells <- unlist(lapply(cells,
   function(i)
     if (i %in% rownames(pred) && pred[i, "class"] == "yes") {
-      if (ignore_ambiguous_result == TRUE && !is.na(parent(classifier)) &&
-          gsub("/", "", pred_cells[i]) == parent(classifier))
+      if (ignore_ambiguous_result == TRUE && !is.na(parent(classifier)) 
+          && gsub("/", "", pred_cells[i]) == parent(classifier))
       { paste0(cell_type(classifier), "/") }
       else { paste0(pred_cells[i], cell_type(classifier), "/") }
     }
@@ -652,31 +663,16 @@ make_prediction <- function(mat, classifier, pred_cells, ignore_ambiguous_result
   colnames(pred)[1] <- 'p'
 
   # add cell type to colnames
-  colnames(pred) <- unlist(lapply(colnames(pred), 
-                                  function(x) paste0(c(unlist(strsplit(cell_type(classifier), split = " ")), x), collapse = "_")))
+  colnames(pred) <- unlist(
+    lapply(colnames(pred), function(x) 
+      paste0(
+        c(unlist(strsplit(cell_type(classifier), split = " ")), x), 
+        collapse = "_")
+      )
+    )
 
   return_val <- list('pred' = pred, 'pred_cells' = pred_cells)
   return(return_val)
-}
-
-#' Get the cell type having the highest average expression
-#'
-#' @param types list of possible cell types
-#' @param cell_exp cell expression
-#' @param classifiers classifiers 
-#' 
-#' @return cell type having the highest average expression
-#' 
-#' @rdname internal
-highest_expressed_ctype <- function(types, cell_exp, classifiers) {
-  avgs <- NULL
-  for (type in types) {
-    avg <- mean(select_features(cell_exp, features(classifiers[[type]])), 
-                na.rm = TRUE)
-    avgs <- c(avgs, avg)
-  }
-  max_exp <- which.max(avgs)
-  return(types[max_exp])
 }
 
 #' Simplify prediction
@@ -752,7 +748,9 @@ verify_parent <- function(mat, classifier, meta.data) {
   pos_parent <- applicable_mat <- NULL
   
   # parent clf, if avai, always has to be applied before children clf.
-  parent_slot <- paste0(c(unlist(strsplit(parent(classifier), split = " ")), "class"), collapse = "_")
+  parent_slot <- paste0(
+    c(unlist(strsplit(parent(classifier), split = " ")), "class"), 
+    collapse = "_")
   if (parent_slot %in% colnames(meta.data)) {
     parent_pred <- meta.data[, parent_slot]
     pos_parent <- colnames(mat)[parent_pred == 'yes'] 

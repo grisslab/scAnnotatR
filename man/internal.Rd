@@ -26,7 +26,6 @@
 \alias{process_parent_clf,Seurat-method}
 \alias{process_parent_clf,SingleCellExperiment-method}
 \alias{make_prediction}
-\alias{highest_expressed_ctype}
 \alias{simplify_prediction}
 \alias{verify_parent}
 \alias{test_performance}
@@ -116,8 +115,6 @@ process_parent_clf(
 
 make_prediction(mat, classifier, pred_cells, ignore_ambiguous_result = TRUE)
 
-highest_expressed_ctype(types, cell_exp, classifiers)
-
 simplify_prediction(meta.data, mat, classifiers)
 
 verify_parent(mat, classifier, meta.data)
@@ -183,13 +180,9 @@ in \code{\link{SingleCellExperiment}} object}
 
 \item{ignore_ambiguous_result}{whether ignore ambigouous result}
 
-\item{types}{list of possible cell types}
-
-\item{cell_exp}{cell expression}
+\item{meta.data}{object meta data}
 
 \item{classifiers}{classifiers}
-
-\item{meta.data}{object meta data}
 }
 \value{
 TRUE if the classifier is valid or the reason why it is not
@@ -232,8 +225,6 @@ a binary vector for cell tag
 list of cells which are positive to parent clf
 
 prediction
-
-cell type having the highest average expression
 
 simplified prediction
 

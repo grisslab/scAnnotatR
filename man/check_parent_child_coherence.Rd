@@ -79,8 +79,6 @@ list of cells which are positive to parent clf
 
 prediction
 
-cell type having the highest average expression
-
 simplified prediction
 
 applicable matrix

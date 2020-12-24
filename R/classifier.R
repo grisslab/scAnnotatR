@@ -110,18 +110,17 @@ setMethod("train_classifier", c("train_obj" = "Seurat"),
                    seurat_parent_tag_slot = "predicted_cell_type", 
                    seurat_assay = 'RNA', seurat_slot = 'counts', ...) {
   #--- part of parent cell type
-  parent_process <- process_parent_clf(train_obj, 
-                                       seurat_parent_tag_slot, parent_cell, 
-                                       parent_clf, path_to_models, zscore, 
-                                       seurat_assay, seurat_slot)
+  parent_process <- process_parent_clf(
+    train_obj, seurat_parent_tag_slot, parent_cell, parent_clf, 
+    path_to_models, zscore, seurat_assay, seurat_slot
+  )
   
   # check parent-child coherence
   if (!is.null(parent_process$pos_parent)) {
-    check_res <- check_parent_child_coherence(train_obj, 
-                                              parent_process$pos_parent, 
-                                              parent_process$parent_cell, 
-                                              cell_type, cell_type, 
-                                              seurat_tag_slot)
+    check_res <- check_parent_child_coherence(
+      train_obj, parent_process$pos_parent, parent_process$parent_cell, 
+      cell_type, cell_type, seurat_tag_slot
+    )
     train_obj <- check_res$adjusted_object
     seurat_tag_slot <- check_res$adjusted_tag_slot
   }
@@ -213,16 +212,17 @@ setMethod("train_classifier", c("train_obj" = "SingleCellExperiment"),
   colnames(train_obj) <- make.unique(colnames(train_obj), sep = '_')
             
   #--- part of parent cell type
-  parent_process <- process_parent_clf(train_obj, sce_parent_tag_slot, 
-                                       parent_cell, parent_clf, path_to_models, 
-                                       zscore, sce_assay)
+  parent_process <- process_parent_clf(
+    train_obj, sce_parent_tag_slot, parent_cell, parent_clf, 
+    path_to_models, zscore, sce_assay
+  )
   
   # check parent-child coherence
   if (!is.null(parent_process$pos_parent)) {
-    check_res <- check_parent_child_coherence(train_obj, 
-                                              parent_process$pos_parent, 
-                                              parent_process$parent_cell, 
-                                              cell_type,cell_type,sce_tag_slot)
+    check_res <- check_parent_child_coherence(
+      train_obj, parent_process$pos_parent, parent_process$parent_cell,
+      cell_type,cell_type,sce_tag_slot
+    )
     train_obj <- check_res$adjusted_object
     sce_tag_slot <- check_res$adjusted_tag_slot
   }
@@ -378,19 +378,17 @@ setMethod("test_classifier", c("test_obj" = "Seurat",
   
   #--- parent cell type
   # process parent clf
-  parent_process <- process_parent_clf(test_obj, seurat_parent_tag_slot, 
-                                       parent(classifier), parent_clf, 
-                                       path_to_models, zscore, seurat_assay, 
-                                       seurat_slot)
+  parent_process <- process_parent_clf(
+    test_obj, seurat_parent_tag_slot, parent(classifier), parent_clf,
+    path_to_models, zscore, seurat_assay, seurat_slot
+  )
   
   # check parent-child coherence
   if (!is.null(parent_process$pos_parent)) {
-    check_res <- check_parent_child_coherence(test_obj, 
-                                              parent_process$pos_parent, 
-                                              parent(classifier), 
-                                              cell_type(classifier), 
-                                              target_cell_type, 
-                                              seurat_tag_slot)
+    check_res <- check_parent_child_coherence(
+      test_obj, parent_process$pos_parent, parent(classifier), 
+      cell_type(classifier), target_cell_type, seurat_tag_slot
+    )
     test_obj <- check_res$adjusted_object
     seurat_tag_slot <- check_res$adjusted_tag_slot
   }
@@ -400,8 +398,8 @@ setMethod("test_classifier", c("test_obj" = "Seurat",
   test_obj <- filter_cells(test_obj, seurat_tag_slot)
   
   # convert Seurat object to matrix
-  test_mat = Seurat::GetAssayData(object = test_obj, 
-                                  assay = seurat_assay, slot = seurat_slot)
+  test_mat = Seurat::GetAssayData(
+    object = test_obj, assay = seurat_assay, slot = seurat_slot)
   
   # perform features selection
   test_mat <- select_features(test_mat, features(classifier))
@@ -466,17 +464,17 @@ setMethod("test_classifier", c("test_obj" = "SingleCellExperiment",
   
   #--- parent cell type
   # process parent clf
-  parent_process <- process_parent_clf(test_obj, sce_parent_tag_slot, 
-                                       parent(classifier), parent_clf, 
-                                       path_to_models, zscore, sce_assay)
+  parent_process <- process_parent_clf(
+    test_obj, sce_parent_tag_slot, parent(classifier), parent_clf, 
+    path_to_models, zscore, sce_assay
+  )
   
   # check parent-child coherence
   if (!is.null(parent_process$pos_parent)) {
-    check_res <- check_parent_child_coherence(test_obj, 
-                                              parent_process$pos_parent, 
-                                              parent(classifier), 
-                                              cell_type(classifier), 
-                                              target_cell_type, sce_tag_slot)
+    check_res <- check_parent_child_coherence(
+      test_obj, parent_process$pos_parent, parent(classifier), 
+      cell_type(classifier), target_cell_type, sce_tag_slot
+    )
     test_obj <- check_res$adjusted_object
     sce_tag_slot <- check_res$adjusted_tag_slot
   }
@@ -654,7 +652,9 @@ setMethod("classify_cells", c("classify_obj" = "Seurat"),
     filtered_mat <- t(as.matrix(filtered_mat))
     filtered_mat <- transform_to_zscore(filtered_mat)
     
-    prediction <- make_prediction(filtered_mat, classifier, pred_cells, ignore_ambiguous_result)
+    prediction <- make_prediction(
+      filtered_mat, classifier, pred_cells, ignore_ambiguous_result
+    )
     pred <- prediction$pred
     pred_cells <- prediction$pred_cells
     
@@ -669,8 +669,11 @@ setMethod("classify_cells", c("classify_obj" = "Seurat"),
     
     # ignore ambiguous results
     if (ignore_ambiguous_result == TRUE) {
-      pred_cells <- unlist(lapply(pred_cells, 
-                                  function(x) if (length(unlist(strsplit(x, split = '/'))) <= 1) {x} else {'ambiguous'}))
+      pred_cells <- unlist(
+        lapply(pred_cells, function(x) 
+          if (length(unlist(strsplit(x, split = '/'))) <= 1) {x} 
+          else {'ambiguous'})
+      )
     } 
     
     # add cell type to meta data
@@ -678,7 +681,9 @@ setMethod("classify_cells", c("classify_obj" = "Seurat"),
     
     # simplify result can only happen when not ignore ambiguous results
     if (ignore_ambiguous_result == FALSE) 
-      classify_obj[['most_probable_cell_type']] <- simplify_prediction(classify_obj[[]], as.matrix(mat), classifiers)
+      classify_obj[['most_probable_cell_type']] <- simplify_prediction(
+        classify_obj[[]], as.matrix(mat), classifiers
+    )
   }
   
   return(classify_obj)
@@ -726,16 +731,19 @@ setMethod("classify_cells", c("classify_obj" = "SingleCellExperiment"),
     filtered_mat <- t(as.matrix(filtered_mat))
     filtered_mat <- transform_to_zscore(filtered_mat)
     
-    prediction <- make_prediction(filtered_mat, classifier, pred_cells, ignore_ambiguous_result)
+    prediction <- make_prediction(
+      filtered_mat, classifier, pred_cells, ignore_ambiguous_result
+    )
+    
     pred <- prediction$pred
     pred_cells <- prediction$pred_cells
     # add prediction to meta data: 2 cols: p, class 
     for (colname in colnames(pred)) {
-      classify_obj[[colname]] <- unlist(lapply(colnames(classify_obj), 
-                                               function(x) 
-                                                 if (x %in% rownames(pred)) {pred[x, colname]} 
-                                               else {NA}))
-      #pred[, colname, drop = FALSE, ]
+      classify_obj[[colname]] <- unlist(
+        lapply(colnames(classify_obj), function(x)
+          if (x %in% rownames(pred)) {pred[x, colname]}
+          else {NA})
+      )
     }
   }
   
@@ -744,8 +752,11 @@ setMethod("classify_cells", c("classify_obj" = "SingleCellExperiment"),
     
     # double check if there is more than one predicted cell type
     if (ignore_ambiguous_result == TRUE) {
-      pred_cells <- unlist(lapply(pred_cells, function(x) 
-        if (length(unlist(strsplit(x, split = '/'))) <= 1) {x} else {'ambiguous'}))
+      pred_cells <- unlist(
+        lapply(pred_cells, function(x) 
+          if (length(unlist(strsplit(x, split = '/'))) <= 1) {x} 
+          else {'ambiguous'})
+        )
     } 
     
     # add cell type to meta data
@@ -753,8 +764,10 @@ setMethod("classify_cells", c("classify_obj" = "SingleCellExperiment"),
     
     # this will be ignored if ignore ambiguous result is on
     if (ignore_ambiguous_result == FALSE) 
-      classify_obj$most_probable_cell_type <- simplify_prediction(as.matrix(SummarizedExperiment::colData(classify_obj)), 
-                                                                  as.matrix(mat), classifiers)
+      classify_obj$most_probable_cell_type <- simplify_prediction(
+        as.matrix(SummarizedExperiment::colData(classify_obj)), 
+        as.matrix(mat), classifiers
+      )
   }
   return(classify_obj)
 })
