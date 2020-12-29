@@ -13,6 +13,8 @@
 #' 
 #' @return no return value, but the model is now saved to database
 #' 
+#' @importFrom utils data
+#' 
 #' @examples
 #' # load small example dataset
 #' data("tirosh_mel80_example")
@@ -32,20 +34,8 @@
 #' delete_model("t cells")
 #' 
 #' @export
-setGeneric("save_new_model", 
-           function(new_model, 
-                    include.default = TRUE, 
-                    path.to.models = ".") 
-  standardGeneric("save_new_model"))
-
-#' @inherit save_new_model
-#' 
-#' @importFrom utils data
-#' @rdname save_new_model
-setMethod("save_new_model", c("new_model" = "scTypeR"), 
-          function(new_model, 
-                   include.default = TRUE, 
-                   path.to.models = ".") {
+save_new_model <- function(new_model, include.default = TRUE, 
+                    path.to.models = ".") {
   default_models <- NULL
   
   utils::data("default_models")
@@ -64,26 +54,26 @@ setMethod("save_new_model", c("new_model" = "scTypeR"),
   }
   
   # check if new cell type already existed
-  if (new_model@cell_type %in% names(new_models)) {
+  if (cell_type(new_model) %in% names(new_models)) {
     stop("A model already existed for the cell type. 
          Please delete the old model to add a new one.", call. = FALSE)
   } 
   
-  if (!is.na(new_model@parent) && !new_model@parent %in% names(new_models)) {
+  if (!is.na(parent(new_model)) && !parent(new_model) %in% names(new_models)) {
     stop("Model for parent cell type has not been added. 
          Please save the model classifying parent cell type into tree first.", 
          call. = FALSE)
   }
   
   # add new model to list
-  names <- append(names(new_models), new_model@cell_type)
+  names <- append(names(new_models), cell_type(new_model))
   new_models <- append(new_models, new_model)
   names(new_models) <- names
   
   # save to rda file
   save(new_models, file = new_models.file.path, compress = 'xz')
-  cat("Finished saving new model\n")
-})
+  message("Finished saving new model")
+} 
 
 #' Plant tree from list of models
 #' 
@@ -92,6 +82,9 @@ setMethod("save_new_model", c("new_model" = "scTypeR"),
 #'  
 #' @return tree structure and plot of tree 
 #'
+#' @importFrom utils data
+#' @import data.tree
+#'
 #' @examples
 #' 
 #' # to create the tree of classifiers 
@@ -99,14 +92,7 @@ setMethod("save_new_model", c("new_model" = "scTypeR"),
 #' plant_tree()
 #' 
 #' @export
-setGeneric("plant_tree", function(models.file.path = c("default", ".")) 
-  standardGeneric("plant_tree"))
-
-#' @inherit plant_tree
-#' 
-#' @importFrom utils data
-#' @import data.tree
-setMethod("plant_tree", , function(models.file.path = c("default", ".")) {
+plant_tree <- function(models.file.path = c("default", ".")) { 
   new_models <- default_models <- NULL
   
   root.name <- "cell types"
@@ -128,13 +114,15 @@ setMethod("plant_tree", , function(models.file.path = c("default", ".")) {
   
   if (!is.null(model_list)) {
     for (model in model_list) {
-      if (is.na(model@parent))
+      if (is.na(parent(model)))
         parent.pathString = root.name
       else 
-        parent.pathString <- tree[tree$cell_type == model@parent,]$pathString
+        parent.pathString <- tree[tree$cell_type == parent(model),]$pathString
       
-      cell.info <- c(model@cell_type, model@parent, 
-                     paste0(parent.pathString, "/", model@cell_type))
+      cell.info <- c(
+        cell_type(model), parent(model), 
+        paste0(parent.pathString, "/", cell_type(model))
+      )
       cell.info <- as.data.frame(matrix(cell.info, nrow = 1))
       colnames(cell.info) <- c("cell_type", "parent_cell_type", "pathString")
       
@@ -151,7 +139,7 @@ setMethod("plant_tree", , function(models.file.path = c("default", ".")) {
   } else stop('Tree not available.')
   
   return(tree)
-})
+}
 
 #' Delete model/branch from package
 #' 
@@ -179,11 +167,7 @@ setMethod("plant_tree", , function(models.file.path = c("default", ".")) {
 #' # delete classifier from system
 #' delete_model("t cells")
 #' @export
-setGeneric("delete_model", function(cell_type, path.to.models = ".") 
-  standardGeneric("delete_model"))
-
-#' @inherit delete_model
-setMethod("delete_model", , function(cell_type, path.to.models = ".") {
+delete_model <- function(cell_type, path.to.models = ".") {
   new_models <- NULL
   
   new_models.file.path <- paste0(path.to.models, "/new_models.rda")
@@ -204,8 +188,8 @@ setMethod("delete_model", , function(cell_type, path.to.models = ".") {
   else {
     # get a list of models to delete
     for (model in new_models) {
-      if (model@parent %in% to.be.removed) {
-        to.be.removed <- append(to.be.removed, model@cell_type)
+      if (parent(model) %in% to.be.removed) {
+        to.be.removed <- append(to.be.removed, cell_type(model))
       }
     }
     
@@ -215,4 +199,4 @@ setMethod("delete_model", , function(cell_type, path.to.models = ".") {
   # save models after remove
   if (!is.null(new_models))
     save(new_models, file = new_models.file.path)
-})
+}

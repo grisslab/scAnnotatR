@@ -16,7 +16,7 @@
 #' and testing on Jerby-Arnon dataset.
 #' @docType data
 #' @usage default_models
-#' @format a list of \code{\link{scTypeR}} objects
+#' @format a list of \code{\link{scClassifR}} objects
 #' @author Vy Nguyen, November 2020
 #' @keywords datasets
 "default_models"

@@ -118,11 +118,11 @@ The slot must contain only string values.}
 Default to 'logcounts' assay.}
 }
 \value{
-\code{\link{scTypeR}} object
+\code{\link{scClassifR}} object
 }
 \description{
 Train a classifier for a new cell type. 
-If cell type has a parent, only available for \code{\link{scTypeR}}
+If cell type has a parent, only available for \code{\link{scClassifR}}
 object as parent cell classifying model.
 }
 \note{

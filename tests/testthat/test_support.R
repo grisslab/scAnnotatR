@@ -1,5 +1,5 @@
-context("scTypeR support functions")
-library(scTypeR)
+context("scClassifR support functions")
+library(scClassifR)
 library(Seurat)
 
 test_that("Balance dataset balances dataset", {

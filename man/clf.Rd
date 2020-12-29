@@ -7,14 +7,14 @@
 clf(classifier)
 }
 \arguments{
-\item{classifier}{\code{\link{scTypeR}} object}
+\item{classifier}{\code{\link{scClassifR}} object}
 }
 \value{
 Classifier is the object returned by caret SVM learning process.
 More information about the caret package: https://topepo.github.io/caret/
 }
 \description{
-Returns the classifier of the \code{\link{scTypeR}} object
+Returns the classifier of the \code{\link{scClassifR}} object
 }
 \examples{
 data("tirosh_mel80_example")
@@ -23,5 +23,5 @@ set.seed(123)
 clf_b <- train_classifier(train_obj = tirosh_mel80_example, 
 features = selected_features_B, cell_type = "B cells")
 clf(clf_b)
-
+ 
 }

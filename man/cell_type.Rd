@@ -7,7 +7,7 @@
 cell_type(classifier)
 }
 \arguments{
-\item{classifier}{\code{\link{scTypeR}} object}
+\item{classifier}{\code{\link{scClassifR}} object}
 }
 \value{
 cell type of object

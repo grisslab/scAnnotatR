@@ -8,8 +8,9 @@
 #' 
 #' @return a list of balanced count matrix
 #' and corresponding tags of balanced count matrix
+#' @rdname internal
 balance_dataset <- function(mat, tag) {
-  print(paste0("Imbalanced dataset has: ", toString(nrow(mat)), " cells."))
+  message("Imbalanced dataset has: ", toString(nrow(mat)), " cells.")
   
   n_pos = length(tag[tag == 'yes'])
   n_neg = length(tag[tag == 'no'])
@@ -35,11 +36,11 @@ balance_dataset <- function(mat, tag) {
   cut_tag = tag[random_idx]
   
   # refabricate the balanced dataset
-  balanced_mat = rbind(cut_mat, mat[!rownames(mat) %in% cut_idx,, drop = FALSE])
+  balanced_mat = rbind(
+    cut_mat, mat[!rownames(mat) %in% cut_idx,, drop = FALSE])
   balanced_tag = append(cut_tag, tag[tag != cut_val])
   
-  print(paste0("Balanced dataset has: ", 
-               toString(nrow(balanced_mat)), " cells."))
+  message("Balanced dataset has: ", toString(nrow(balanced_mat)), " cells.")
   
   return_val = list("mat" = balanced_mat, "tag" = balanced_tag)
 
@@ -62,6 +63,7 @@ balance_dataset <- function(mat, tag) {
 #' @import e1071
 #' @import ape 
 #' @rawNamespace import(kernlab, except = c(alpha, predict))
+#' @rdname internal
 train_func <- function(mat, tag) {
   
   # calculate sigma
@@ -75,13 +77,13 @@ train_func <- function(mat, tag) {
   mat$tag <- tag
   clf <- caret::train(form = tag ~ ., data = mat, 
                       method = "svmRadial",
-                      tuneGrid = data.frame(.C = 1,
-                                            .sigma = sigma),
+                      tuneGrid = data.frame(
+                        .C = 1, .sigma = sigma),
                       metrix = "Accuracy",
-                      trControl = trainControl(classProbs = TRUE,
-                                               trim = TRUE,
-                                               returnData = FALSE,
-                                               returnResamp = 'none')) 
+                      trControl = trainControl(
+                        classProbs = TRUE, trim = TRUE,
+                        returnData = FALSE, returnResamp = 'none')
+                      ) 
   return(clf)
 }
 
@@ -93,6 +95,7 @@ train_func <- function(mat, tag) {
 #' @return row wise center-scaled count matrix
 #' 
 #' @importFrom stats sd
+#' @rdname internal
 transform_to_zscore <- function(mat) {
   # z_mat = scale(mat) # this cause NaN when column has zero variance
   z_mat <- apply(mat, 2, function(y) 
@@ -107,6 +110,7 @@ transform_to_zscore <- function(mat) {
 #' @return list of classifiers
 #' 
 #' @importFrom utils data
+#' @rdname internal
 load_models <- function(path_to_models) {
   # prevents R CMD check note
   model_list <- new_models <- default_models <- NULL
@@ -135,6 +139,7 @@ load_models <- function(path_to_models) {
 #' @param features list of selected features
 #' 
 #' @return filtered matrix
+#' @rdname internal
 select_features <- function(mat, features) {
   filtered_mat <- mat[rownames(mat) %in% features,, drop = FALSE]
   
@@ -164,6 +169,7 @@ select_features <- function(mat, features) {
 #' @param ... arguments passed to other methods
 #' 
 #' @return list of adjusted object and adjusted tag slot
+#' @rdname internal
 setGeneric("check_parent_child_coherence", 
            function(obj, pos_parent, parent_cell, cell_type, 
                     target_cell_type, ...) 
@@ -177,6 +183,8 @@ setGeneric("check_parent_child_coherence",
 #' @param tag_slot tag slot in \code{\link{Seurat}} object 
 #' indicating cell type
 #' 
+#' @importFrom Seurat Idents
+#' 
 #' @rdname check_parent_child_coherence
 setMethod("check_parent_child_coherence", c("obj" = "Seurat"), 
           function(obj, pos_parent, parent_cell, cell_type, 
@@ -185,34 +193,37 @@ setMethod("check_parent_child_coherence", c("obj" = "Seurat"),
   
   # prepare (sub) cell type tag  
   if (tag_slot == "active.ident") {
-    subtype <- obj@active.ident
-    subtype <- as.data.frame(subtype)
-    rownames(subtype) <- names(obj@active.ident)
-    pos_subtype <- subtype[tolower(subtype[, 1]) %in% tolower(target_cell_type)
-                           | subtype[, 1] %in% pos.val, , drop=FALSE]
+    subtype <- Seurat::Idents(obj)
+    test <- tolower(subtype) %in% tolower(target_cell_type) | 
+      subtype %in% pos.val
+    pos_subtype <- subtype[test]
   } else {
     subtype <- obj[[tag_slot]]
-    pos_subtype <- subtype[tolower(subtype[, tag_slot]) 
-                           %in% tolower(target_cell_type) 
-                           | subtype[, tag_slot] %in% pos.val, , drop=FALSE]
+    test <- tolower(subtype[, 1]) %in% tolower(target_cell_type) | 
+      subtype[, 1] %in% pos.val
+    pos_subtype <- subtype[test, , drop=FALSE]
   }
   
   #-- compare with cell type with parent cell type, 
   # ie. cell, which is cell_type, must also be cell_parent
   # if not, raise warnings
   if (any(!rownames(pos_subtype) %in% pos_parent)) {
-    warning(paste0("Some annotated ", cell_type, " are negative to ", 
+    warning("Some annotated ", cell_type, " are negative to ", 
     parent_cell, " classifier. They are removed from training/testing for ", 
-    cell_type, " classifier.\n"), call. = FALSE, immediate. = TRUE)
+    cell_type, " classifier.\n", call. = FALSE, immediate. = TRUE)
   }
   tag_slot <- "new_tag_slot"
   
   # join parent cell type and child cell type
-  new.tag_slot <- unlist(lapply(colnames(obj), function(x) 
-    if (x %in% rownames(pos_subtype) && x %in% pos_parent) {"yes"}else{"no"}))
-  new.tag_slot <- unlist(lapply(seq_len(length(new.tag_slot)), function(i) 
-    if (!colnames(obj)[i] %in% pos_parent) {"not applicable"} 
-    else {new.tag_slot[i]}))
+  test <- 
+    (colnames(obj) %in% rownames(pos_subtype)) & 
+    (colnames(obj) %in% pos_parent)
+  new.tag_slot <- ifelse(test, 'yes', 'no')
+  new.tag_slot <- unlist(
+    lapply(seq_len(length(new.tag_slot)), function(i) 
+      if (!colnames(obj)[i] %in% pos_parent) {"not applicable"} 
+      else {new.tag_slot[i]})
+    )
   names(new.tag_slot) <- colnames(obj)
   obj[[tag_slot]] <- new.tag_slot
   
@@ -237,18 +248,17 @@ setMethod("check_parent_child_coherence", c("obj" = "SingleCellExperiment"),
   pos.val <- c(1, "yes", TRUE)
   
   # prepare (sub) cell type tag  
-  subtype.bin <- (tolower(SummarizedExperiment::colData(obj)[, tag_slot]) 
-                  %in% tolower(target_cell_type) 
-                  | SummarizedExperiment::colData(obj)[, tag_slot]%in%pos.val)
+  x <- SummarizedExperiment::colData(obj)[, tag_slot]
+  subtype.bin <- ( tolower(x) %in% tolower(target_cell_type) | x %in% pos.val)
   pos_subtype.names <- colnames(obj)[subtype.bin]
   
   #-- compare with cell type with parent cell type, 
   # ie. cell, which is cell_type, must also be cell_parent
   # if not, raise warnings
   if (any(!pos_subtype.names %in% pos_parent)) {
-    warning(paste0("Some annotated ", cell_type, " are negative to ", 
+    warning("Some annotated ", cell_type, " are negative to ", 
     parent_cell, " classifier. They are removed from training/testing for ", 
-    cell_type, " classifier.\n"), call. = FALSE, immediate. = TRUE)
+    cell_type, " classifier.\n", call. = FALSE, immediate. = TRUE)
   }
   tag_slot <- "new_tag_slot"
   
@@ -268,7 +278,7 @@ setMethod("check_parent_child_coherence", c("obj" = "SingleCellExperiment"),
 #' 
 #' @param obj object
 #' @param tag_slot slot in cell meta data indicating cell type
-#' 
+#' @rdname internal
 setGeneric("filter_cells", function(obj, tag_slot) 
   standardGeneric("filter_cells"))
 
@@ -278,8 +288,8 @@ setGeneric("filter_cells", function(obj, tag_slot)
 #' non applicable cells in a \code{\link{Seurat}} object
 #' 
 #' @return adjusted \code{\link{Seurat}} object
-#'  
-#' @rdname filter_cells
+#'
+#' @rdname internal
 setMethod("filter_cells", c("obj" = "Seurat"), function(obj, tag_slot) {
   # define characters usually included in ambiguous cell types
   # this is to avoid considering ambiguous cell types as negative cell_type
@@ -288,9 +298,9 @@ setMethod("filter_cells", c("obj" = "Seurat"), function(obj, tag_slot) {
   
   # only eliminate cell labels containing cell_type and ambiguous.chars
   if (tag_slot == "active.ident") {
-    cell.tags <- obj@active.ident
+    cell.tags <- Seurat::Idents(obj)
     cell.tags <- as.data.frame(cell.tags)
-    rownames(cell.tags) <- names(obj@active.ident)
+    rownames(cell.tags) <- names(Seurat::Idents(obj))
   } else {
     cell.tags <- obj[[tag_slot]]
   }
@@ -322,7 +332,7 @@ setMethod("filter_cells", c("obj" = "Seurat"), function(obj, tag_slot) {
 #' 
 #' @importFrom SingleCellExperiment colData
 #' 
-#' @rdname filter_cells
+#' @rdname internal
 setMethod("filter_cells", c("obj" = "SingleCellExperiment"), 
           function(obj, tag_slot) {
   # define characters usually included in ambiguous cell types
@@ -353,6 +363,8 @@ setMethod("filter_cells", c("obj" = "SingleCellExperiment"),
 #' @importFrom stats setNames
 #' 
 #' @return a binary vector for cell tag
+#' 
+#' @rdname internal
 setGeneric("construct_tag_vect", 
            function(obj, cell_type, ...) 
   standardGeneric("construct_tag_vect"))
@@ -364,23 +376,23 @@ setGeneric("construct_tag_vect",
 #'
 #' @param tag_slot tag slot in \code{\link{Seurat}} object indicating cell type
 #' 
-#' @rdname construct_tag_vect
+#' @importFrom Seurat Idents
+#' 
+#' @rdname internal
 setMethod("construct_tag_vect", c("obj" = "Seurat"), 
           function(obj, cell_type, tag_slot) {
   pos.val <- c(1, "yes", TRUE)
   
   # construct new tag
-  if (tag_slot == "active.ident") {
-    tag = unlist(lapply(obj@active.ident, function(x) 
-      if (x %in% pos.val || tolower(x) %in% tolower(cell_type)) 
-        {"yes"} else {"no"}))
-    named_tag = setNames(tag, names(obj@active.ident))
-  } else {
-    tag = apply(obj[[tag_slot]], 1, function(x) 
-      if (x %in% pos.val || tolower(x) %in% tolower(cell_type)) 
-        {"yes"} else {"no"})
-    named_tag = setNames(tag, rownames(obj[[tag_slot]]))
-  }
+  if (tag_slot == "active.ident") 
+    x <- Seurat::Idents(obj)
+  else 
+    x <- obj[[tag_slot]][, 1]
+  
+  test <- (x %in% pos.val) | (tolower(x) %in% tolower(cell_type))
+  tag <- ifelse(test, "yes", "no")
+  
+  named_tag = setNames(tag, colnames(obj))
   
   return(named_tag)
 })
@@ -395,18 +407,17 @@ setMethod("construct_tag_vect", c("obj" = "Seurat"),
 #' 
 #' @importFrom SummarizedExperiment colData
 #' 
-#' @rdname construct_tag_vect
-setMethod("construct_tag_vect", 
-          c("obj" = "SingleCellExperiment"), function(obj, cell_type, tag_slot)
-{
+#' @rdname internal
+setMethod("construct_tag_vect", c("obj" = "SingleCellExperiment"), 
+          function(obj, cell_type, tag_slot) {
   pos.val <- c(1, "yes", TRUE)
   
-  # construct new tag
-  tag = unlist(lapply(SummarizedExperiment::colData(obj)[, tag_slot], 
-        function(x) if (x %in% pos.val 
-                       | tolower(x) %in% tolower(cell_type)){"yes"}else{"no"}))
+  x <- SummarizedExperiment::colData(obj)[, tag_slot] 
+  test <- (x %in% pos.val) | (tolower(x) %in% tolower(cell_type))
+  tag <- ifelse(test, "yes", "no")
+  
   named_tag = setNames(tag, colnames(obj))
-
+  
   return(named_tag)
 })
 
@@ -416,7 +427,7 @@ setMethod("construct_tag_vect",
 #' @param parent_tag_slot string, name of annotation tag slot in object 
 #' indicating pre-assigned/predicted parent cell type
 #' @param parent_cell_type name of parent cell type
-#' @param parent_clf \code{\link{scTypeR}} object corresponding 
+#' @param parent_clf \code{\link{scClassifR}} object corresponding 
 #' to classification model for the parent cell type
 #' @param path_to_models path to databases, or by default
 #' @param zscore boolean indicating the transformation of gene expression 
@@ -427,6 +438,8 @@ setMethod("construct_tag_vect",
 #' 
 #' @importFrom stats predict
 #' @import dplyr
+#' 
+#' @rdname internal
 setGeneric("process_parent_clf", 
            function(obj, parent_tag_slot, parent_cell_type, parent_clf, 
                     path_to_models, zscore = TRUE, ...) 
@@ -441,8 +454,9 @@ setGeneric("process_parent_clf",
 #' \code{\link{Seurat}} object
 #' 
 #' @importFrom Seurat GetAssayData
+#' @importFrom Seurat Idents
 #' 
-#' @rdname process_parent_clf
+#' @rdname internal
 setMethod("process_parent_clf", c("obj" = "Seurat"), 
           function(obj, parent_tag_slot, parent_cell_type, 
                    parent_clf, path_to_models, zscore = TRUE, 
@@ -450,20 +464,20 @@ setMethod("process_parent_clf", c("obj" = "Seurat"),
   pos_parent <- parent.clf <- . <- model_list <- NULL
   
   if (is.na(parent_cell_type) && !is.null(parent_clf))
-    parent_cell_type <- parent_clf@cell_type
+    parent_cell_type <- cell_type(parent_clf)
   
   # if sub cell type is indicated
   if (!is.na(parent_cell_type)) {
     #-- apply parent cell classifier
     if (is.null(parent_clf)) {
-      cat("Parent classifier not provided. Try finding available model.\n")
+      message("Parent classifier not provided. Try finding available model.")
       
       model_list <- load_models(path_to_models)
       
       if (parent_cell_type %in% names(model_list)) {
         parent.clf <- model_list[[parent_cell_type]]
       } else {
-        cat("No available model for parent cell type\n")
+        message("No available model for parent cell type")
       }
     }
     else {
@@ -471,13 +485,13 @@ setMethod("process_parent_clf", c("obj" = "Seurat"),
     }
     
     if (!is.null(parent.clf)) {
-      cat("Apply pretrained model for parent cell type.\n")
+      message("Apply pretrained model for parent cell type.")
       
       # convert Seurat object to matrix
       mat = Seurat::GetAssayData(object = obj, 
                                  assay = seurat_assay, slot = seurat_slot)
       
-      filtered_mat <- select_features(mat, parent.clf@features)
+      filtered_mat <- select_features(mat, features(parent.clf))
       
       filtered_mat <- t(as.matrix(filtered_mat))
       
@@ -487,16 +501,16 @@ setMethod("process_parent_clf", c("obj" = "Seurat"),
       }
       
       # predict
-      pred = stats::predict(parent.clf@clf, filtered_mat, type = "prob") %>% 
+      pred = stats::predict(clf(parent.clf), filtered_mat, type = "prob") %>% 
            dplyr::mutate('class' = apply(., 1, 
-           function(x) if(x[1] >= parent.clf@p_thres) {"yes"} else {"no"}))
+           function(x) if(x[1] >= p_thres(parent.clf)) {"yes"} else {"no"}))
       rownames(pred) <- rownames(filtered_mat)
       pos_parent <- rownames(pred[pred$class == "yes",])
     } else if (!is.null(parent_tag_slot)) { # try with predicted tag slot
-      cat("Parent classifier could not be applied. 
-          Try with predicted/pre-assigned cell type.\n")
+      message("Parent classifier could not be applied. 
+              Try with predicted/pre-assigned cell type.")
       if (parent_tag_slot == 'active.ident') {
-        cell_type_anno <- obj@active.ident
+        cell_type_anno <- Seurat::Idents(obj)
         pos_parent <- names(cell_type_anno[tolower(cell_type_anno) 
                                            == tolower(parent_cell_type)]) 
       } else {
@@ -528,28 +542,28 @@ setMethod("process_parent_clf", c("obj" = "Seurat"),
 #' @import SingleCellExperiment
 #' @importFrom SummarizedExperiment assay
 #' 
-#' @rdname process_parent_clf
+#' @rdname internal
 setMethod("process_parent_clf", c("obj" = "SingleCellExperiment"), 
           function(obj, parent_tag_slot, parent_cell_type, parent_clf, 
                    path_to_models, zscore = TRUE, sce_assay, ...) {
   pos_parent <- parent.clf <- . <- model_list <- NULL
   
   if (is.na(parent_cell_type) && !is.null(parent_clf))
-    parent_cell_type <- parent_clf@cell_type
+    parent_cell_type <- cell_type(parent_clf)
   
   # if sub cell type is indicated
   if (!is.na(parent_cell_type)) {
     #-- apply parent cell classifier
     # get parent classifier
     if (is.null(parent_clf)) {
-      cat("Parent classifier not provided. Try finding available model.\n")
+      message("Parent classifier not provided. Try finding available model.")
       
       model_list <- load_models(path_to_models)
       
       if (parent_cell_type %in% names(model_list)) {
         parent.clf <- model_list[[parent_cell_type]]
       } else {
-        cat("No available model for parent cell type")
+        message("No available model for parent cell type")
       }
     }
     else {
@@ -557,12 +571,12 @@ setMethod("process_parent_clf", c("obj" = "SingleCellExperiment"),
     }
     
     if (!is.null(parent.clf)) {
-      cat("Apply pretrained model for parent cell type.\n")
+      message("Apply pretrained model for parent cell type.\n")
       
       # convert Seurat object to matrix
       mat = SummarizedExperiment::assay(obj, sce_assay)
       
-      filtered_mat <- select_features(mat, parent.clf@features)
+      filtered_mat <- select_features(mat, features(parent.clf))
       filtered_mat <- t(as.matrix(filtered_mat))
       
       # transform mat to zscore values
@@ -571,14 +585,14 @@ setMethod("process_parent_clf", c("obj" = "SingleCellExperiment"),
       }
       
       # predict
-      pred = stats::predict(parent.clf@clf, filtered_mat, type = "prob") %>% 
+      pred = stats::predict(clf(parent.clf), filtered_mat, type = "prob") %>% 
         dplyr::mutate('class' = apply(., 1, 
-        function(x) if(x[1] >= parent.clf@p_thres) {"yes"} else {"no"}))
+        function(x) if(x[1] >= p_thres(parent.clf)) {"yes"} else {"no"}))
       rownames(pred) <- rownames(filtered_mat)
       pos_parent <- rownames(pred[pred$class == "yes",])
     } else if (!is.null(parent_tag_slot)) { # try with predicted tag slot
-      cat("Parent classifier could not be applied. 
-          Try with predicted/pre-assigned cell type.\n")
+      message("Parent classifier could not be applied. 
+              Try with predicted/pre-assigned cell type.")
       cell_type_anno <- colData(obj)[, parent_tag_slot]
       pos_parent <- colnames(obj)[tolower(cell_type_anno) 
                                   == tolower(parent_cell_type)]
@@ -608,24 +622,31 @@ setMethod("process_parent_clf", c("obj" = "SingleCellExperiment"),
 #' 
 #' @import dplyr
 #' @importFrom stats predict
-make_prediction <- function(mat, classifier, pred_cells, ignore_ambiguous_result = TRUE) {
+#' 
+#' @rdname internal
+make_prediction <- function(mat, classifier, pred_cells, 
+                            ignore_ambiguous_result = TRUE) {
   . <- NULL
   cells <- names(pred_cells)
   
   # predict
-  pred = stats::predict(classifier@clf, mat, type = "prob") %>%
+  pred = stats::predict(clf(classifier), mat, type = "prob") %>%
     dplyr::mutate('class' = apply(., 1, function(x)
-      if(x[1] >= classifier@p_thres) {"yes"} else {"no"}))
+      if(x[1] >= p_thres(classifier)) {"yes"} else {"no"}))
   rownames(pred) <- rownames(mat)
   
   # append a summary to whole predicted cell type
   pred_cells <- unlist(lapply(cells,
   function(i)
     if (i %in% rownames(pred) && pred[i, "class"] == "yes") {
-      if (ignore_ambiguous_result == TRUE && !is.na(classifier@parent) &&
-          gsub("/", "", pred_cells[i]) == classifier@parent)
-      { paste0(classifier@cell_type, "/") }
-      else { paste0(pred_cells[i], classifier@cell_type, "/") }
+      test <- 
+        ignore_ambiguous_result == TRUE && 
+        !is.na(parent(classifier)) && 
+        gsub("/", "", pred_cells[i]) == parent(classifier)
+      if (test)
+        paste0(cell_type(classifier), "/")
+      else
+        paste0(pred_cells[i], cell_type(classifier), "/")
     }
     else { pred_cells[i] }))
   names(pred_cells) <- cells
@@ -635,29 +656,16 @@ make_prediction <- function(mat, classifier, pred_cells, ignore_ambiguous_result
   colnames(pred)[1] <- 'p'
 
   # add cell type to colnames
-  colnames(pred) <- unlist(lapply(colnames(pred), 
-                                  function(x) paste0(c(unlist(strsplit(classifier@cell_type, split = " ")), x), collapse = "_")))
+  colnames(pred) <- unlist(
+    lapply(colnames(pred), function(x) 
+      paste0(
+        c(unlist(strsplit(cell_type(classifier), split = " ")), x), 
+        collapse = "_")
+      )
+    )
 
   return_val <- list('pred' = pred, 'pred_cells' = pred_cells)
   return(return_val)
-}
-
-#' Get the cell type having the highest average expression
-#'
-#' @param types list of possible cell types
-#' @param cell_exp cell expression
-#' @param classifiers classifiers 
-#' 
-#' @return cell type having the highest average expression
-highest_expressed_ctype <- function(types, cell_exp, classifiers) {
-  avgs <- NULL
-  for (type in types) {
-    avg <- mean(select_features(cell_exp, features(classifiers[[type]])), 
-                na.rm = TRUE)
-    avgs <- c(avgs, avg)
-  }
-  max_exp <- which.max(avgs)
-  return(types[max_exp])
 }
 
 #' Simplify prediction
@@ -667,6 +675,8 @@ highest_expressed_ctype <- function(types, cell_exp, classifiers) {
 #' @param classifiers classifiers 
 #' 
 #' @return simplified prediction
+#' 
+#' @rdname internal
 simplify_prediction <- function(meta.data, mat, classifiers) {
   if (is.null(names(classifiers)))
     names(classifiers) <- unlist(lapply(classifiers, function(x) cell_type(x)))
@@ -725,19 +735,23 @@ simplify_prediction <- function(meta.data, mat, classifiers) {
 #' @param meta.data object meta data
 #' 
 #' @return applicable matrix
+#' 
+#' @rdname internal
 verify_parent <- function(mat, classifier, meta.data) {
   pos_parent <- applicable_mat <- NULL
   
   # parent clf, if avai, always has to be applied before children clf.
-  parent_slot <- paste0(c(unlist(strsplit(classifier@parent, split = " ")), "class"), collapse = "_")
+  parent_slot <- paste0(
+    c(unlist(strsplit(parent(classifier), split = " ")), "class"), 
+    collapse = "_")
   if (parent_slot %in% colnames(meta.data)) {
     parent_pred <- meta.data[, parent_slot]
     pos_parent <- colnames(mat)[parent_pred == 'yes'] 
   } else {
-    warning(paste0('Parent classifier of ', classifier@cell_type, 'cannot be applied.\n 
-                   Please list/save parent classifier before child(ren) classifier.\n
-                   Skip applying classification models for ', classifier@cell_type, 
-                   ' and its parent cell type.\n'), call. = FALSE, immediate. = TRUE)
+    warning('Parent classifier of ', cell_type(classifier), 'cannot be applied.\n 
+             Please list/save parent classifier before child(ren) classifier.\n
+             Skip applying classification models for ', cell_type(classifier), 
+             ' and its parent cell type.\n', call. = FALSE, immediate. = TRUE)
   }
   
   if (!is.null(pos_parent)) {
@@ -757,16 +771,18 @@ verify_parent <- function(mat, classifier, meta.data) {
 #' @import dplyr
 #' @import pROC
 #' @importFrom stats predict
+#' 
+#' @rdname internal
 test_performance <- function(mat, classifier, tag) {
   overall.roc <- . <- NULL
   
   tag <- unlist(lapply(tag, function(x) if (x == 'yes') {1} else {0}))
   
-  iter <- unique(sort(c(classifier@p_thres, seq(0.1, 0.9, by = 0.1))))
+  iter <- unique(sort(c(p_thres(classifier), seq(0.1, 0.9, by = 0.1))))
   
   # predict
   for (thres in iter) {
-    test_pred = stats::predict(classifier@clf, mat, type = "prob") %>% 
+    test_pred = stats::predict(clf(classifier), mat, type = "prob") %>% 
       dplyr::mutate('class' = apply(., 1, function(x) 
         if(x[1] >= thres) {1} else {0}))
     rownames(test_pred) <- rownames(mat)
@@ -776,29 +792,29 @@ test_performance <- function(mat, classifier, tag) {
     pe <- ROCR::performance(pr, "tpr", "fpr")
     roc.data <- data.frame(fpr=unlist(pe@x.values), tpr=unlist(pe@y.values))
     
-    if (thres == classifier@p_thres) {
+    if (thres == p_thres(classifier)) {
       pred <- test_pred
-      cat(paste0('Current probability threshold: ', toString(classifier@p_thres), '\n'))
+      message('Current probability threshold: ', toString(p_thres(classifier)))
       # accuracy
-      cat(paste0(" ", "\t\tPositive", "\tNegative", "\tTotal\n"))
-      cat(paste0("Actual", "\t\t", toString(length(tag[tag == 1])), 
-                 "\t\t", toString(length(tag[tag == 0])), 
-                 "\t\t", toString(length(tag)), "\n"))
-      cat(paste0("Predicted", "\t", 
-                 toString(nrow(test_pred[test_pred$class == 1,])), 
-                 "\t\t", toString(nrow(test_pred[test_pred$class == 0,])), 
-                 "\t\t", toString(nrow(test_pred)), "\n"))
+      message(" ", "\t\tPositive", "\tNegative", "\tTotal")
+      message("Actual", "\t\t", toString(length(tag[tag == 1])), 
+              "\t\t", toString(length(tag[tag == 0])), 
+              "\t\t", toString(length(tag)))
+      message("Predicted", "\t", 
+              toString(nrow(test_pred[test_pred$class == 1,])),
+              "\t\t", toString(nrow(test_pred[test_pred$class == 0,])), 
+              "\t\t", toString(nrow(test_pred)), "\n")
       count <- 0
       for (i in seq_len(length(tag))) { # can improve this later
         if (tag[i] == test_pred$class[i]) 
           count <- count + 1 
       }
       acc <- count/length(tag)
-      cat(paste0("Accuracy: ", toString(acc), "\n\n"))
-      cat(paste0("Sensivity (True Positive Rate) for ", 
-                 classifier@cell_type, ": ", toString(roc.data[2, 2]), "\n"))
-      cat(paste0("Specificity (1 - False Positive Rate) for ", 
-                 classifier@cell_type, ": ", toString(1 - roc.data[2, 1]), "\n"))
+      message("Accuracy: ", toString(acc), "\n")
+      message("Sensivity (True Positive Rate) for ", 
+              cell_type(classifier), ": ", toString(roc.data[2, 2]))
+      message("Specificity (1 - False Positive Rate) for ", 
+              cell_type(classifier), ": ", toString(1 - roc.data[2, 1]))
     }
     
     # add new result to overall
@@ -808,7 +824,7 @@ test_performance <- function(mat, classifier, tag) {
   # calculate AUC
   roc_obj <- pROC::roc(tag, test_pred$yes, levels = c(0, 1), direction = "<")
   auc_obj = pROC::auc(roc_obj)
-  cat(paste0("Area under the curve: ", toString(auc_obj), "\n"))
+  message("Area under the curve: ", toString(auc_obj))
   
   colnames(overall.roc) <- c('p_thres', 'fpr', 'tpr')
   return_val = list("pred" = pred, "acc" = acc, "test_tag" = tag, 

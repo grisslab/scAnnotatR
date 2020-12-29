@@ -19,7 +19,7 @@ options(rmarkdown.html_vignette.check_title = FALSE)
 
 ## Introduction
 
-One of key functions of the scTypeR package is to provide users 
+One of key functions of the scClassifR package is to provide users 
 easy tools to train their own model classifying new cell types from labeled 
 scRNA-seq data.
 
@@ -45,18 +45,23 @@ which is available in the scRNAseq (2.4.0) library. The dataset is stored as a
 SCE object.
 
 To start the training workflow, we first install and load the necessary libraries. 
-```{r}
+```{r, eval = FALSE}
 # use BiocManager to install from Bioconductor
 if (!requireNamespace("BiocManager", quietly = TRUE))
     install.packages("BiocManager")
 
-# the scTypeR package
-if (!require(scTypeR))
-  BiocManager::install("scTypeR")
+# the scClassifR package
+if (!require(scClassifR))
+  BiocManager::install("scClassifR")
 
 # we use the scRNAseq package to load example data
 if (!require(scRNAseq))
   BiocManager::install("scRNAseq")
+```
+
+```{r}
+library(scRNAseq)
+library(scClassifR)
 ```
 
 First, we load the dataset. To reduce the computational complexity of this vignette, we only use the first 5000 cells of the dataset.
@@ -100,7 +105,7 @@ test_set$B_cell <- unlist(lapply(test_set$`Most likely LM22 cell type`,
                                  function(x) if (is.na(x)) {'ambiguous'} else if (x %in% c('Plasma cells', 'B cells memory', 'B cells naive')) {'B cells'} else {'others'}))
 ```
 
-We observe that there are cells marked NAs. Those can be understood as 1/different from all indicated cell types or 2/any unknown cell types. Here we consider the second case, ie. we don't know whether they are positive or negative to B cells. To avoid any effect of these cells, we can assign them as 'ambiguous'. All cells tagged 'ambiguous' will be ignored by scTypeR from training and testing. 
+We observe that there are cells marked NAs. Those can be understood as 1/different from all indicated cell types or 2/any unknown cell types. Here we consider the second case, ie. we don't know whether they are positive or negative to B cells. To avoid any effect of these cells, we can assign them as 'ambiguous'. All cells tagged 'ambiguous' will be ignored by scClassifR from training and testing. 
 
 We may want to check the number of cells in each category:
 ```{r}
@@ -148,7 +153,7 @@ clf_B <- train_classifier(train_obj = train_set, cell_type = "B cells", features
 ```{r}
 clf_B
 ```
-The classification model is a `scTypeR` object. 
+The classification model is a `scClassifR` object. 
 Details about the classification model are accessible via getter methods. 
 
 For example:

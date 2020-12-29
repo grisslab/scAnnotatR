@@ -2,12 +2,9 @@
 % Please edit documentation in R/tree.R
 \name{save_new_model}
 \alias{save_new_model}
-\alias{save_new_model,scTypeR-method}
 \title{Save a model to the package}
 \usage{
 save_new_model(new_model, include.default = TRUE, path.to.models = ".")
-
-\S4method{save_new_model}{scTypeR}(new_model, include.default = TRUE, path.to.models = ".")
 }
 \arguments{
 \item{new_model}{new model to be added into the classification tree}
