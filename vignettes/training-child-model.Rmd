@@ -39,7 +39,7 @@ the differentiation of a T cell *vs.* other cells.
 
 ## Parent model
 A first prerequisite of training for a child model is the parent model. 
-A parent model is of class scTypeR and must be available in the 
+A parent model is of class scClassifR and must be available in the 
 working space, among default pretrained models of the package or among 
 trained models in a user supplied database.
 
@@ -50,13 +50,13 @@ models to our working place.
 if (!requireNamespace("BiocManager", quietly = TRUE))
     install.packages("BiocManager")
 
-# the scTypeR package
-if (!require(scTypeR))
-  BiocManager::install("scTypeR")
+# the scClassifR package
+if (!require(scClassifR))
+  BiocManager::install("scClassifR")
 ```
 
 ```{r}
-library(scTypeR)
+library(scClassifR)
 ```
 
 ```{r}

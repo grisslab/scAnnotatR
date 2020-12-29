@@ -1,5 +1,5 @@
-context("scTypeR class functions")
-library(scTypeR)
+context("scClassifR class functions")
+library(scClassifR)
 
 test_that("Set cell type changes cell type", {
   data("default_models")

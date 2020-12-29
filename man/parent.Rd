@@ -7,7 +7,7 @@
 parent(classifier)
 }
 \arguments{
-\item{classifier}{scTypeR object}
+\item{classifier}{scClassifR object}
 }
 \value{
 Parent model of object

@@ -427,7 +427,7 @@ setMethod("construct_tag_vect", c("obj" = "SingleCellExperiment"),
 #' @param parent_tag_slot string, name of annotation tag slot in object 
 #' indicating pre-assigned/predicted parent cell type
 #' @param parent_cell_type name of parent cell type
-#' @param parent_clf \code{\link{scTypeR}} object corresponding 
+#' @param parent_clf \code{\link{scClassifR}} object corresponding 
 #' to classification model for the parent cell type
 #' @param path_to_models path to databases, or by default
 #' @param zscore boolean indicating the transformation of gene expression 

@@ -2,8 +2,8 @@
 % Please edit documentation in R/classifier.R
 \name{test_classifier}
 \alias{test_classifier}
-\alias{test_classifier,Seurat,scTypeR-method}
-\alias{test_classifier,SingleCellExperiment,scTypeR-method}
+\alias{test_classifier,Seurat,scClassifR-method}
+\alias{test_classifier,SingleCellExperiment,scClassifR-method}
 \title{Testing process.}
 \usage{
 test_classifier(
@@ -16,7 +16,7 @@ test_classifier(
   ...
 )
 
-\S4method{test_classifier}{Seurat,scTypeR}(
+\S4method{test_classifier}{Seurat,scClassifR}(
   test_obj,
   classifier,
   target_cell_type = NULL,
@@ -30,7 +30,7 @@ test_classifier(
   ...
 )
 
-\S4method{test_classifier}{SingleCellExperiment,scTypeR}(
+\S4method{test_classifier}{SingleCellExperiment,scClassifR}(
   test_obj,
   classifier,
   target_cell_type = NULL,
@@ -53,7 +53,7 @@ that can be considered as the main cell type in classifier,
 for example, c("plasma cell", "b cell", "b cells", "activating b cell"). 
 Default as NULL.}
 
-\item{parent_clf}{\code{\link{scTypeR}} object
+\item{parent_clf}{\code{\link{scClassifR}} object
 corresponding to classification model for the parent cell type}
 
 \item{path_to_models}{path to the folder containing the list of models. 

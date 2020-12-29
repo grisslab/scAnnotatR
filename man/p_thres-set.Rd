@@ -7,13 +7,13 @@
 p_thres(classifier) <- value
 }
 \arguments{
-\item{classifier}{scTypeR object. 
+\item{classifier}{scClassifR object. 
 The object is returned from the train_classifier function.}
 
 \item{value}{the new threshold}
 }
 \value{
-scTypeR object with the new threshold.
+scClassifR object with the new threshold.
 }
 \description{
 Setter for predicting probability threshold

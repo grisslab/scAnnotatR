@@ -1,11 +1,11 @@
-# scTypeR class definition ----
+# scClassifR class definition ----
 
 setOldClass("train")
 
-#' scTypeR class. 
+#' scClassifR class. 
 #' 
 #' This class is returned by the \code{\link{train_classifier}} function.
-#' Generally, scTypeR objects are never created directly.
+#' Generally, scClassifR objects are never created directly.
 #' 
 #' @slot cell_type character. Name of the cell type.
 #' @slot clf list. Trained model returned by caret train function.
@@ -14,7 +14,7 @@ setOldClass("train")
 #' @slot p_thres numeric. 
 #' Probability threshold for the cell type to be assigned for a cell.
 #' @slot parent character. Parent cell type.
-#' @return A scTypeR object.
+#' @return A scClassifR object.
 #' @import methods
 #' @examples
 #' # load small example dataset
@@ -27,7 +27,8 @@ setOldClass("train")
 #'                           features = selected_features_B, cell_type = "B cells")
 #'
 #' clf_b
-scTypeR <- setClass("scTypeR",
+#' @export
+scClassifR <- setClass("scClassifR",
                             slots = list(cell_type = "character", 
                             clf = "train", 
                             features = "character", 
@@ -42,8 +43,9 @@ scTypeR <- setClass("scTypeR",
 #' @param p_thres numeric. 
 #' Probability threshold for the cell type to be assigned for a cell.
 #' @param parent character. Parent cell type.
-scTypeR <- function(cell_type, clf, features, p_thres, parent) {
-    classifier <- methods::new("scTypeR",
+#' @export
+scClassifR <- function(cell_type, clf, features, p_thres, parent) {
+    classifier <- methods::new("scClassifR",
                             cell_type = cell_type,
                             clf = clf,
                             features = features,
@@ -52,9 +54,9 @@ scTypeR <- function(cell_type, clf, features, p_thres, parent) {
     return(classifier)
 }
 
-#' Internal functions of scTypeR package
+#' Internal functions of scClassifR package
 #'
-#' Check if a scTypeR object is valid
+#' Check if a scClassifR object is valid
 #'
 #' @param object The request classifier to check.
 #'
@@ -204,11 +206,11 @@ checkClassifierValidity <- function(clf) {
   return(TRUE)
 }
 
-setValidity("scTypeR", checkObjectValidity)
+setValidity("scClassifR", checkObjectValidity)
 
 #' Show object
 #' 
-#' @param object scTypeR object
+#' @param object scClassifR object
 #' 
 #' @return print to console information about the object
 #' 
@@ -222,11 +224,11 @@ setValidity("scTypeR", checkObjectValidity)
 #' 
 #' @export
 #' @rdname show
-setMethod("show", c("object" = "scTypeR"), function(object) {
-  cat("An object of class scTypeR for ", cell_type(object), "\n")
-  cat("* ", toString(length(features(object))), " features applied: ", 
+setMethod("show", c("object" = "scClassifR"), function(object) {
+  cat("An object of class scClassifR for", cell_type(object), "\n")
+  cat("* ", toString(length(features(object))), "features applied: ", 
                      paste(features(object), collapse = ', '), "\n")
-  cat("* Predicting probability threshold: ", toString(p_thres(object)), "\n")
+  cat("* Predicting probability threshold:", toString(p_thres(object)), "\n")
   if (!is.na(parent(object)) && length(parent(object)) == 1) {
     cat("* A child model of: ", parent(object), "\n")
   } else {
@@ -240,7 +242,7 @@ setMethod("show", c("object" = "scTypeR"), function(object) {
 #' 
 #' Returns the cell type for the given classifier.
 #' 
-#' @param classifier \code{\link{scTypeR}} object
+#' @param classifier \code{\link{scClassifR}} object
 #' 
 #' @return cell type of object
 #' 
@@ -259,9 +261,9 @@ cell_type <- function(classifier) {
 
 #' clf
 #' 
-#' Returns the classifier of the \code{\link{scTypeR}} object
+#' Returns the classifier of the \code{\link{scClassifR}} object
 #' 
-#' @param classifier \code{\link{scTypeR}} object
+#' @param classifier \code{\link{scClassifR}} object
 #' 
 #' @return Classifier is the object returned by caret SVM learning process.
 #' More information about the caret package: https://topepo.github.io/caret/
@@ -283,7 +285,7 @@ clf <- function(classifier) {
 #' 
 #' Returns the set of features for the given classifier.
 #' 
-#' @param classifier scTypeR object
+#' @param classifier scClassifR object
 #' 
 #' @return Applied features of object
 #' 
@@ -305,7 +307,7 @@ features <- function(classifier) {
 #' 
 #' Returns the probability threshold for the given classifier.
 #' 
-#' @param classifier scTypeR object
+#' @param classifier scClassifR object
 #' 
 #' @return Predicting probability threshold of object
 #' 
@@ -327,7 +329,7 @@ p_thres <- function(classifier) {
 #' 
 #' Returns the parent of the cell type corresponding to the given classifier.
 #' 
-#' @param classifier scTypeR object
+#' @param classifier scClassifR object
 #' 
 #' @return Parent model of object
 #' 
@@ -349,11 +351,11 @@ parent <- function(classifier) {
 #' Setter for cell_type
 #' Change cell type for a classifier
 #' 
-#' @param classifier scTypeR object. 
+#' @param classifier scClassifR object. 
 #' The object is returned from the train_classifier function.
 #' @param value the new cell type
 #' 
-#' @return scTypeR object with the new cell type.
+#' @return scClassifR object with the new cell type.
 #' @examples
 #' data("tirosh_mel80_example")
 #' selected_features_B = c("CD19", "MS4A1", "CD79A")
@@ -375,11 +377,11 @@ parent <- function(classifier) {
 
 #' Setter for predicting probability threshold
 #' 
-#' @param classifier scTypeR object. 
+#' @param classifier scClassifR object. 
 #' The object is returned from the train_classifier function.
 #' @param value the new threshold
 #' 
-#' @return scTypeR object with the new threshold.
+#' @return scClassifR object with the new threshold.
 #' @examples
 #' data("tirosh_mel80_example")
 #' selected_features_B = c("CD19", "MS4A1", "CD79A")
@@ -404,11 +406,11 @@ parent <- function(classifier) {
 
 #' Setter for parent
 #' 
-#' @param classifier scTypeR object. 
+#' @param classifier scClassifR object. 
 #' The object is returned from the train_classifier function.
 #' @param value the new parent
 #' 
-#' @return scTypeR object with the new parent.
+#' @return scClassifR object with the new parent.
 #' @rdname internal
 #' 
 "parent<-" <- function(classifier, value) {
@@ -425,11 +427,11 @@ parent <- function(classifier) {
 #' Setter for clf.
 #' Change of clf will also lead to change of features.
 #' 
-#' @param classifier scTypeR object. 
+#' @param classifier scClassifR object. 
 #' The object is returned from the train_classifier function.
 #' @param value the new classifier
 #' 
-#' @return scTypeR object with the new trained classifier.
+#' @return scClassifR object with the new trained classifier.
 #' @rdname internal
 "clf<-" <- function(classifier, value) {
   # set new classifier
@@ -451,11 +453,11 @@ parent <- function(classifier) {
 
 #' Setter for features. Users are not allowed to change features. 
 #' 
-#' @param classifier scTypeR object. 
+#' @param classifier scClassifR object. 
 #' The object is returned from the train_classifier function.
 #' @param value the new classifier
 #' 
-#' @return scTypeR object with the new features.
+#' @return scClassifR object with the new features.
 #' @rdname internal
 #' 
 "features<-" <- function(classifier, value) {

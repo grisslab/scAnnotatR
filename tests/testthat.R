@@ -1,4 +1,4 @@
 library(testthat)
-library(scTypeR)
+library(scClassifR)
 
-test_check("scTypeR")
+test_check("scClassifR")

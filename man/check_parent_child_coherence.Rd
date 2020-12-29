@@ -3,7 +3,7 @@
 \name{check_parent_child_coherence,Seurat-method}
 \alias{check_parent_child_coherence,Seurat-method}
 \alias{check_parent_child_coherence,SingleCellExperiment-method}
-\title{Internal functions of scTypeR package}
+\title{Internal functions of scClassifR package}
 \usage{
 \S4method{check_parent_child_coherence}{Seurat}(
   obj,
@@ -50,11 +50,11 @@ TRUE if the p_thres is valid or the reason why it is not.
 
 TRUE if the classifier is valid or the reason why it is not.
 
-scTypeR object with the new parent.
+scClassifR object with the new parent.
 
-scTypeR object with the new trained classifier.
+scClassifR object with the new trained classifier.
 
-scTypeR object with the new features.
+scClassifR object with the new features.
 
 a list of balanced count matrix
 and corresponding tags of balanced count matrix
