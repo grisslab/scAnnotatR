@@ -14,7 +14,6 @@ train_classifier(
   parent_clf = NULL,
   path_to_models = c("default", "."),
   zscore = TRUE,
-  balance = TRUE,
   ...
 )
 
@@ -26,7 +25,6 @@ train_classifier(
   parent_clf = NULL,
   path_to_models = c("default", "."),
   zscore = TRUE,
-  balance = TRUE,
   seurat_tag_slot = "active.ident",
   seurat_parent_tag_slot = "predicted_cell_type",
   seurat_assay = "RNA",
@@ -42,7 +40,6 @@ train_classifier(
   parent_clf = NULL,
   path_to_models = c("default", "."),
   zscore = TRUE,
-  balance = TRUE,
   sce_tag_slot = "ident",
   sce_parent_tag_slot = "predicted_cell_type",
   sce_assay = "logcounts",
@@ -76,8 +73,6 @@ If user has trained new models, indicate the folder containing the
 new_models.rda file.}
 
 \item{zscore}{whether gene expression in train_obj is transformed to zscore}
-
-\item{balance}{whether applying balancing on training set before training}
 
 \item{...}{arguments passed to other methods}
 

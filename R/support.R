@@ -51,8 +51,6 @@ balance_dataset <- function(mat, tag) {
 #' 
 #' @param mat count matrix of dimension m x n
 #' corresponding to m cells and n features. 
-#' The matrix must have been balanced before. 
-#' If not, pass it through the balance_dataset function.
 #' @param tag named list of training tags/labels (yes/no) 
 #' corresponding to a specific cell type, name and length of 
 #' list must be coherent with cells in mat
@@ -76,12 +74,11 @@ train_func <- function(mat, tag) {
   mat <- as.data.frame(mat)
   mat$tag <- tag
   clf <- caret::train(form = tag ~ ., data = mat, 
-                      method = "svmRadial",
-                      tuneGrid = data.frame(
-                        .C = 1, .sigma = sigma),
+                      method = "svmLinear",
+                      tuneGrid = data.frame(.C = 1),
                       metrix = "Accuracy",
-                      trControl = trainControl(
-                        classProbs = TRUE, trim = TRUE,
+                      trControl = trainControl(method = "cv", 
+                        classProbs = TRUE, trim = TRUE, sampling = 'down',
                         returnData = FALSE, returnResamp = 'none')
                       ) 
   return(clf)

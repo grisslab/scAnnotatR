@@ -24,7 +24,6 @@
 #' If user has trained new models, indicate the folder containing the 
 #' new_models.rda file.
 #' @param zscore whether gene expression in train_obj is transformed to zscore
-#' @param balance whether applying balancing on training set before training
 #' @param ... arguments passed to other methods
 #' 
 #' @return \code{\link{scClassifR}} object
@@ -41,7 +40,7 @@ setGeneric("train_classifier",
            function(train_obj, cell_type, features, 
                     parent_cell = NA_character_, 
                     parent_clf = NULL, path_to_models = c("default", "."), 
-                    zscore = TRUE, balance = TRUE, ...) 
+                    zscore = TRUE, ...) 
              standardGeneric("train_classifier"))
 
 #' @inherit train_classifier
@@ -105,8 +104,7 @@ setGeneric("train_classifier",
 setMethod("train_classifier", c("train_obj" = "Seurat"), 
           function(train_obj, cell_type, features, parent_cell = NA_character_,
                    parent_clf = NULL, path_to_models = c("default", "."), 
-                   zscore = TRUE, balance = TRUE, 
-                   seurat_tag_slot = "active.ident", 
+                   zscore = TRUE, seurat_tag_slot = "active.ident", 
                    seurat_parent_tag_slot = "predicted_cell_type", 
                    seurat_assay = 'RNA', seurat_slot = 'counts', ...) {
   #--- part of parent cell type
@@ -154,16 +152,11 @@ setMethod("train_classifier", c("train_obj" = "Seurat"),
          call. = FALSE)
   }
 
-  # perform balancing ds
-  if (balance == TRUE)
-    balance_ds <- balance_dataset(mat, train_tag)
-  else balance_ds <- list("mat" = mat, "tag" = train_tag)
-  
   # transform list to factor
-  balance_ds$tag <- factor(balance_ds$tag, levels = c('yes', 'no'))
+  train_tag <- factor(train_tag, levels = c('yes', 'no'))
   
   # train
-  clf <- train_func(balance_ds$mat, balance_ds$tag)
+  clf <- train_func(mat, train_tag)
   
   # remove this info to reduce memory
   clf$resampledCM <- NULL 
@@ -210,7 +203,7 @@ setMethod("train_classifier", c("train_obj" = "Seurat"),
 setMethod("train_classifier", c("train_obj" = "SingleCellExperiment"), 
           function(train_obj, cell_type, features, parent_cell = NA_character_,
                    parent_clf = NULL, path_to_models = c("default", "."), 
-                   zscore = TRUE, balance = TRUE, sce_tag_slot = "ident", 
+                   zscore = TRUE, sce_tag_slot = "ident", 
                    sce_parent_tag_slot = "predicted_cell_type", 
                    sce_assay = 'logcounts', ...) {
   # solve duplication of cell names
@@ -260,16 +253,11 @@ setMethod("train_classifier", c("train_obj" = "SingleCellExperiment"),
          call. = FALSE)
   }
   
-  # perform balancing ds
-  if (balance == TRUE)
-    balance_ds <- balance_dataset(mat, train_tag)
-  else balance_ds <- list("mat" = mat, "tag" = train_tag)
-  
   # transform list to factor
-  balance_ds$tag <- factor(balance_ds$tag, levels = c('yes', 'no'))
+  train_tag <- factor(train_tag, levels = c('yes', 'no'))
   
   # train
-  clf <- train_func(balance_ds$mat, balance_ds$tag)
+  clf <- train_func(mat, train_tag)
   
   
   # remove this info to reduce memory
