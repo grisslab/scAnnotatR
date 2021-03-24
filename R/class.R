@@ -440,6 +440,7 @@ parent <- function(classifier) {
     
     # set new features
     new_features <- labels(value$terms)
+    new_features <- gsub('_', '-', new_features) # convert underscore to hyphen if exists
     features(classifier) <- new_features
   } else {
     stop("Can only assign new classifier for a cell type that has no parent.

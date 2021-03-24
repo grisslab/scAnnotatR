@@ -155,6 +155,9 @@ setMethod("train_classifier", c("train_obj" = "Seurat"),
   # transform list to factor
   train_tag <- factor(train_tag, levels = c('yes', 'no'))
   
+  # convert hyphen (-) by underscore (_)
+  colnames(mat) <- gsub('-', '_', colnames(mat))
+  
   # train
   clf <- train_func(mat, train_tag)
   
@@ -162,7 +165,9 @@ setMethod("train_classifier", c("train_obj" = "Seurat"),
   clf$resampledCM <- NULL 
   p_thres <- 0.5
   
-  object <- scClassifR(cell_type, clf, labels(clf$terms), p_thres, 
+  features <- labels(clf$terms)
+  features <- gsub('_', '-', features) # convert back underscore to hyphen
+  object <- scClassifR(cell_type, clf, features, p_thres, 
                              NA_character_)
   
   # only assign parent if pretrained model for parent cell type is avai
@@ -256,15 +261,19 @@ setMethod("train_classifier", c("train_obj" = "SingleCellExperiment"),
   # transform list to factor
   train_tag <- factor(train_tag, levels = c('yes', 'no'))
   
+  # convert hyphen (-) by underscore (_)
+  colnames(mat) <- gsub('-', '_', colnames(mat))
+  
   # train
   clf <- train_func(mat, train_tag)
-  
   
   # remove this info to reduce memory
   clf$resampledCM <- NULL 
   p_thres <- 0.5
   
-  object <- scClassifR(cell_type, clf, labels(clf$terms), p_thres, 
+  features <- labels(clf$terms)
+  features <- gsub('_', '-', features) # convert back underscore to hyphen
+  object <- scClassifR(cell_type, clf, features, p_thres, 
                              NA_character_)
   
   # only assign parent if pretrained model for parent cell type is avai

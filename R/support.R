@@ -497,6 +497,9 @@ setMethod("process_parent_clf", c("obj" = "Seurat"),
         filtered_mat <- transform_to_zscore(filtered_mat)
       }
       
+      # to avoid problem triggered by '-' in gene names
+      colnames(filtered_mat) <- gsub('-', '_', colnames(filtered_mat))
+      
       # predict
       pred = stats::predict(clf(parent.clf), filtered_mat, type = "prob") %>% 
            dplyr::mutate('class' = apply(., 1, 
@@ -581,6 +584,9 @@ setMethod("process_parent_clf", c("obj" = "SingleCellExperiment"),
         filtered_mat <- transform_to_zscore(filtered_mat)
       }
       
+      # to avoid problem triggered by '-' in gene names
+      colnames(filtered_mat) <- gsub('-', '_', colnames(filtered_mat))
+      
       # predict
       pred = stats::predict(clf(parent.clf), filtered_mat, type = "prob") %>% 
         dplyr::mutate('class' = apply(., 1, 
@@ -625,6 +631,9 @@ make_prediction <- function(mat, classifier, pred_cells,
                             ignore_ambiguous_result = TRUE) {
   . <- NULL
   cells <- names(pred_cells)
+  
+  # to avoid problem triggered by '-' in gene names
+  colnames(mat) <- gsub('-', '_', colnames(mat))
   
   # predict
   pred = stats::predict(clf(classifier), mat, type = "prob") %>%
@@ -773,6 +782,10 @@ verify_parent <- function(mat, classifier, meta.data) {
 test_performance <- function(mat, classifier, tag) {
   overall.roc <- . <- NULL
   
+  # to avoid problem triggered by '-' in gene names
+  colnames(mat) <- gsub('-', '_', colnames(mat))
+  #labels(clf(classifier)$terms) <- gsub('-', '_', labels(clf(classifier)$terms))
+    
   tag <- unlist(lapply(tag, function(x) if (x == 'yes') {1} else {0}))
   
   iter <- unique(sort(c(p_thres(classifier), seq(0.1, 0.9, by = 0.1))))
