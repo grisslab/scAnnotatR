@@ -637,13 +637,6 @@ setMethod("classify_cells", c("classify_obj" = "Seurat"),
                    path_to_models = c("default", "."), 
                    ignore_ambiguous_result = FALSE, cluster_slot = 'seurat_clusters', 
                    seurat_assay = 'RNA', seurat_slot = 'counts', ...) {
-  mat = Seurat::GetAssayData(object = classify_obj, 
-                             assay = seurat_assay, slot = seurat_slot)
-  
-  # create an empty cell type for all cells
-  pred_cells <- c(rep("", ncol(mat))) 
-  names(pred_cells) <- colnames(mat)
-  
   if (is.null(classifiers)) { 
     model_list <- load_models(path_to_models)
     
@@ -652,65 +645,82 @@ setMethod("classify_cells", c("classify_obj" = "Seurat"),
     else classifiers <- model_list
   }
   
-  # reduce features to reduce computational complexity
   union.features <- unique(unname(unlist(lapply(classifiers, 
                                                 function(x) features(x)))))
-  mat <- select_features(mat, union.features)
+  chunk.size = 5000
+  nchunks = ceiling(ncol(classify_obj)/chunk.size)
+  for (i in seq(1, nchunks)) {
+    idx.chunk = seq((i - 1) * chunk.size + 1, 
+                    min(ncol(classify_obj), i * chunk.size))
+    obj.chunk <- classify_obj[, idx.chunk]
+    
+    mat = Seurat::GetAssayData(object = obj.chunk, 
+                               assay = seurat_assay, slot = seurat_slot)
+    
+    # create an empty cell type for all cells
+    pred_cells <- c(rep("", ncol(mat))) 
+    names(pred_cells) <- colnames(mat)
+    
+    # reduce features to reduce computational complexity
+    mat <- select_features(mat, union.features)
+    
+    # run predictors
+    for (classifier in classifiers) {
+      if (!is.na(parent(classifier))) {
+        applicable_mat <- verify_parent(mat, classifier, obj.chunk[[]])
+        if (is.null(applicable_mat)) next # no parent clf provided or no positive to parent clf
+      } else applicable_mat <- mat
   
-  # run predictors
-  for (classifier in classifiers) {
-    if (!is.na(parent(classifier))) {
-      applicable_mat <- verify_parent(mat, classifier, classify_obj[[]])
-      if (is.null(applicable_mat)) next # no parent clf provided or no positive to parent clf
-    } else applicable_mat <- mat
-
-    filtered_mat <- select_features(applicable_mat, features(classifier))
-    filtered_mat <- t(as.matrix(filtered_mat))
-    filtered_mat <- transform_to_zscore(filtered_mat)
-    
-    prediction <- make_prediction(
-      filtered_mat, classifier, pred_cells, ignore_ambiguous_result
-    )
-    pred <- prediction$pred
-    pred_cells <- prediction$pred_cells
-    
-    # add prediction to meta data: each classifier/celltype has 2 col: p, class
-    for (colname in colnames(pred)) {
-      classify_obj[[colname]] <- pred[, colname, drop = FALSE]
-    }
-  }
-  
-  if (any(pred_cells != "")) {
-    pred_cells <- gsub("/$", "", pred_cells)
-    
-    # ignore ambiguous results
-    if (ignore_ambiguous_result == TRUE) {
-      pred_cells <- unlist(
-        lapply(pred_cells, function(x) 
-          if (length(unlist(strsplit(x, split = '/'))) <= 1) {x} 
-          else {'ambiguous'})
+      filtered_mat <- select_features(applicable_mat, features(classifier))
+      filtered_mat <- t(as.matrix(filtered_mat))
+      filtered_mat <- transform_to_zscore(filtered_mat)
+      
+      prediction <- make_prediction(
+        filtered_mat, classifier, pred_cells, ignore_ambiguous_result
       )
-    } 
+      pred <- prediction$pred
+      pred_cells <- prediction$pred_cells
+      
+      # add prediction to meta data: each classifier/celltype has 2 col: p, class
+      for (colname in colnames(pred)) {
+        obj.chunk[[colname]] <- pred[, colname, drop = FALSE]
+      }
+    }
     
-    # add cell type to meta data
-    classify_obj[['predicted_cell_type']] <- pred_cells
+    if (any(pred_cells != "")) {
+      pred_cells <- gsub("/$", "", pred_cells)
+      
+      # ignore ambiguous results
+      if (ignore_ambiguous_result == TRUE) {
+        pred_cells <- unlist(
+          lapply(pred_cells, function(x) 
+            if (length(unlist(strsplit(x, split = '/'))) <= 1) {x} 
+            else {'ambiguous'})
+        )
+      } 
+      
+      # add cell type to meta data
+      obj.chunk[['predicted_cell_type']] <- pred_cells
+      
+      # simplify result can only happen when not ignore ambiguous results
+      if (ignore_ambiguous_result == FALSE) 
+        obj.chunk[['most_probable_cell_type']] <- simplify_prediction(
+          obj.chunk[[]], as.matrix(mat), classifiers)
+    }
     
-    # simplify result can only happen when not ignore ambiguous results
-    if (ignore_ambiguous_result == FALSE) 
-      classify_obj[['most_probable_cell_type']] <- simplify_prediction(
-        classify_obj[[]], as.matrix(mat), classifiers
-    )
+    if (i == 1) classified_obj <- obj.chunk
+    else classified_obj <- merge(classified_obj, obj.chunk)
   }
   
   if (!is.null(cluster_slot) 
-      & cluster_slot %in% colnames(classify_obj[[]]) 
+      & cluster_slot %in% colnames(classified_obj[[]]) 
       & !ignore_ambiguous_result) {
-    clusts <- classify_obj[[]][, cluster_slot]
-    classify_obj$clust_pred <- 
-      classify_clust(clusts, classify_obj$most_probable_cell_type)
+    clusts <- as.factor(classified_obj[[]][, cluster_slot])
+    classified_obj$clust_pred <- 
+      classify_clust(clusts, classified_obj$most_probable_cell_type)
   }
   
-  return(classify_obj)
+  return(classified_obj)
 })
 
 #' @inherit classify_cells
@@ -731,12 +741,6 @@ setMethod("classify_cells", c("classify_obj" = "SingleCellExperiment"),
   # solve duplication of cell names
   colnames(classify_obj) <- make.unique(colnames(classify_obj), sep = '_')
   
-  mat = SummarizedExperiment::assay(classify_obj, sce_assay)
-  
-  # create an empty cell type for all cells
-  pred_cells <- c(rep("", ncol(mat))) 
-  names(pred_cells) <- colnames(mat)
-  
   if (is.null(classifiers)) { 
     model_list <- load_models(path_to_models)
     
@@ -744,71 +748,83 @@ setMethod("classify_cells", c("classify_obj" = "SingleCellExperiment"),
     else classifiers <- model_list
   }
   
-  # reduce features to reduce computational complexity
   union.features <- unique(unname(unlist(lapply(classifiers, 
                                                 function(x) features(x)))))
-  mat <- select_features(mat, union.features)
   
-  # run predictors
-  start_time <- Sys.time()
-  for (classifier in classifiers) {
-    if (!is.na(parent(classifier))) { 
-      applicable_mat <- verify_parent(mat, classifier, colData(classify_obj))
-      if (is.null(applicable_mat)) next # no parent clf provided or no positive to parent clf
-    } else applicable_mat <- mat
-
-    filtered_mat <- select_features(applicable_mat, features(classifier))
-    filtered_mat <- t(as.matrix(filtered_mat))
-    filtered_mat <- transform_to_zscore(filtered_mat)
+  # split dataset into multiple chunks to reduce running time
+  chunk.size = 5000
+  nchunks = ceiling(ncol(classify_obj)/chunk.size)
+  for (i in seq(1, nchunks)) {
+    idx.chunk = seq((i - 1) * chunk.size + 1, 
+                    min(ncol(classify_obj), i * chunk.size))
+    obj.chunk <- classify_obj[, idx.chunk]
     
-    prediction <- make_prediction(
-      filtered_mat, classifier, pred_cells, ignore_ambiguous_result
-    )
+    mat = SummarizedExperiment::assay(obj.chunk, sce_assay)
     
-    pred <- prediction$pred
-    pred_cells <- prediction$pred_cells
-    # add prediction to meta data: 2 cols: p, class 
-    for (colname in colnames(pred)) {
-      classify_obj[[colname]] <- unlist(
-        lapply(colnames(classify_obj), function(x)
-          if (x %in% rownames(pred)) {pred[x, colname]}
-          else {NA})
-      )
-    }
-  }
-  end_time <- Sys.time()
-  print(difftime(end_time, start_time, units = "secs")[[1]])
-  
-  if (any(pred_cells != "")) {
-    pred_cells <- gsub("/$", "", pred_cells)
+    # create an empty cell type for all cells
+    pred_cells <- c(rep("", ncol(mat))) 
+    names(pred_cells) <- colnames(mat)
     
-    # double check if there is more than one predicted cell type
-    if (ignore_ambiguous_result == TRUE) {
-      pred_cells <- unlist(
-        lapply(pred_cells, function(x) 
-          if (length(unlist(strsplit(x, split = '/'))) <= 1) {x} 
-          else {'ambiguous'})
+    # reduce features to reduce computational complexity
+    mat <- select_features(mat, union.features)
+    
+    # run predictors
+    for (classifier in classifiers) {
+      if (!is.na(parent(classifier))) { 
+        applicable_mat <- verify_parent(mat, classifier, colData(obj.chunk))
+        if (is.null(applicable_mat)) next # no parent clf provided or no positive to parent clf
+      } else applicable_mat <- mat
+      
+      filtered_mat <- select_features(applicable_mat, features(classifier))
+      filtered_mat <- t(as.matrix(filtered_mat))
+      filtered_mat <- transform_to_zscore(filtered_mat)
+      
+      prediction <- make_prediction(
+        filtered_mat, classifier, pred_cells, ignore_ambiguous_result)
+      
+      pred <- prediction$pred
+      pred_cells <- prediction$pred_cells
+      # add prediction to meta data: 2 cols: p, class 
+      for (colname in colnames(pred)) {
+        obj.chunk[[colname]] <- unlist(
+          lapply(colnames(obj.chunk), function(x)
+            if (x %in% rownames(pred)) {pred[x, colname]}
+            else {NA})
         )
-    } 
-  
-    # add cell type to meta data
-    classify_obj$predicted_cell_type <- pred_cells
-    start_time <- Sys.time()
-    # this will be ignored if ignore ambiguous result is on
-    if (ignore_ambiguous_result == FALSE) 
-      classify_obj$most_probable_cell_type <- simplify_prediction(
-        as.matrix(SummarizedExperiment::colData(classify_obj)), 
-        as.matrix(mat), classifiers
-      )
-    end_time <- Sys.time()
-    print(difftime(end_time, start_time, units = "secs")[[1]])
+      }
+    }
+    
+    if (any(pred_cells != "")) {
+      pred_cells <- gsub("/$", "", pred_cells)
+      
+      # double check if there is more than one predicted cell type
+      if (ignore_ambiguous_result == TRUE) {
+        pred_cells <- unlist(
+          lapply(pred_cells, function(x) 
+            if (length(unlist(strsplit(x, split = '/'))) <= 1) {x} 
+            else {'ambiguous'})
+          )
+      } 
+    
+      # add cell type to meta data
+      obj.chunk$predicted_cell_type <- pred_cells
+      # this will be ignored if ignore ambiguous result is on
+      if (ignore_ambiguous_result == FALSE) 
+        obj.chunk$most_probable_cell_type <- simplify_prediction(
+          as.matrix(SummarizedExperiment::colData(obj.chunk)), 
+          as.matrix(mat), classifiers
+        )
+    }
+    
+    if (i == 1) classified_obj <- obj.chunk
+    else classified_obj <- cbind(classified_obj, obj.chunk)
   }
   
   if (!is.null(cluster_slot) & !ignore_ambiguous_result) {
-    clusts <- SummarizedExperiment::colData(classify_obj)[, cluster_slot]
-    classify_obj$clust_pred <- 
-      classify_clust(clusts, classify_obj$most_probable_cell_type)
+    clusts <- SummarizedExperiment::colData(classified_obj)[, cluster_slot]
+    classified_obj$clust_pred <- 
+      classify_clust(clusts, classified_obj$most_probable_cell_type)
   }
   
-  return(classify_obj)
+  return(classified_obj)
 })

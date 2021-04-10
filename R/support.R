@@ -784,7 +784,6 @@ test_performance <- function(mat, classifier, tag) {
   
   # to avoid problem triggered by '-' in gene names
   colnames(mat) <- gsub('-', '_', colnames(mat))
-  #labels(clf(classifier)$terms) <- gsub('-', '_', labels(clf(classifier)$terms))
     
   tag <- unlist(lapply(tag, function(x) if (x == 'yes') {1} else {0}))
   
