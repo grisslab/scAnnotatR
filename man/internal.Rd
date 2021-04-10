@@ -29,6 +29,7 @@
 \alias{simplify_prediction}
 \alias{verify_parent}
 \alias{test_performance}
+\alias{classify_clust}
 \title{Internal functions of scClassifR package}
 \usage{
 checkObjectValidity(object)
@@ -120,6 +121,8 @@ simplify_prediction(meta.data, mat, classifiers)
 verify_parent(mat, classifier, meta.data)
 
 test_performance(mat, classifier, tag)
+
+classify_clust(clusts, most_probable_cell_type)
 }
 \arguments{
 \item{object}{The request classifier to check.}
@@ -183,6 +186,10 @@ in \code{\link{SingleCellExperiment}} object}
 \item{meta.data}{object meta data}
 
 \item{classifiers}{classifiers}
+
+\item{clusts}{cluster info}
+
+\item{most_probable_cell_type}{predicted cell type}
 }
 \value{
 TRUE if the classifier is valid or the reason why it is not

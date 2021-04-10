@@ -841,3 +841,22 @@ test_performance <- function(mat, classifier, tag) {
                     "overall_roc" = overall.roc, 'auc' = auc_obj)
   return(return_val)
 }
+
+#' Test clf performance
+#'
+#' @param clusts cluster info
+#' @param most_probable_cell_type predicted cell type
+#' 
+#' @importFrom plyr mapvalues
+#' @rdname internal
+classify_clust <- function(clusts, most_probable_cell_type) {
+  clust.cell.coor <- table(most_probable_cell_type, clusts) 
+  max.val <- apply(clust.cell.coor, 2, function(x) max(x)/sum(x))
+  names(max.val) <- 
+    unname(apply(clust.cell.coor, 2, 
+                 function(x) rownames(clust.cell.coor)[which.max(x)]))
+  clust.pred <- paste0(round(max.val * 100, 2), '% ', names(max.val))
+  converted_pred <- 
+    plyr::mapvalues(clusts, from = levels(clusts),
+                    to = levels(factor(clust.pred, levels = unique(clust.pred))))
+}

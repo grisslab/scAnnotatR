@@ -298,7 +298,6 @@ clf <- function(classifier) {
 #' features(clf_b)
 #' 
 #' @export
-#' 
 features <- function(classifier) {
   return(classifier@features)
 }

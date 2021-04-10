@@ -575,6 +575,9 @@ plot_roc_curve <- function(test_result) {
 #' (multiple cell types) to empty
 #' When this parameter turns to TRUE, 
 #' most probably predicted cell types will be ignored.  
+#' @param cluster_slot name of slot in meta data containing cluster 
+#' information, in case users want to have additional cluster-level 
+#' prediction
 #' @param ... arguments passed to other methods
 #' 
 #' @return the input object with new slots in cells meta data
@@ -584,8 +587,9 @@ plot_roc_curve <- function(test_result) {
 #' @export
 setGeneric("classify_cells", function(classify_obj, classifiers = NULL, 
                                       cell_types = "all", 
-                                      path_to_models = c("default", "."), 
-                                      ignore_ambiguous_result = FALSE, ...) 
+                                      path_to_models = c("default", "."),
+                                      ignore_ambiguous_result = FALSE, 
+                                      cluster_slot = NULL, ...) 
   standardGeneric("classify_cells"))
 
 #' @inherit classify_cells
@@ -631,8 +635,8 @@ setGeneric("classify_cells", function(classify_obj, classifiers = NULL,
 setMethod("classify_cells", c("classify_obj" = "Seurat"), 
           function(classify_obj, classifiers = NULL, cell_types = "all", 
                    path_to_models = c("default", "."), 
-                   ignore_ambiguous_result = FALSE, seurat_assay = 'RNA', 
-                   seurat_slot = 'counts', ...) {
+                   ignore_ambiguous_result = FALSE, cluster_slot = 'seurat_clusters', 
+                   seurat_assay = 'RNA', seurat_slot = 'counts', ...) {
   mat = Seurat::GetAssayData(object = classify_obj, 
                              assay = seurat_assay, slot = seurat_slot)
   
@@ -647,6 +651,11 @@ setMethod("classify_cells", c("classify_obj" = "Seurat"),
       classifiers = model_list[cell_types]
     else classifiers <- model_list
   }
+  
+  # reduce features to reduce computational complexity
+  union.features <- unique(unname(unlist(lapply(classifiers, 
+                                                function(x) features(x)))))
+  mat <- select_features(mat, union.features)
   
   # run predictors
   for (classifier in classifiers) {
@@ -693,6 +702,14 @@ setMethod("classify_cells", c("classify_obj" = "Seurat"),
     )
   }
   
+  if (!is.null(cluster_slot) 
+      & cluster_slot %in% colnames(classify_obj[[]]) 
+      & !ignore_ambiguous_result) {
+    clusts <- classify_obj[[]][, cluster_slot]
+    classify_obj$clust_pred <- 
+      classify_clust(clusts, classify_obj$most_probable_cell_type)
+  }
+  
   return(classify_obj)
 })
 
@@ -710,7 +727,7 @@ setMethod("classify_cells", c("classify_obj" = "SingleCellExperiment"),
           function(classify_obj, classifiers = NULL, cell_types = "all", 
                    path_to_models = c("default", "."), 
                    ignore_ambiguous_result = FALSE, 
-                   sce_assay = 'logcounts', ...) {
+                   sce_assay = 'logcounts', cluster_slot = NULL, ...) {
   # solve duplication of cell names
   colnames(classify_obj) <- make.unique(colnames(classify_obj), sep = '_')
   
@@ -727,7 +744,13 @@ setMethod("classify_cells", c("classify_obj" = "SingleCellExperiment"),
     else classifiers <- model_list
   }
   
+  # reduce features to reduce computational complexity
+  union.features <- unique(unname(unlist(lapply(classifiers, 
+                                                function(x) features(x)))))
+  mat <- select_features(mat, union.features)
+  
   # run predictors
+  start_time <- Sys.time()
   for (classifier in classifiers) {
     if (!is.na(parent(classifier))) { 
       applicable_mat <- verify_parent(mat, classifier, colData(classify_obj))
@@ -753,6 +776,8 @@ setMethod("classify_cells", c("classify_obj" = "SingleCellExperiment"),
       )
     }
   }
+  end_time <- Sys.time()
+  print(difftime(end_time, start_time, units = "secs")[[1]])
   
   if (any(pred_cells != "")) {
     pred_cells <- gsub("/$", "", pred_cells)
@@ -765,16 +790,25 @@ setMethod("classify_cells", c("classify_obj" = "SingleCellExperiment"),
           else {'ambiguous'})
         )
     } 
-    
+  
     # add cell type to meta data
     classify_obj$predicted_cell_type <- pred_cells
-    
+    start_time <- Sys.time()
     # this will be ignored if ignore ambiguous result is on
     if (ignore_ambiguous_result == FALSE) 
       classify_obj$most_probable_cell_type <- simplify_prediction(
         as.matrix(SummarizedExperiment::colData(classify_obj)), 
         as.matrix(mat), classifiers
       )
+    end_time <- Sys.time()
+    print(difftime(end_time, start_time, units = "secs")[[1]])
   }
+  
+  if (!is.null(cluster_slot) & !ignore_ambiguous_result) {
+    clusts <- SummarizedExperiment::colData(classify_obj)[, cluster_slot]
+    classify_obj$clust_pred <- 
+      classify_clust(clusts, classify_obj$most_probable_cell_type)
+  }
+  
   return(classify_obj)
 })

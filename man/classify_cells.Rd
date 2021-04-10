@@ -12,6 +12,7 @@ classify_cells(
   cell_types = "all",
   path_to_models = c("default", "."),
   ignore_ambiguous_result = FALSE,
+  cluster_slot = NULL,
   ...
 )
 
@@ -21,6 +22,7 @@ classify_cells(
   cell_types = "all",
   path_to_models = c("default", "."),
   ignore_ambiguous_result = FALSE,
+  cluster_slot = "seurat_clusters",
   seurat_assay = "RNA",
   seurat_slot = "counts",
   ...
@@ -33,6 +35,7 @@ classify_cells(
   path_to_models = c("default", "."),
   ignore_ambiguous_result = FALSE,
   sce_assay = "logcounts",
+  cluster_slot = NULL,
   ...
 )
 }
@@ -60,6 +63,10 @@ new_models.rda file.}
 (multiple cell types) to empty
 When this parameter turns to TRUE, 
 most probably predicted cell types will be ignored.}
+
+\item{cluster_slot}{name of slot in meta data containing cluster 
+information, in case users want to have additional cluster-level 
+prediction}
 
 \item{...}{arguments passed to other methods}
 
