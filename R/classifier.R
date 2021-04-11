@@ -647,33 +647,33 @@ setMethod("classify_cells", c("classify_obj" = "Seurat"),
   
   union.features <- unique(unname(unlist(lapply(classifiers, 
                                                 function(x) features(x)))))
+  mat = Seurat::GetAssayData(object = classify_obj, 
+                             assay = seurat_assay, slot = seurat_slot)
+  # reduce features to reduce computational complexity
+  mat <- select_features(mat, union.features)
+  mat <- t(transform_to_zscore(t(as.matrix(mat))))
+  
   chunk.size = 5000
   nchunks = ceiling(ncol(classify_obj)/chunk.size)
   for (i in seq(1, nchunks)) {
     idx.chunk = seq((i - 1) * chunk.size + 1, 
                     min(ncol(classify_obj), i * chunk.size))
     obj.chunk <- classify_obj[, idx.chunk]
-    
-    mat = Seurat::GetAssayData(object = obj.chunk, 
-                               assay = seurat_assay, slot = seurat_slot)
+    mat.chunk <- mat[, idx.chunk]
     
     # create an empty cell type for all cells
-    pred_cells <- c(rep("", ncol(mat))) 
-    names(pred_cells) <- colnames(mat)
-    
-    # reduce features to reduce computational complexity
-    mat <- select_features(mat, union.features)
+    pred_cells <- c(rep("", ncol(mat.chunk))) 
+    names(pred_cells) <- colnames(mat.chunk)
     
     # run predictors
     for (classifier in classifiers) {
       if (!is.na(parent(classifier))) {
-        applicable_mat <- verify_parent(mat, classifier, obj.chunk[[]])
+        applicable_mat <- verify_parent(mat.chunk, classifier, obj.chunk[[]])
         if (is.null(applicable_mat)) next # no parent clf provided or no positive to parent clf
-      } else applicable_mat <- mat
+      } else applicable_mat <- mat.chunk
   
       filtered_mat <- select_features(applicable_mat, features(classifier))
       filtered_mat <- t(as.matrix(filtered_mat))
-      filtered_mat <- transform_to_zscore(filtered_mat)
       
       prediction <- make_prediction(
         filtered_mat, classifier, pred_cells, ignore_ambiguous_result
@@ -705,7 +705,7 @@ setMethod("classify_cells", c("classify_obj" = "Seurat"),
       # simplify result can only happen when not ignore ambiguous results
       if (ignore_ambiguous_result == FALSE) 
         obj.chunk[['most_probable_cell_type']] <- simplify_prediction(
-          obj.chunk[[]], as.matrix(mat), classifiers)
+          obj.chunk[[]], as.matrix(mat.chunk), classifiers)
     }
     
     if (i == 1) classified_obj <- obj.chunk
@@ -720,7 +720,11 @@ setMethod("classify_cells", c("classify_obj" = "Seurat"),
       classify_clust(clusts, classified_obj$most_probable_cell_type)
   }
   
-  return(classified_obj)
+  new.cols <- colnames(classified_obj[[]])[!colnames(classified_obj[[]]) 
+                                           %in% colnames(classify_obj[[]])]
+  for (colname in new.cols)
+    classify_obj[[colname]] <- classified_obj[[colname]]
+  return(classify_obj)
 })
 
 #' @inherit classify_cells
@@ -750,6 +754,10 @@ setMethod("classify_cells", c("classify_obj" = "SingleCellExperiment"),
   
   union.features <- unique(unname(unlist(lapply(classifiers, 
                                                 function(x) features(x)))))
+  mat = SummarizedExperiment::assay(classify_obj, sce_assay)
+  # reduce features to reduce computational complexity
+  mat <- select_features(mat, union.features)
+  mat <- t(transform_to_zscore(t(as.matrix(mat))))
   
   # split dataset into multiple chunks to reduce running time
   chunk.size = 5000
@@ -758,26 +766,21 @@ setMethod("classify_cells", c("classify_obj" = "SingleCellExperiment"),
     idx.chunk = seq((i - 1) * chunk.size + 1, 
                     min(ncol(classify_obj), i * chunk.size))
     obj.chunk <- classify_obj[, idx.chunk]
-    
-    mat = SummarizedExperiment::assay(obj.chunk, sce_assay)
+    mat.chunk <- mat[, idx.chunk]
     
     # create an empty cell type for all cells
-    pred_cells <- c(rep("", ncol(mat))) 
-    names(pred_cells) <- colnames(mat)
-    
-    # reduce features to reduce computational complexity
-    mat <- select_features(mat, union.features)
+    pred_cells <- c(rep("", ncol(mat.chunk))) 
+    names(pred_cells) <- colnames(mat.chunk)
     
     # run predictors
     for (classifier in classifiers) {
       if (!is.na(parent(classifier))) { 
-        applicable_mat <- verify_parent(mat, classifier, colData(obj.chunk))
+        applicable_mat <- verify_parent(mat.chunk, classifier, colData(obj.chunk))
         if (is.null(applicable_mat)) next # no parent clf provided or no positive to parent clf
-      } else applicable_mat <- mat
+      } else applicable_mat <- mat.chunk
       
       filtered_mat <- select_features(applicable_mat, features(classifier))
       filtered_mat <- t(as.matrix(filtered_mat))
-      filtered_mat <- transform_to_zscore(filtered_mat)
       
       prediction <- make_prediction(
         filtered_mat, classifier, pred_cells, ignore_ambiguous_result)
@@ -812,7 +815,7 @@ setMethod("classify_cells", c("classify_obj" = "SingleCellExperiment"),
       if (ignore_ambiguous_result == FALSE) 
         obj.chunk$most_probable_cell_type <- simplify_prediction(
           as.matrix(SummarizedExperiment::colData(obj.chunk)), 
-          as.matrix(mat), classifiers
+          as.matrix(mat.chunk), classifiers
         )
     }
     

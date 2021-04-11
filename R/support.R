@@ -66,10 +66,10 @@ train_func <- function(mat, tag) {
   
   # calculate sigma
   # calculate var of mat
-  mat.vec <- as.vector(mat)
-  mat.len <- length(mat.vec)
-  mat.var <- var(mat.vec) * (mat.len - 1) / mat.len
-  sigma <- 1 / (ncol(mat) * mat.var)
+  # mat.vec <- as.vector(mat)
+  # mat.len <- length(mat.vec)
+  # mat.var <- var(mat.vec) * (mat.len - 1) / mat.len
+  # sigma <- 1 / (ncol(mat) * mat.var)
 
   mat <- as.data.frame(mat)
   mat$tag <- tag
