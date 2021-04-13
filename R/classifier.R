@@ -258,7 +258,7 @@ setMethod("train_classifier", c("train_obj" = "SingleCellExperiment"),
   
   # exclude all eliminated cells
   mat <- mat[colnames(train_obj),]
-  print(head(mat))
+  
   # construct cell tag to yes/no values
   train_tag <- construct_tag_vect(train_obj, cell_type, sce_tag_slot)
   
