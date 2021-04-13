@@ -107,6 +107,10 @@ setMethod("train_classifier", c("train_obj" = "Seurat"),
                    zscore = TRUE, seurat_tag_slot = "active.ident", 
                    seurat_parent_tag_slot = "predicted_cell_type", 
                    seurat_assay = 'RNA', seurat_slot = 'counts', ...) {
+  # convert Seurat object to matrix
+  mat = Seurat::GetAssayData(object = train_obj, 
+                             assay = seurat_assay, slot = seurat_slot)
+  
   #--- part of parent cell type
   parent_process <- process_parent_clf(
     train_obj, seurat_parent_tag_slot, parent_cell, parent_clf, 
@@ -129,12 +133,11 @@ setMethod("train_classifier", c("train_obj" = "Seurat"),
   # filter cells
   train_obj <- filter_cells(train_obj, seurat_tag_slot)
   
-  # convert Seurat object to matrix
-  mat = Seurat::GetAssayData(object = train_obj, 
-                             assay = seurat_assay, slot = seurat_slot)
-  
   # feature selection
-  mat <- select_features(mat, features)
+  if (is.null(parent_process$parent.clf))
+    mat <- select_features(mat, features)
+  else mat <- 
+    select_features(mat, union(features, features(parent_process$parent.clf)))
   
   # transpose mat
   mat <- t(as.matrix(mat))
@@ -142,6 +145,9 @@ setMethod("train_classifier", c("train_obj" = "Seurat"),
   # transform mat to zscore values
   if (zscore == TRUE)
     mat <- transform_to_zscore(mat)
+  
+  # exclude all eliminated cells
+  mat <- mat[colnames(train_obj),]
   
   # construct cell tag to yes/no values
   train_tag <- construct_tag_vect(train_obj, cell_type, seurat_tag_slot)
@@ -213,7 +219,10 @@ setMethod("train_classifier", c("train_obj" = "SingleCellExperiment"),
                    sce_assay = 'logcounts', ...) {
   # solve duplication of cell names
   colnames(train_obj) <- make.unique(colnames(train_obj), sep = '_')
-            
+  
+  # convert Seurat object to matrix
+  mat = SummarizedExperiment::assay(train_obj, sce_assay)
+  
   #--- part of parent cell type
   parent_process <- process_parent_clf(
     train_obj, sce_parent_tag_slot, parent_cell, parent_clf, 
@@ -229,26 +238,27 @@ setMethod("train_classifier", c("train_obj" = "SingleCellExperiment"),
     train_obj <- check_res$adjusted_object
     sce_tag_slot <- check_res$adjusted_tag_slot
   }
-  
   #--- end of part of parent cell type
   
   #--- part of cell type
   # filter cells
   train_obj <- filter_cells(train_obj, sce_tag_slot)
   
-  # convert Seurat object to matrix
-  mat = SummarizedExperiment::assay(train_obj, sce_assay)
-  
   # feature selection
-  mat <- select_features(mat, features)
+  if (is.null(parent_process$parent.clf))
+    mat <- select_features(mat, features)
+  else mat <- 
+    select_features(mat, union(features, features(parent_process$parent.clf)))
   
   # transpose mat
   mat <- t(as.matrix(mat))
   
   # transform mat to zscore values
-  if (zscore == TRUE)
-    mat <- transform_to_zscore(mat)
+  if (zscore == TRUE) mat <- transform_to_zscore(mat)
   
+  # exclude all eliminated cells
+  mat <- mat[colnames(train_obj),]
+  print(head(mat))
   # construct cell tag to yes/no values
   train_tag <- construct_tag_vect(train_obj, cell_type, sce_tag_slot)
   
@@ -376,6 +386,9 @@ setMethod("test_classifier", c("test_obj" = "Seurat",
                    seurat_parent_tag_slot = "predicted_cell_type", 
                    seurat_assay = 'RNA', seurat_slot = 'counts', ...) {
   . <- fpr <- tpr <- NULL
+  # convert Seurat object to matrix
+  test_mat = Seurat::GetAssayData(
+    object = test_obj, assay = seurat_assay, slot = seurat_slot)
   
   # target_cell_type check
   if (!tolower(cell_type(classifier)) %in% tolower(target_cell_type)) {
@@ -403,18 +416,21 @@ setMethod("test_classifier", c("test_obj" = "Seurat",
   # filter cells
   test_obj <- filter_cells(test_obj, seurat_tag_slot)
   
-  # convert Seurat object to matrix
-  test_mat = Seurat::GetAssayData(
-    object = test_obj, assay = seurat_assay, slot = seurat_slot)
-  
   # perform features selection
-  test_mat <- select_features(test_mat, features(classifier))
+  if (is.null(parent_process$parent.clf))
+    test_mat <- select_features(test_mat, features(classifier))
+  else test_mat <- 
+    select_features(test_mat, union(features(classifier), 
+                                    features(parent_process$parent.clf)))
   
   # transpose mat
   test_mat <- t(as.matrix(test_mat))
   
   # transform mat to zscore values
   if (zscore == TRUE) test_mat <- transform_to_zscore(test_mat)
+  
+  # exclude all eliminated cells
+  test_mat <- test_mat[colnames(test_obj),]
   
   # construct cell tag to yes/no values
   test_tag <- construct_tag_vect(test_obj, target_cell_type, seurat_tag_slot)
@@ -463,6 +479,9 @@ setMethod("test_classifier", c("test_obj" = "SingleCellExperiment",
   colnames(test_obj) <- make.unique(colnames(test_obj), sep = '_')
   . <- fpr <- tpr <- NULL
   
+  # convert SCE object to matrix
+  test_mat = SummarizedExperiment::assay(test_obj, sce_assay)
+  
   # target_cell_type check
   if (!tolower(cell_type(classifier)) %in% tolower(target_cell_type)) {
     target_cell_type <- append(target_cell_type, cell_type(classifier))
@@ -489,17 +508,21 @@ setMethod("test_classifier", c("test_obj" = "SingleCellExperiment",
   # filter cells
   test_obj <- filter_cells(test_obj, sce_tag_slot)
   
-  # convert Seurat object to matrix
-  test_mat = SummarizedExperiment::assay(test_obj, sce_assay)
-  
   # perform features selection
-  test_mat <- select_features(test_mat, features(classifier))
+  if (is.null(parent_process$parent.clf))
+    test_mat <- select_features(test_mat, features(classifier))
+  else test_mat <- 
+    select_features(test_mat, union(features(classifier), 
+                                    features(parent_process$parent.clf)))
   
   # transpose mat
   test_mat <- t(as.matrix(test_mat))
   
   # transform mat to zscore values
   if (zscore == TRUE) test_mat <- transform_to_zscore(test_mat)
+  
+  # exclude all eliminated cells
+  test_mat <- test_mat[colnames(test_obj),]
   
   # construct cell tag to yes/no values
   test_tag <- construct_tag_vect(test_obj, target_cell_type, sce_tag_slot)
