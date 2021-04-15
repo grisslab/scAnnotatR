@@ -10,6 +10,7 @@ classify_cells(
   classify_obj,
   classifiers = NULL,
   cell_types = "all",
+  chunk_size = 5000,
   path_to_models = c("default", "."),
   ignore_ambiguous_result = FALSE,
   cluster_slot = NULL,
@@ -20,6 +21,7 @@ classify_cells(
   classify_obj,
   classifiers = NULL,
   cell_types = "all",
+  chunk_size = 5000,
   path_to_models = c("default", "."),
   ignore_ambiguous_result = FALSE,
   cluster_slot = "seurat_clusters",
@@ -32,6 +34,7 @@ classify_cells(
   classify_obj,
   classifiers = NULL,
   cell_types = "all",
+  chunk_size = 5000,
   path_to_models = c("default", "."),
   ignore_ambiguous_result = FALSE,
   sce_assay = "logcounts",
@@ -53,6 +56,10 @@ If classifiers is NULL, the method will use all classifiers in database.}
 
 \item{cell_types}{list of cell types containing models to be used
 for classification, only applicable if the models have been saved to package.}
+
+\item{chunk_size}{size of data chunks to be predicted separately.
+This option is recommended for large datasets to reduce running time.
+Default value at 5000, because smaller datasets can be predicted rapidly.}
 
 \item{path_to_models}{path to the folder containing the list of models. 
 As default value, the pretrained models in the package will be used. 

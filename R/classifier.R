@@ -594,6 +594,9 @@ plot_roc_curve <- function(test_result) {
 #' As default value, the pretrained models in the package will be used. 
 #' If user has trained new models, indicate the folder containing the 
 #' new_models.rda file.
+#' @param chunk_size size of data chunks to be predicted separately.
+#' This option is recommended for large datasets to reduce running time.
+#' Default value at 5000, because smaller datasets can be predicted rapidly.
 #' @param ignore_ambiguous_result return all ambiguous predictions
 #' (multiple cell types) to empty
 #' When this parameter turns to TRUE, 
@@ -609,7 +612,7 @@ plot_roc_curve <- function(test_result) {
 #' 
 #' @export
 setGeneric("classify_cells", function(classify_obj, classifiers = NULL, 
-                                      cell_types = "all", 
+                                      cell_types = "all", chunk_size = 5000,
                                       path_to_models = c("default", "."),
                                       ignore_ambiguous_result = FALSE, 
                                       cluster_slot = NULL, ...) 
@@ -657,7 +660,7 @@ setGeneric("classify_cells", function(classify_obj, classifiers = NULL,
 #' @rdname classify_cells
 setMethod("classify_cells", c("classify_obj" = "Seurat"), 
           function(classify_obj, classifiers = NULL, cell_types = "all", 
-                   path_to_models = c("default", "."), 
+                   chunk_size = 5000, path_to_models = c("default", "."), 
                    ignore_ambiguous_result = FALSE, cluster_slot = 'seurat_clusters', 
                    seurat_assay = 'RNA', seurat_slot = 'counts', ...) {
   if (is.null(classifiers)) { 
@@ -676,11 +679,10 @@ setMethod("classify_cells", c("classify_obj" = "Seurat"),
   mat <- select_features(mat, union.features)
   mat <- t(transform_to_zscore(t(as.matrix(mat))))
   
-  chunk.size = 5000
-  nchunks = ceiling(ncol(classify_obj)/chunk.size)
+  nchunks = ceiling(ncol(classify_obj)/chunk_size)
   for (i in seq(1, nchunks)) {
-    idx.chunk = seq((i - 1) * chunk.size + 1, 
-                    min(ncol(classify_obj), i * chunk.size))
+    idx.chunk = seq((i - 1) * chunk_size + 1, 
+                    min(ncol(classify_obj), i * chunk_size))
     obj.chunk <- classify_obj[, idx.chunk]
     mat.chunk <- mat[, idx.chunk]
     
@@ -762,7 +764,7 @@ setMethod("classify_cells", c("classify_obj" = "Seurat"),
 #' @rdname classify_cells
 setMethod("classify_cells", c("classify_obj" = "SingleCellExperiment"), 
           function(classify_obj, classifiers = NULL, cell_types = "all", 
-                   path_to_models = c("default", "."), 
+                   chunk_size = 5000, path_to_models = c("default", "."), 
                    ignore_ambiguous_result = FALSE, 
                    sce_assay = 'logcounts', cluster_slot = NULL, ...) {
   # solve duplication of cell names
@@ -783,11 +785,10 @@ setMethod("classify_cells", c("classify_obj" = "SingleCellExperiment"),
   mat <- t(transform_to_zscore(t(as.matrix(mat))))
   
   # split dataset into multiple chunks to reduce running time
-  chunk.size = 5000
-  nchunks = ceiling(ncol(classify_obj)/chunk.size)
+  nchunks = ceiling(ncol(classify_obj)/chunk_size)
   for (i in seq(1, nchunks)) {
-    idx.chunk = seq((i - 1) * chunk.size + 1, 
-                    min(ncol(classify_obj), i * chunk.size))
+    idx.chunk = seq((i - 1) * chunk_size + 1, 
+                    min(ncol(classify_obj), i * chunk_size))
     obj.chunk <- classify_obj[, idx.chunk]
     mat.chunk <- mat[, idx.chunk]
     
