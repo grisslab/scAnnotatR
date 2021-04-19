@@ -10,7 +10,6 @@ License: MIT + file LICENSE
 Encoding: UTF-8
 biocViews: SingleCell, Transcriptomics, GeneExpression, SupportVectorMachine, Classification, Software
 Imports: 
-    plyr,
     dplyr,
     ggplot2,
     caret,
