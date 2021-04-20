@@ -168,7 +168,7 @@ setMethod("train_classifier", c("train_obj" = "Seurat"),
   clf <- train_func(mat, train_tag)
   
   # remove this info to reduce memory
-  clf$resampledCM <- NULL 
+  clf$resampledCM <- clf$call <- clf$times <- NULL
   p_thres <- 0.5
   
   features <- labels(clf$terms)
@@ -278,7 +278,7 @@ setMethod("train_classifier", c("train_obj" = "SingleCellExperiment"),
   clf <- train_func(mat, train_tag)
   
   # remove this info to reduce memory
-  clf$resampledCM <- NULL 
+  clf$resampledCM <- clf$call <- clf$times <- NULL
   p_thres <- 0.5
   
   features <- labels(clf$terms)
