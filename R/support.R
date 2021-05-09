@@ -855,6 +855,6 @@ classify_clust <- function(clusts, most_probable_cell_type) {
                  function(x) rownames(clust.cell.coor)[which.max(x)]))
   clust.pred <- paste0(round(max.val * 100, 2), '% ', names(max.val))
   names(clust.pred) <- levels(clusts)
-  converted_pred <- lapply(clusts, function(x) clust.pred[as.character(x)])
+  converted_pred <- unlist(lapply(clusts, function(x) clust.pred[[x]]))
   return(converted_pred)
 }
