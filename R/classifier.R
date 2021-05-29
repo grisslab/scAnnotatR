@@ -257,7 +257,7 @@ setMethod("train_classifier", c("train_obj" = "SingleCellExperiment"),
   if (zscore == TRUE) mat <- transform_to_zscore(mat)
   
   # exclude all eliminated cells
-  mat <- mat[colnames(train_obj),]
+  mat <- mat[colnames(train_obj),, drop = FALSE]
   
   # construct cell tag to yes/no values
   train_tag <- construct_tag_vect(train_obj, cell_type, sce_tag_slot)
@@ -430,7 +430,7 @@ setMethod("test_classifier", c("test_obj" = "Seurat",
   if (zscore == TRUE) test_mat <- transform_to_zscore(test_mat)
   
   # exclude all eliminated cells
-  test_mat <- test_mat[colnames(test_obj),]
+  test_mat <- test_mat[colnames(test_obj),, drop = FALSE]
   
   # construct cell tag to yes/no values
   test_tag <- construct_tag_vect(test_obj, target_cell_type, seurat_tag_slot)
