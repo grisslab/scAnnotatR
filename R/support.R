@@ -334,8 +334,8 @@ setMethod("filter_cells", c("obj" = "SingleCellExperiment"),
           function(obj, tag_slot) {
   # define characters usually included in ambiguous cell types
   # this is to avoid considering ambiguous cell types as negative cell_type
-  ambiguous.chars <- c("/", ",", " -", " [+]", "[.]", "and", 
-                       "or", "[(]" ,"[)]", "ambiguous")
+  ambiguous.chars <- c("/", ",", " -", " [+]", "[.]", " and ", 
+                       " or ", "_or_", "-or-", "[(]" ,"[)]", "ambiguous")
   
   # only eliminate cell labels containing cell_type and ambiguous.chars
   cell.tags <- SummarizedExperiment::colData(obj)[, tag_slot]
