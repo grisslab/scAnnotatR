@@ -152,8 +152,11 @@ classification model. Supposing we are training a model for classifying plasma
 cells, we define the set of features as follows:
 
 ```{r}
-selected_features_plasma <- c("SDC1", "CD19", "BACH2", "CD74", 'CD27', "CD37", 
-                              'IGHG1', 'IGHG2', 'IGHM', "CD40LG", "MCL1", "MZB1")
+selected_features_plasma <- c('BACH2', 'BLK', 'CD14', 'CD19', 'CD27', 'CD37', 
+'CD38', 'CD40LG', 'CD74', 'CD79A', 'CD79B', 'CD83', 'CD84', 'CD86', 'CR2', 
+'DERL3', 'FLI1', 'IGHG1', 'IGHG2', 'IGHM', 'IL2RA', 'IRF8', 'LRMP', 'LY86', 
+'MCL1', 'MEF2C', 'MME', 'MS4A1', 'MVK', 'MZB1', 'POU2AF1', 'PTEN', 'RASGRP2', 
+'SDC1', 'SP140', 'TCF3', 'VPREB3')
 ```
 
 ## Train model

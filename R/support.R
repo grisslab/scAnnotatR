@@ -313,10 +313,9 @@ setMethod("filter_cells", c("obj" = "Seurat"), function(obj, tag_slot) {
   n.applicable.cells <- 
     rownames(cell.tags[grepl("not applicable", cell.tags[, 1]) 
                        | is.na(cell.tags[, 1]),, drop = FALSE])
-  if (any(ambiguous))
-    warning('Cell types containing "/", ",", "-", "+", ".", "and", "or", "(", 
-            ")", and "ambiguous" are considered as ambiguous. They are removed
-            from training and testing.', call. = FALSE, immediate. = TRUE)
+  if (!is.null(ambiguous.cells))
+    warning('Cell types containing "/", ",", "-", "+", ".", "and", "or", "(", ")", and "ambiguous" are considered as ambiguous. They are removed from training and testing.\n', 
+            call. = FALSE, immediate. = TRUE)
   keeping.cells <- 
     colnames(obj)[!((colnames(obj) %in% ambiguous.cells) 
                     | colnames(obj) %in% n.applicable.cells)]
@@ -352,9 +351,8 @@ setMethod("filter_cells", c("obj" = "SingleCellExperiment"),
   n.applicable <- (grepl("not applicable", cell.tags) | is.na(cell.tags))
   
   if (any(ambiguous))
-    warning('Cell types containing "/", ",", "-", "+", ".", "and", "or", "(", 
-            ")", and "ambiguous" are considered as ambiguous. They are removed
-            from training and testing.', call. = FALSE, immediate. = TRUE)
+    warning('Cell types containing "/", ",", "-", "+", ".", "and", "or", "(", ")", and "ambiguous" are considered as ambiguous. They are removed from training and testing.\n', 
+            call. = FALSE, immediate. = TRUE)
   obj <- obj[, !(ambiguous | n.applicable)]
   
   return(obj)

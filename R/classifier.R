@@ -134,10 +134,7 @@ setMethod("train_classifier", c("train_obj" = "Seurat"),
   train_obj <- filter_cells(train_obj, seurat_tag_slot)
   
   # feature selection
-  if (is.null(parent_process$parent.clf))
-    mat <- select_features(mat, features)
-  else mat <- 
-    select_features(mat, union(features, features(parent_process$parent.clf)))
+  mat <- select_features(mat, features)
   
   # transpose mat
   mat <- t(as.matrix(mat))
@@ -245,10 +242,7 @@ setMethod("train_classifier", c("train_obj" = "SingleCellExperiment"),
   train_obj <- filter_cells(train_obj, sce_tag_slot)
   
   # feature selection
-  if (is.null(parent_process$parent.clf))
-    mat <- select_features(mat, features)
-  else mat <- 
-    select_features(mat, union(features, features(parent_process$parent.clf)))
+  mat <- select_features(mat, features)
   
   # transpose mat
   mat <- t(as.matrix(mat))
@@ -417,11 +411,7 @@ setMethod("test_classifier", c("test_obj" = "Seurat",
   test_obj <- filter_cells(test_obj, seurat_tag_slot)
   
   # perform features selection
-  if (is.null(parent_process$parent.clf))
-    test_mat <- select_features(test_mat, features(classifier))
-  else test_mat <- 
-    select_features(test_mat, union(features(classifier), 
-                                    features(parent_process$parent.clf)))
+  test_mat <- select_features(test_mat, features(classifier))
   
   # transpose mat
   test_mat <- t(as.matrix(test_mat))
@@ -509,11 +499,7 @@ setMethod("test_classifier", c("test_obj" = "SingleCellExperiment",
   test_obj <- filter_cells(test_obj, sce_tag_slot)
   
   # perform features selection
-  if (is.null(parent_process$parent.clf))
-    test_mat <- select_features(test_mat, features(classifier))
-  else test_mat <- 
-    select_features(test_mat, union(features(classifier), 
-                                    features(parent_process$parent.clf)))
+  test_mat <- select_features(test_mat, features(classifier))
   
   # transpose mat
   test_mat <- t(as.matrix(test_mat))

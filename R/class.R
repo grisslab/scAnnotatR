@@ -226,7 +226,7 @@ setValidity("scClassifR", checkObjectValidity)
 #' @rdname show
 setMethod("show", c("object" = "scClassifR"), function(object) {
   cat("An object of class scClassifR for", cell_type(object), "\n")
-  cat("* ", toString(length(features(object))), "features applied: ", 
+  cat("* ", toString(length(features(object))), "features applied:", 
                      paste(features(object), collapse = ', '), "\n")
   cat("* Predicting probability threshold:", toString(p_thres(object)), "\n")
   if (!is.na(parent(object)) && length(parent(object)) == 1) {
