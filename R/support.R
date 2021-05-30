@@ -272,6 +272,8 @@ setMethod("check_parent_child_coherence", c("obj" = "SingleCellExperiment"),
 })
 
 #' Filter cells from ambiguous chars and non applicable cells
+#' Ambiguous characters includes: "/", ",", "-", "+", ".", "and", 
+#' "or", "(", ")", "ambiguous"
 #' 
 #' @param obj object
 #' @param tag_slot slot in cell meta data indicating cell type
@@ -290,8 +292,8 @@ setGeneric("filter_cells", function(obj, tag_slot)
 setMethod("filter_cells", c("obj" = "Seurat"), function(obj, tag_slot) {
   # define characters usually included in ambiguous cell types
   # this is to avoid considering ambiguous cell types as negative cell_type
-  ambiguous.chars <- c("/", ",", " -", " [+]", "[.]", "and", 
-                       "or", "[(]" ,"[)]", "ambiguous")
+  ambiguous.chars <- c("/", ",", " -", " [+]", "[.]", " and ", 
+                       " or ", "_or_", "-or-", "[(]" ,"[)]", "ambiguous")
   
   # only eliminate cell labels containing cell_type and ambiguous.chars
   if (tag_slot == "active.ident") {
@@ -311,7 +313,10 @@ setMethod("filter_cells", c("obj" = "Seurat"), function(obj, tag_slot) {
   n.applicable.cells <- 
     rownames(cell.tags[grepl("not applicable", cell.tags[, 1]) 
                        | is.na(cell.tags[, 1]),, drop = FALSE])
-  
+  if (any(ambiguous))
+    warning('Cell types containing "/", ",", "-", "+", ".", "and", "or", "(", 
+            ")", and "ambiguous" are considered as ambiguous. They are removed
+            from training and testing.', call. = FALSE, immediate. = TRUE)
   keeping.cells <- 
     colnames(obj)[!((colnames(obj) %in% ambiguous.cells) 
                     | colnames(obj) %in% n.applicable.cells)]
@@ -346,6 +351,10 @@ setMethod("filter_cells", c("obj" = "SingleCellExperiment"),
   ambiguous <- grepl(paste(ambiguous.chars, collapse="|"), cell.tags)
   n.applicable <- (grepl("not applicable", cell.tags) | is.na(cell.tags))
   
+  if (any(ambiguous))
+    warning('Cell types containing "/", ",", "-", "+", ".", "and", "or", "(", 
+            ")", and "ambiguous" are considered as ambiguous. They are removed
+            from training and testing.', call. = FALSE, immediate. = TRUE)
   obj <- obj[, !(ambiguous | n.applicable)]
   
   return(obj)
