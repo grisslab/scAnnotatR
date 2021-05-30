@@ -198,7 +198,7 @@ setMethod("check_parent_child_coherence", c("obj" = "Seurat"),
     subtype <- obj[[tag_slot]]
     test <- tolower(subtype[, 1]) %in% tolower(target_cell_type) | 
       subtype[, 1] %in% pos.val
-    pos_subtype <- subtype[test, , drop=FALSE]
+    pos_subtype <- subtype[test,, drop=FALSE]
   }
   
   #-- compare with cell type with parent cell type, 

@@ -147,7 +147,7 @@ setMethod("train_classifier", c("train_obj" = "Seurat"),
     mat <- transform_to_zscore(mat)
   
   # exclude all eliminated cells
-  mat <- mat[colnames(train_obj),]
+  mat <- mat[colnames(train_obj),, drop = FALSE]
   
   # construct cell tag to yes/no values
   train_tag <- construct_tag_vect(train_obj, cell_type, seurat_tag_slot)
@@ -522,7 +522,7 @@ setMethod("test_classifier", c("test_obj" = "SingleCellExperiment",
   if (zscore == TRUE) test_mat <- transform_to_zscore(test_mat)
   
   # exclude all eliminated cells
-  test_mat <- test_mat[colnames(test_obj),]
+  test_mat <- test_mat[colnames(test_obj),, drop = FALSE]
   
   # construct cell tag to yes/no values
   test_tag <- construct_tag_vect(test_obj, target_cell_type, sce_tag_slot)
@@ -684,7 +684,7 @@ setMethod("classify_cells", c("classify_obj" = "Seurat"),
     idx.chunk = seq((i - 1) * chunk_size + 1, 
                     min(ncol(classify_obj), i * chunk_size))
     obj.chunk <- classify_obj[, idx.chunk]
-    mat.chunk <- mat[, idx.chunk]
+    mat.chunk <- mat[, idx.chunk, drop = FALSE]
     
     # create an empty cell type for all cells
     pred_cells <- c(rep("", ncol(mat.chunk))) 
@@ -790,7 +790,7 @@ setMethod("classify_cells", c("classify_obj" = "SingleCellExperiment"),
     idx.chunk = seq((i - 1) * chunk_size + 1, 
                     min(ncol(classify_obj), i * chunk_size))
     obj.chunk <- classify_obj[, idx.chunk]
-    mat.chunk <- mat[, idx.chunk]
+    mat.chunk <- mat[, idx.chunk, drop = FALSE]
     
     # create an empty cell type for all cells
     pred_cells <- c(rep("", ncol(mat.chunk))) 
