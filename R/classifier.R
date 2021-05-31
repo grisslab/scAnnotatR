@@ -719,6 +719,13 @@ setMethod("classify_cells", c("classify_obj" = "Seurat"),
           obj.chunk[[]], as.matrix(mat.chunk), classifiers)
     }
     
+    if (is.null(obj.chunk[['most_probable_cell_type']])) 
+      obj.chunk$predicted_cell_type <- ""
+    
+    if (ignore_ambiguous_result == FALSE & 
+        is.null(obj.chunk[['most_probable_cell_type']]))
+      obj.chunk$most_probable_cell_type <- ""
+    
     if (i == 1) classified_obj <- obj.chunk
     else classified_obj <- merge(classified_obj, obj.chunk)
   }
@@ -828,6 +835,12 @@ setMethod("classify_cells", c("classify_obj" = "SingleCellExperiment"),
           as.matrix(mat.chunk), classifiers
         )
     }
+    
+    if (is.null(obj.chunk$predicted_cell_type)) 
+      obj.chunk$predicted_cell_type <- ""
+    
+    if (ignore_ambiguous_result == FALSE & is.null(obj.chunk$most_probable_cell_type))
+      obj.chunk$most_probable_cell_type <- ""
     
     if (i == 1) classified_obj <- obj.chunk
     else classified_obj <- cbind(classified_obj, obj.chunk)
