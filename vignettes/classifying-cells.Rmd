@@ -104,9 +104,14 @@ To launch cell type identification, we simply call the `classify_cells`
 function. A detailed description of all parameters can be found through
 the function's help page `?classify_cells`.
 
+Here we use only 3 classifiers for B cells, T cells and NK cells to reduce 
+computational cost of this vignette. If users want to use all pretrained 
+classifiers on their dataset, `cell_types = 'all'` can be used.
 ```{r}
 seurat.obj <- classify_cells(classify_obj = tirosh_mel80_example, 
-                             cell_types = 'all', path_to_models = 'default')
+                             seurat_assay = 'RNA', seurat_slot = 'data',
+                             cell_types = c('B cells', 'NK', 'T cells'), 
+                             path_to_models = 'default')
 ```
 
 #### Parameters
@@ -130,7 +135,7 @@ but with additional columns in the metadata table.
 
 ```{r}
 # display the additional metadata fields
-seurat.obj[[]][c(20:30), c(8:21)]
+seurat.obj[[]][c(50:60), c(8:16)]
 ```
 New columns are:
 

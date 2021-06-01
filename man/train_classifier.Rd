@@ -78,10 +78,11 @@ new_models.rda file.}
 
 \item{seurat_tag_slot}{string, name of slot in cell meta data 
 indicating cell tag/label in the training object.
-Strings indicating cell types are expected in this slot. 
+Strings indicating cell types are expected in this slot.
 For \code{\link{Seurat}} object, default value is "active.ident".  
-Expected values are string or binary/logical, 
-0/"no"/F/FALSE: not being new cell type, 1/"yes"/T/TRUE: being new cell type.}
+Expected values are string (A-Z, a-z, 0-9, no special character accepted) 
+or binary/logical, 0/"no"/F/FALSE: not being new cell type, 
+1/"yes"/T/TRUE: being new cell type.}
 
 \item{seurat_parent_tag_slot}{string, name of a slot in cell meta data 
 indicating assigned/predicted cell type. Default is "predicted_cell_type". 
@@ -99,8 +100,9 @@ and "scale.data". Default to "counts", which contains unnormalized data.}
 \item{sce_tag_slot}{string, name of annotation slot indicating 
 cell tag/label in the training object.
 For \code{\link{SingleCellExperiment}} object, default value is "ident".  
-Expected values are string or binary/logical, 
-0/"no"/F/FALSE: not being new cell type, 1/"yes"/T/TRUE: being new cell type.}
+Expected values are string (A-Z, a-z, 0-9, no special character accepted) 
+or binary/logical, 0/"no"/F/FALSE: not being new cell type, 
+1/"yes"/T/TRUE: being new cell type.}
 
 \item{sce_parent_tag_slot}{string, name of a slot in cell meta data 
 indicating pre-assigned/predicted cell type. 

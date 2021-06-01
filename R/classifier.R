@@ -47,10 +47,11 @@ setGeneric("train_classifier",
 #' 
 #' @param seurat_tag_slot string, name of slot in cell meta data 
 #' indicating cell tag/label in the training object.
-#' Strings indicating cell types are expected in this slot. 
+#' Strings indicating cell types are expected in this slot.
 #' For \code{\link{Seurat}} object, default value is "active.ident".  
-#' Expected values are string or binary/logical, 
-#' 0/"no"/F/FALSE: not being new cell type, 1/"yes"/T/TRUE: being new cell type.
+#' Expected values are string (A-Z, a-z, 0-9, no special character accepted) 
+#' or binary/logical, 0/"no"/F/FALSE: not being new cell type, 
+#' 1/"yes"/T/TRUE: being new cell type.
 #' @param seurat_parent_tag_slot string, name of a slot in cell meta data 
 #' indicating assigned/predicted cell type. Default is "predicted_cell_type". 
 #' This slot would have been filled automatically 
@@ -193,8 +194,9 @@ setMethod("train_classifier", c("train_obj" = "Seurat"),
 #' @param sce_tag_slot string, name of annotation slot indicating 
 #' cell tag/label in the training object.
 #' For \code{\link{SingleCellExperiment}} object, default value is "ident".  
-#' Expected values are string or binary/logical, 
-#' 0/"no"/F/FALSE: not being new cell type, 1/"yes"/T/TRUE: being new cell type.
+#' Expected values are string (A-Z, a-z, 0-9, no special character accepted) 
+#' or binary/logical, 0/"no"/F/FALSE: not being new cell type, 
+#' 1/"yes"/T/TRUE: being new cell type.
 #' @param sce_parent_tag_slot string, name of a slot in cell meta data 
 #' indicating pre-assigned/predicted cell type. 
 #' Default field is "predicted_cell_type".
@@ -339,8 +341,8 @@ setGeneric("test_classifier", function(test_obj, classifier,
 #' indicating cell tag/label in the testing object.
 #' Strings indicating cell types are expected in this slot. 
 #' For \code{\link{Seurat}} object, default value is "active.ident". 
-#' Expected values is string or binary/logical, 
-#' 0/"no"/F/FALSE: not being new cell type, 
+#' Expected values are string (A-Z, a-z, 0-9, no special character accepted) 
+#' or binary/logical, 0/"no"/F/FALSE: not being new cell type, 
 #' 1/"yes"/T/TRUE: being new cell type.
 #' @param seurat_parent_tag_slot string, name of tag slot in cell meta data
 #' indicating pre-assigned/predicted parent cell type. 
@@ -444,8 +446,8 @@ setMethod("test_classifier", c("test_obj" = "Seurat",
 #' indicating cell tag/label in the testing object.
 #' Strings indicating cell types are expected in this slot. 
 #' Default value is "ident".  
-#' Expected values are string or binary/logical, 
-#' 0/"no"/F/FALSE: not being new cell type, 
+#' Expected values are string (A-Z, a-z, 0-9, no special character accepted) 
+#' or binary/logical, 0/"no"/F/FALSE: not being new cell type, 
 #' 1/"yes"/T/TRUE: being new cell type.
 #' @param sce_parent_tag_slot string, name of tag slot in cell meta data
 #' indicating pre-assigned/predicted parent cell type. 

@@ -69,8 +69,8 @@ the new_models.rda file.}
 indicating cell tag/label in the testing object.
 Strings indicating cell types are expected in this slot. 
 For \code{\link{Seurat}} object, default value is "active.ident". 
-Expected values is string or binary/logical, 
-0/"no"/F/FALSE: not being new cell type, 
+Expected values are string (A-Z, a-z, 0-9, no special character accepted) 
+or binary/logical, 0/"no"/F/FALSE: not being new cell type, 
 1/"yes"/T/TRUE: being new cell type.}
 
 \item{seurat_parent_tag_slot}{string, name of tag slot in cell meta data
@@ -90,8 +90,8 @@ Default to "counts", which contains unnormalized data.}
 indicating cell tag/label in the testing object.
 Strings indicating cell types are expected in this slot. 
 Default value is "ident".  
-Expected values are string or binary/logical, 
-0/"no"/F/FALSE: not being new cell type, 
+Expected values are string (A-Z, a-z, 0-9, no special character accepted) 
+or binary/logical, 0/"no"/F/FALSE: not being new cell type, 
 1/"yes"/T/TRUE: being new cell type.}
 
 \item{sce_parent_tag_slot}{string, name of tag slot in cell meta data
