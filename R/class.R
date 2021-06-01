@@ -230,7 +230,7 @@ setMethod("show", c("object" = "scClassifR"), function(object) {
                      paste(features(object), collapse = ', '), "\n")
   cat("* Predicting probability threshold:", toString(p_thres(object)), "\n")
   if (!is.na(parent(object)) && length(parent(object)) == 1) {
-    cat("* A child model of: ", parent(object), "\n")
+    cat("* A child model of:", parent(object), "\n")
   } else {
     cat("* No parent model\n")
   }
