@@ -193,7 +193,7 @@ setMethod("check_parent_child_coherence", c("obj" = "Seurat"),
     subtype <- Seurat::Idents(obj)
     test <- tolower(subtype) %in% tolower(target_cell_type) | 
       subtype %in% pos.val
-    pos_subtype <- subtype[test]
+    pos_subtype <- as.data.frame(subtype[test])
   } else {
     subtype <- obj[[tag_slot]]
     test <- tolower(subtype[, 1]) %in% tolower(target_cell_type) | 
@@ -213,7 +213,7 @@ setMethod("check_parent_child_coherence", c("obj" = "Seurat"),
   
   # join parent cell type and child cell type
   test <- 
-    (colnames(obj) %in% rownames(pos_subtype)) & 
+    (colnames(obj) %in% rownames(pos_subtype)) &
     (colnames(obj) %in% pos_parent)
   new.tag_slot <- ifelse(test, 'yes', 'no')
   new.tag_slot <- unlist(
@@ -313,9 +313,10 @@ setMethod("filter_cells", c("obj" = "Seurat"), function(obj, tag_slot) {
   n.applicable.cells <- 
     rownames(cell.tags[grepl("not applicable", cell.tags[, 1]) 
                        | is.na(cell.tags[, 1]),, drop = FALSE])
-  if (!is.null(ambiguous.cells))
+  if (length(ambiguous.cells) != 0) 
     warning('Cell types containing "/", ",", "-", "+", ".", "and", "or", "(", ")", and "ambiguous" are considered as ambiguous. They are removed from training and testing.\n', 
             call. = FALSE, immediate. = TRUE)
+    
   keeping.cells <- 
     colnames(obj)[!((colnames(obj) %in% ambiguous.cells) 
                     | colnames(obj) %in% n.applicable.cells)]
