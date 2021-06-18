@@ -658,9 +658,9 @@ make_prediction <- function(mat, classifier, pred_cells,
         !is.na(parent(classifier)) && 
         gsub("/", "", pred_cells[i]) == parent(classifier)
       if (test)
-        paste0(cell_type(classifier), "/")
+        paste0("/", cell_type(classifier))
       else
-        paste0(pred_cells[i], cell_type(classifier), "/")
+        paste0(pred_cells[i], "/", cell_type(classifier))
     }
     else { pred_cells[i] }))
   names(pred_cells) <- cells
@@ -685,58 +685,53 @@ make_prediction <- function(mat, classifier, pred_cells,
 #' Simplify prediction
 #'
 #' @param meta.data cell meta data
-#' @param mat expression mat
+#' @param full_pred full prediction
 #' @param classifiers classifiers 
 #' 
 #' @return simplified prediction
 #' 
 #' @rdname internal
-simplify_prediction <- function(meta.data, mat, classifiers) {
+simplify_prediction <- function(meta.data, full_pred, classifiers) {
   if (is.null(names(classifiers)))
     names(classifiers) <- unlist(lapply(classifiers, function(x) cell_type(x)))
-            
+  
   # list of parents named by children
   parents <- unlist(lapply(classifiers, function(x) parent(x)))
+  simplified <- full_pred
+  names(simplified) <- rownames(meta.data)
   
-  # create simplified result for the first level: no parent
-  noparent_idx <- which(is.na(parents))
-  noparent_cell <- names(noparent_idx)
-  noparent_pcol <- paste0(gsub(' ', '_', noparent_cell), '_p')
-  noparent_p <- meta.data[, noparent_pcol, drop = FALSE]
-  
-  # create most probable pred from cell types having no parent
-  max_p <- colnames(noparent_p)[unlist(apply(noparent_p, 1, which.max))]
-  max_clf <- gsub('_p', '', max_p)
-  max_clf <- gsub('_', ' ', max_clf)
-  simplified <- unlist(lapply(1:nrow(noparent_p), function(i) 
-    if (noparent_p[i, max_p[i]] >= p_thres(classifiers[[max_clf[i]]])) 
-    {max_clf[i]} else {'unknown'}))
-  names(simplified) <- colnames(mat)
+  # parent level
+  for (cell in rownames(meta.data)) {
+    predicted_types <- unlist(strsplit(full_pred[cell], split = '/'))
+    predicted_parents <- parents[parents %in% predicted_types]
+    if (length(predicted_parents) >= 2) {
+      p.pcol.names <- paste0(gsub(' ', '_', predicted_parents), '_p')
+      p.prob <- meta.data[cell, p.pcol.names, drop = FALSE]
+      simplified[cell] <- colnames(p.prob)[which.max(p.prob)]
+    }
+  }
+  simplified <- gsub('_p', '', simplified)
+  simplified <- gsub('_', ' ', simplified)
   
   # continue to deeper level: children
   simplified.copy <- NULL
   while (!identical(simplified, simplified.copy)) {
     simplified.copy <- simplified # copy simplified
-    for (parent in unique(simplified)) {
-      if (parent %in% parents) {
-        children <- names(which(parents == parent))
-        
-        children_pcol <- paste0(gsub(' ', '_', children), '_p')
-        # extract prediction probabilities of children
-        children_p <- meta.data[simplified == parent, 
-                                children_pcol, drop = FALSE]
-        max_p <- colnames(children_p)[unlist(apply(children_p, 1, which.max))]
-        names(max_p) <- rownames(children_p)
-        max_child <- gsub('_p', '', max_p)
-        max_child <- gsub('_', ' ', max_child)
-        names(max_child) <- rownames(children_p)
-        simplified <- unlist(lapply(names(simplified), function(i) 
-          if (simplified[i] == parent 
-              && children_p[i, max_p[i]] >= p_thres(classifiers[[max_child[i]]])) 
-          {max_child[i]} else {simplified[i]})) # change simplified
-        names(simplified) <- colnames(mat)
-      }
+    for (cell in rownames(meta.data)) {
+      parent <- simplified[cell]
+      children <- names(which(parents == parent))
+      predicted_types <- unlist(strsplit(full_pred[cell], split = '/'))
+      predicted_children <- children[children %in% predicted_types]
+      if (length(predicted_children) >= 2) {
+        c.pcol.names <- paste0(gsub(' ', '_', predicted_children), '_p')
+        c.prob <- meta.data[cell, c.pcol.names, drop = FALSE]
+        simplified[cell] <- colnames(c.prob)[which.max(c.prob)]
+      } else if (length(predicted_children) == 1) {
+        simplified[cell] <- predicted_children
+      } else simplified[cell] <- simplified[cell]
     }
+    simplified <- gsub('_p', '', simplified)
+    simplified <- gsub('_', ' ', simplified)
   }
   
   return(simplified)

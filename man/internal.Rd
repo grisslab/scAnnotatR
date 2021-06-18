@@ -116,7 +116,7 @@ process_parent_clf(
 
 make_prediction(mat, classifier, pred_cells, ignore_ambiguous_result = TRUE)
 
-simplify_prediction(meta.data, mat, classifiers)
+simplify_prediction(meta.data, full_pred, classifiers)
 
 verify_parent(mat, classifier, meta.data)
 
@@ -184,6 +184,8 @@ in \code{\link{SingleCellExperiment}} object}
 \item{ignore_ambiguous_result}{whether ignore ambigouous result}
 
 \item{meta.data}{object meta data}
+
+\item{full_pred}{full prediction}
 
 \item{classifiers}{classifiers}
 

@@ -675,7 +675,7 @@ setMethod("classify_cells", c("classify_obj" = "Seurat"),
     mat.chunk <- mat[, idx.chunk, drop = FALSE]
     
     # create an empty cell type for all cells
-    pred_cells <- c(rep("", ncol(mat.chunk))) 
+    pred_cells <- c(rep("unknown", ncol(mat.chunk))) 
     names(pred_cells) <- colnames(mat.chunk)
     
     # run predictors
@@ -701,7 +701,7 @@ setMethod("classify_cells", c("classify_obj" = "Seurat"),
     }
     
     if (any(pred_cells != "")) {
-      pred_cells <- gsub("/$", "", pred_cells)
+      pred_cells <- gsub("unknown/", "", pred_cells)
       
       # ignore ambiguous results
       if (ignore_ambiguous_result == TRUE) {
@@ -718,15 +718,13 @@ setMethod("classify_cells", c("classify_obj" = "Seurat"),
       # simplify result can only happen when not ignore ambiguous results
       if (ignore_ambiguous_result == FALSE) 
         obj.chunk[['most_probable_cell_type']] <- simplify_prediction(
-          obj.chunk[[]], as.matrix(mat.chunk), classifiers)
+          obj.chunk[[]], obj.chunk$predicted_cell_type, classifiers)
     }
     
-    if (is.null(obj.chunk[['most_probable_cell_type']])) 
-      obj.chunk$predicted_cell_type <- ""
-    
-    if (ignore_ambiguous_result == FALSE & 
-        is.null(obj.chunk[['most_probable_cell_type']]))
-      obj.chunk$most_probable_cell_type <- ""
+    # if (ignore_ambiguous_result == FALSE & 
+    #     is.null(obj.chunk[['most_probable_cell_type']])){
+    #   obj.chunk$predicted_cell_type <- obj.chunk$most_probable_cell_type <- ""
+    # }
     
     if (i == 1) classified_obj <- obj.chunk
     else classified_obj <- merge(classified_obj, obj.chunk)
@@ -788,7 +786,7 @@ setMethod("classify_cells", c("classify_obj" = "SingleCellExperiment"),
     mat.chunk <- mat[, idx.chunk, drop = FALSE]
     
     # create an empty cell type for all cells
-    pred_cells <- c(rep("", ncol(mat.chunk))) 
+    pred_cells <- c(rep("unknown", ncol(mat.chunk))) 
     names(pred_cells) <- colnames(mat.chunk)
     
     # run predictors
@@ -817,8 +815,7 @@ setMethod("classify_cells", c("classify_obj" = "SingleCellExperiment"),
     }
     
     if (any(pred_cells != "")) {
-      pred_cells <- gsub("/$", "", pred_cells)
-      
+      pred_cells <- gsub("unknown/", "", pred_cells)
       # double check if there is more than one predicted cell type
       if (ignore_ambiguous_result == TRUE) {
         pred_cells <- unlist(
@@ -834,15 +831,16 @@ setMethod("classify_cells", c("classify_obj" = "SingleCellExperiment"),
       if (ignore_ambiguous_result == FALSE) 
         obj.chunk$most_probable_cell_type <- simplify_prediction(
           as.matrix(SummarizedExperiment::colData(obj.chunk)), 
-          as.matrix(mat.chunk), classifiers
+          obj.chunk$predicted_cell_type, classifiers
         )
     }
     
-    if (is.null(obj.chunk$predicted_cell_type)) 
-      obj.chunk$predicted_cell_type <- ""
-    
-    if (ignore_ambiguous_result == FALSE & is.null(obj.chunk$most_probable_cell_type))
-      obj.chunk$most_probable_cell_type <- ""
+    # if ('most_probable_cell_type' %in% colnames(colData(obj.chunk)) 
+    #     & is.null(obj.chunk$predicted_cell_type)) 
+    #   obj.chunk$predicted_cell_type <- ""
+    # 
+    # if (ignore_ambiguous_result == FALSE & is.null(obj.chunk$most_probable_cell_type))
+    #   obj.chunk$most_probable_cell_type <- ""
     
     if (i == 1) classified_obj <- obj.chunk
     else classified_obj <- cbind(classified_obj, obj.chunk)
