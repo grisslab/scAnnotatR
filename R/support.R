@@ -703,9 +703,9 @@ simplify_prediction <- function(meta.data, full_pred, classifiers) {
   # parent level
   for (cell in rownames(meta.data)) {
     predicted_types <- unlist(strsplit(full_pred[cell], split = '/'))
-    predicted_parents <- parents[parents %in% predicted_types]
-    if (length(predicted_parents) >= 2) {
-      p.pcol.names <- paste0(gsub(' ', '_', predicted_parents), '_p')
+    #predicted_parents <- parents[parents %in% predicted_types]
+    if (length(predicted_types) >= 2) {
+      p.pcol.names <- paste0(gsub(' ', '_', predicted_types), '_p')
       p.prob <- meta.data[cell, p.pcol.names, drop = FALSE]
       simplified[cell] <- colnames(p.prob)[which.max(p.prob)]
     }
@@ -719,16 +719,18 @@ simplify_prediction <- function(meta.data, full_pred, classifiers) {
     simplified.copy <- simplified # copy simplified
     for (cell in rownames(meta.data)) {
       parent <- simplified[cell]
-      children <- names(which(parents == parent))
-      predicted_types <- unlist(strsplit(full_pred[cell], split = '/'))
-      predicted_children <- children[children %in% predicted_types]
-      if (length(predicted_children) >= 2) {
-        c.pcol.names <- paste0(gsub(' ', '_', predicted_children), '_p')
-        c.prob <- meta.data[cell, c.pcol.names, drop = FALSE]
-        simplified[cell] <- colnames(c.prob)[which.max(c.prob)]
-      } else if (length(predicted_children) == 1) {
-        simplified[cell] <- predicted_children
-      } else simplified[cell] <- simplified[cell]
+      if (parent %in% parents){
+        children <- names(which(parents == parent))
+        predicted_types <- unlist(strsplit(full_pred[cell], split = '/'))
+        predicted_children <- children[children %in% predicted_types]
+        if (length(predicted_children) >= 2) {
+          c.pcol.names <- paste0(gsub(' ', '_', predicted_children), '_p')
+          c.prob <- meta.data[cell, c.pcol.names, drop = FALSE]
+          simplified[cell] <- colnames(c.prob)[which.max(c.prob)]
+        } else if (length(predicted_children) == 1) {
+          simplified[cell] <- predicted_children
+        } else simplified[cell] <- simplified[cell]
+      }
     }
     simplified <- gsub('_p', '', simplified)
     simplified <- gsub('_', ' ', simplified)

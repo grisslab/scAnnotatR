@@ -143,9 +143,8 @@ New columns are:
     ambiguous assignments. In these cases, the possible cell types are separated
     by a "/"
 
-  * **most_probable_cell_type**: Present only if `simplified_result` was set
-    to `TRUE`. Contains the most probably cell type ignoring any ambiguous
-    assignments.
+  * **most_probable_cell_type**: contains the most probably cell type ignoring any 
+    ambiguous assignments.
 
   * columns with syntax `[celltype]_p`: probability of a cell to belong 
     to a cell type. Unknown cell types are marked as NAs.
