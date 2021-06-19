@@ -654,7 +654,7 @@ setMethod("classify_cells", c("classify_obj" = "Seurat"),
   if (is.null(classifiers)) { 
     model_list <- load_models(path_to_models)
     
-    if (cell_types >= 1 && cell_types != "all") 
+    if (length(cell_types) >= 1 | all(cell_types != "all")) 
       classifiers = model_list[cell_types]
     else classifiers <- model_list
   }
