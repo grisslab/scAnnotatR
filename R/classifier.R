@@ -646,10 +646,12 @@ setGeneric("classify_cells", function(classify_obj, classifiers = NULL,
 #' @importFrom stats predict
 #' 
 #' @rdname classify_cells
+#' 
 setMethod("classify_cells", c("classify_obj" = "Seurat"), 
           function(classify_obj, classifiers = NULL, cell_types = "all", 
                    chunk_size = 5000, path_to_models = c("default", "."), 
-                   ignore_ambiguous_result = FALSE, cluster_slot = 'seurat_clusters', 
+                   ignore_ambiguous_result = FALSE, 
+                   cluster_slot = 'seurat_clusters', 
                    seurat_assay = 'RNA', seurat_slot = 'counts', ...) {
   if (is.null(classifiers)) { 
     model_list <- load_models(path_to_models)
@@ -682,7 +684,8 @@ setMethod("classify_cells", c("classify_obj" = "Seurat"),
     for (classifier in classifiers) {
       if (!is.na(parent(classifier))) {
         applicable_mat <- verify_parent(mat.chunk, classifier, obj.chunk[[]])
-        if (is.null(applicable_mat)) next # no parent clf provided or no positive to parent clf
+        # no parent clf provided or no positive to parent clf
+        if (is.null(applicable_mat)) next 
       } else applicable_mat <- mat.chunk
   
       filtered_mat <- select_features(applicable_mat, features(classifier))
@@ -694,7 +697,7 @@ setMethod("classify_cells", c("classify_obj" = "Seurat"),
       pred <- prediction$pred
       pred_cells <- prediction$pred_cells
       
-      # add prediction to meta data: each classifier/celltype has 2 col: p, class
+      # add prediction to meta data: each classifier has p & class cols
       for (colname in colnames(pred)) {
         obj.chunk[[colname]] <- pred[, colname, drop = FALSE]
       }
@@ -787,8 +790,10 @@ setMethod("classify_cells", c("classify_obj" = "SingleCellExperiment"),
     # run predictors
     for (classifier in classifiers) {
       if (!is.na(parent(classifier))) { 
-        applicable_mat <- verify_parent(mat.chunk, classifier, colData(obj.chunk))
-        if (is.null(applicable_mat)) next # no parent clf provided or no positive to parent clf
+        applicable_mat <- verify_parent(mat.chunk, classifier, 
+                                        colData(obj.chunk))
+        # no parent clf provided or no positive to parent clf
+        if (is.null(applicable_mat)) next 
       } else applicable_mat <- mat.chunk
       
       filtered_mat <- select_features(applicable_mat, features(classifier))

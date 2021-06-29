@@ -24,7 +24,8 @@ setOldClass("train")
 #' selected_features_B = c("CD19", "MS4A1", "CD79A")
 #' set.seed(123)
 #' clf_b <- train_classifier(train_obj = tirosh_mel80_example, 
-#'                           features = selected_features_B, cell_type = "B cells")
+#'                           features = selected_features_B, 
+#'                           cell_type = "B cells")
 #'
 #' clf_b
 #' @export
@@ -70,31 +71,31 @@ checkObjectValidity <- function(object) {
     return(cell_type.val)
     }
   
-  # check clf
-  clf.val <- checkClassifierValidity(clf(object))
-  if (is.character(clf.val)) {
-    return(clf.val)
-  }
-  
-  # check features
-  features.val <- checkFeaturesValidity(features(object))
-  if (is.character(features.val)) {
-    return(features.val)
-  }
-  
-  # check p_thres
-  p_thres.val <- checkPThresValidity(p_thres(object))
-  if (is.character(p_thres.val)) {
-    return(p_thres.val)
-  }
-  
-  # check parent
-  parent.val <- checkParentValidity(parent(object))
-  if (is.character(parent.val)) {
-    return(parent.val)
-  }
-  
-  return(TRUE)
+    # check clf
+    clf.val <- checkClassifierValidity(clf(object))
+    if (is.character(clf.val)) {
+      return(clf.val)
+    }
+    
+    # check features
+    features.val <- checkFeaturesValidity(features(object))
+    if (is.character(features.val)) {
+      return(features.val)
+    }
+    
+    # check p_thres
+    p_thres.val <- checkPThresValidity(p_thres(object))
+    if (is.character(p_thres.val)) {
+      return(p_thres.val)
+    }
+    
+    # check parent
+    parent.val <- checkParentValidity(parent(object))
+    if (is.character(parent.val)) {
+      return(parent.val)
+    }
+    
+    return(TRUE)
 }
 
 #' Check validity of classifier cell type.
@@ -439,7 +440,8 @@ parent <- function(classifier) {
     
     # set new features
     new_features <- labels(value$terms)
-    new_features <- gsub('_', '-', new_features) # convert underscore to hyphen if exists
+    # convert underscore to hyphen if exists
+    new_features <- gsub('_', '-', new_features) 
     features(classifier) <- new_features
   } else {
     stop("Can only assign new classifier for a cell type that has no parent.

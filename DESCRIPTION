@@ -28,6 +28,7 @@ Suggests:
     scRNAseq,
     testthat
 VignetteBuilder: knitr
-Depends: R (>= 4.0), Seurat, SingleCellExperiment, SummarizedExperiment
+Depends: R (>= 4.1), Seurat, SingleCellExperiment, SummarizedExperiment
 LazyData: true
+LazyDataCompression: xz
 RoxygenNote: 7.1.1
