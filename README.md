@@ -1,6 +1,6 @@
-# scClassifR
+# scAnnotatR
 
-The `scClassifR` package automatically classifies cells in scRNA-seq datasets. It is simple to use with a clear infrastructure to easily add additional cell type classification models. `scClassifR` support both `Seurat` and `SingleCellExperiment` objects as input.
+The `scAnnotatR` package automatically classifies cells in scRNA-seq datasets. It is simple to use with a clear infrastructure to easily add additional cell type classification models. `scAnnotatR` support both `Seurat` and `SingleCellExperiment` objects as input.
 
 ## Installation
 
@@ -13,8 +13,8 @@ if (!require(devtools)) {
 }
 
 # install the ReactomeGSA package
-if (!require(scClassifR)) {
-  install_github("grisslab/scClassifR")
+if (!require(scAnnotatR)) {
+  install_github("grisslab/scAnnotatR")
 }
 ```
 
@@ -26,5 +26,5 @@ The complete usage is shown in the vignettes:
   * [Basic training of a new cell classification model](vignettes/training-basic-model.Rmd)
   * [Training of child-celltype models](vignettes/training-child-model.Rmd)
 
-For more questions / feedback please simply post an [Issue](https://github.com/grisslab/scClassifR/issues/new/choose).
+For more questions / feedback please simply post an [Issue](https://github.com/grisslab/scAnnotatR/issues/new/choose).
 
