@@ -12,11 +12,12 @@
 
 #' @name default_models
 #' @title Pretrained classifiers for human cells
-#' @description Pretrained classifier obtained by training Sade-Feldman dataset
-#' and testing on Jerby-Arnon dataset.
+#' @description Pretrained classifier obtained by training and testing on the 
+#' Sade-Feldman melanoma dataset, the Jerby-Arnon melanoma dataset, the Haniffa
+#' Skin Cell Atlas and the Haniffa Covid-19 Cell Atlas.
 #' @docType data
 #' @usage default_models
 #' @format a list of \code{\link{scAnnotatR}} objects
-#' @author Vy Nguyen, November 2020
+#' @author Vy Nguyen, June 2021
 #' @keywords datasets
 "default_models"
