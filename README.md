@@ -12,7 +12,6 @@ if (!require(devtools)) {
   install.packages("devtools")
 }
 
-# install the ReactomeGSA package
 if (!require(scAnnotatR)) {
   install_github("grisslab/scAnnotatR")
 }
