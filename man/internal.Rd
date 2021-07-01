@@ -30,7 +30,7 @@
 \alias{verify_parent}
 \alias{test_performance}
 \alias{classify_clust}
-\title{Internal functions of scClassifR package}
+\title{Internal functions of scAnnotatR package}
 \usage{
 checkObjectValidity(object)
 
@@ -165,7 +165,7 @@ indicating pre-assigned/predicted parent cell type}
 
 \item{parent_cell_type}{name of parent cell type}
 
-\item{parent_clf}{\code{\link{scClassifR}} object corresponding 
+\item{parent_clf}{\code{\link{scAnnotatR}} object corresponding 
 to classification model for the parent cell type}
 
 \item{zscore}{boolean indicating the transformation of gene expression 
@@ -206,11 +206,11 @@ TRUE if the p_thres is valid or the reason why it is not.
 
 TRUE if the classifier is valid or the reason why it is not.
 
-scClassifR object with the new parent.
+scAnnotatR object with the new parent.
 
-scClassifR object with the new trained classifier.
+scAnnotatR object with the new trained classifier.
 
-scClassifR object with the new features.
+scAnnotatR object with the new features.
 
 a list of balanced count matrix
 and corresponding tags of balanced count matrix
@@ -242,7 +242,7 @@ applicable matrix
 clf performance
 }
 \description{
-Check if a scClassifR object is valid
+Check if a scAnnotatR object is valid
 
 Filter cells from ambiguous chars and 
 non applicable cells in a \code{\link{Seurat}} object

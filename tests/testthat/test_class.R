@@ -1,5 +1,5 @@
-context("scClassifR class functions")
-library(scClassifR)
+context("scAnnotatR class functions")
+library(scAnnotatR)
 
 test_that("Set cell type changes cell type", {
   data("default_models")

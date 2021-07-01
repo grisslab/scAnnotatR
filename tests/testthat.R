@@ -1,4 +1,4 @@
 library(testthat)
-library(scClassifR)
+library(scAnnotatR)
 
-test_check("scClassifR")
+test_check("scAnnotatR")

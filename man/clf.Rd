@@ -7,14 +7,14 @@
 clf(classifier)
 }
 \arguments{
-\item{classifier}{\code{\link{scClassifR}} object}
+\item{classifier}{\code{\link{scAnnotatR}} object}
 }
 \value{
 Classifier is the object returned by caret SVM learning process.
 More information about the caret package: https://topepo.github.io/caret/
 }
 \description{
-Returns the classifier of the \code{\link{scClassifR}} object
+Returns the classifier of the \code{\link{scAnnotatR}} object
 }
 \examples{
 data("tirosh_mel80_example")

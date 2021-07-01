@@ -1,5 +1,5 @@
-context("scClassifR support functions")
-library(scClassifR)
+context("scAnnotatR support functions")
+library(scAnnotatR)
 library(Seurat)
 
 test_that("Balance dataset balances dataset", {

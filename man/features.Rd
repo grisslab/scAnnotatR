@@ -7,7 +7,7 @@
 features(classifier)
 }
 \arguments{
-\item{classifier}{scClassifR object}
+\item{classifier}{scAnnotatR object}
 }
 \value{
 Applied features of object
