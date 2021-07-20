@@ -1,14 +1,23 @@
 Package: scAnnotatR
 Type: Package
-Title: Pretrained learning models for cell type prediction on single cell RNA-sequencing data 
+Title: Pretrained learning models for cell type prediction on single cell 
+       RNA-sequencing data 
 Version: 0.99.1
 Authors@R: 
-    c(person("Vy", "Nguyen", email = "thi-tuong-vy.nguyen@meduniwien.ac.at", role = c("aut"), comment = c(ORCID = "0000-0003-3436-3662")),
-      person("Johannes", "Griss", email = "johannes.griss@meduniwien.ac.at", role = c("cre"), comment = c(ORCID = "0000-0003-2206-9511")))
-Description: The package comprises a set of pretrained machine learning models to predict basic immune cell types. This enables all users to quickly get a first annotation of the cell types present in their dataset without requiring prior knowledge. scAnnotatR also allows users to train their own models to predict new cell types based on specific research needs.
+    c(person("Vy", "Nguyen", email = "thi-tuong-vy.nguyen@meduniwien.ac.at", 
+      role = c("aut"), comment = c(ORCID = "0000-0003-3436-3662")),
+      person("Johannes", "Griss", email = "johannes.griss@meduniwien.ac.at", 
+      role = c("cre"), comment = c(ORCID = "0000-0003-2206-9511")))
+Description: The package comprises a set of pretrained machine learning models
+             to predict basic immune cell types. This enables all users to 
+             quickly get a first annotation of the cell types present in their 
+             dataset without requiring prior knowledge. scAnnotatR also allows 
+             users to train their own models to predict new cell types based on 
+             specific research needs.
 License: MIT + file LICENSE
 Encoding: UTF-8
-biocViews: SingleCell, Transcriptomics, GeneExpression, SupportVectorMachine, Classification, Software
+biocViews: SingleCell, Transcriptomics, GeneExpression, SupportVectorMachine, 
+           Classification, Software
 Imports: 
     dplyr,
     ggplot2,
@@ -32,3 +41,5 @@ Depends: R (>= 4.1), Seurat, SingleCellExperiment, SummarizedExperiment
 LazyData: true
 LazyDataCompression: xz
 RoxygenNote: 7.1.1
+URL: https://github.com/grisslab/scAnnotatR
+BugReports: https://github.com/grisslab/scAnnotatR/issues/new
