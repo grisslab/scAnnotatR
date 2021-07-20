@@ -135,7 +135,7 @@ but with additional columns in the metadata table.
 
 ```{r}
 # display the additional metadata fields
-seurat.obj[[]][c(50:60), c(8:16)]
+seurat.obj[[]][c(50:60), c(8:ncol(seurat.obj[[]]))]
 ```
 New columns are:
 
