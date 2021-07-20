@@ -147,7 +147,8 @@ from the majority group. To use the same set of cells while training multiple
 times for one model, users can use `set.seed`. 
 ```{r}
 set.seed(123)
-clf_B <- train_classifier(train_obj = train_set, cell_type = "B cells", features = selected_features_B,
+clf_B <- train_classifier(train_obj = train_set, cell_type = "B cells", 
+                          features = selected_features_B,
                           sce_assay = 'counts', sce_tag_slot = 'B_cell')
 ```
 ```{r}
@@ -232,7 +233,8 @@ New classification models can be stored using the `save_new_model` function:
 
 ```{r}
 # no copy of pretrained models is performed
-save_new_model(new_model = clf_B, path.to.models = getwd(),include.default = FALSE) 
+save_new_model(new_model = clf_B, path.to.models = tempdir(),
+               include.default = FALSE) 
 ```
 
 Parameters:
@@ -251,7 +253,7 @@ Models can be deleted from the model database using the `delete_model` function:
 
 ```{r}
 # delete the "B cells" model from the new database
-delete_model("B cells", path.to.models = getwd())
+delete_model("B cells", path.to.models = tempdir())
 ```
 
 ## Session Info
