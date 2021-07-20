@@ -2,29 +2,20 @@
 % Please edit documentation in R/class.R
 \name{cell_type<-}
 \alias{cell_type<-}
-\title{Setter for cell_type
-Change cell type for a classifier}
+\title{Setter for cell_type.
+Change cell type of a classifier}
 \usage{
 cell_type(classifier) <- value
 }
 \arguments{
-\item{classifier}{scAnnotatR object. 
-The object is returned from the train_classifier function.}
+\item{classifier}{the classifier whose cell type will be changed}
 
 \item{value}{the new cell type}
 }
 \value{
-scAnnotatR object with the new cell type.
+the classifier with the new cell type
 }
 \description{
-Setter for cell_type
-Change cell type for a classifier
-}
-\examples{
-data("tirosh_mel80_example")
-selected_features_B = c("CD19", "MS4A1", "CD79A")
-set.seed(123)
-clf_b <- train_classifier(train_obj = tirosh_mel80_example, 
-features = selected_features_B, cell_type = "B cells")
-cell_type(clf_b) <- "B cell"
+Setter for cell_type.
+Change cell type of a classifier
 }

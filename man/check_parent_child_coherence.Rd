@@ -50,9 +50,15 @@ TRUE if the p_thres is valid or the reason why it is not.
 
 TRUE if the classifier is valid or the reason why it is not.
 
-scAnnotatR object with the new parent.
+the classifier with the new parent.
+
+scAnnotatR object with the new parent
+
+the classifier with the new core model.
 
 scAnnotatR object with the new trained classifier.
+
+the classifier with the new features
 
 scAnnotatR object with the new features.
 

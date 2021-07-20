@@ -7,25 +7,14 @@
 p_thres(classifier) <- value
 }
 \arguments{
-\item{classifier}{scAnnotatR object. 
-The object is returned from the train_classifier function.}
+\item{classifier}{the classifier whose predicting probability threshold 
+will be changed}
 
 \item{value}{the new threshold}
 }
 \value{
-scAnnotatR object with the new threshold.
+classifier with the new threshold.
 }
 \description{
 Setter for predicting probability threshold
-}
-\examples{
-data("tirosh_mel80_example")
-selected_features_B = c("CD19", "MS4A1", "CD79A")
-set.seed(123)
-clf_b <- train_classifier(train_obj = tirosh_mel80_example, 
-features = selected_features_B, cell_type = "B cells")
-clf_b_test <- test_classifier(test_obj = tirosh_mel80_example, 
-classifier = clf_b)
-# assign a new threhold probability for prediction
-p_thres(clf_b) <- 0.4
 }

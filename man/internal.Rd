@@ -8,8 +8,11 @@
 \alias{checkPThresValidity}
 \alias{checkClassifierValidity}
 \alias{parent<-}
+\alias{parent<-,scAnnotatR-method}
 \alias{clf<-}
+\alias{clf<-,scAnnotatR-method}
 \alias{features<-}
+\alias{features<-,scAnnotatR-method}
 \alias{balance_dataset}
 \alias{train_func}
 \alias{transform_to_zscore}
@@ -46,9 +49,15 @@ checkClassifierValidity(clf)
 
 parent(classifier) <- value
 
+\S4method{parent}{scAnnotatR}(classifier) <- value
+
 clf(classifier) <- value
 
+\S4method{clf}{scAnnotatR}(classifier) <- value
+
 features(classifier) <- value
+
+\S4method{features}{scAnnotatR}(classifier) <- value
 
 balance_dataset(mat, tag)
 
@@ -206,9 +215,15 @@ TRUE if the p_thres is valid or the reason why it is not.
 
 TRUE if the classifier is valid or the reason why it is not.
 
-scAnnotatR object with the new parent.
+the classifier with the new parent.
+
+scAnnotatR object with the new parent
+
+the classifier with the new core model.
 
 scAnnotatR object with the new trained classifier.
+
+the classifier with the new features
 
 scAnnotatR object with the new features.
 

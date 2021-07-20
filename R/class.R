@@ -348,14 +348,21 @@ parent <- function(classifier) {
 
 #--- setters
 
-#' Setter for cell_type
-#' Change cell type for a classifier
+#' Setter for cell_type.
+#' Change cell type of a classifier
 #' 
-#' @param classifier scAnnotatR object. 
-#' The object is returned from the train_classifier function.
+#' @param classifier the classifier whose cell type will be changed
 #' @param value the new cell type
 #' 
-#' @return scAnnotatR object with the new cell type.
+#' @return the classifier with the new cell type
+#' @export
+setGeneric('cell_type<-', function(classifier, value) 
+  standardGeneric("cell_type<-"))
+
+#' @inherit cell_type<-
+#' @param classifier scAnnotatR object. 
+#' The object is returned from the train_classifier function.
+#' @return scAnnotatR object with the new cell type
 #' @examples
 #' data("tirosh_mel80_example")
 #' selected_features_B = c("CD19", "MS4A1", "CD79A")
@@ -363,8 +370,8 @@ parent <- function(classifier) {
 #' clf_b <- train_classifier(train_obj = tirosh_mel80_example, 
 #' features = selected_features_B, cell_type = "B cells")
 #' cell_type(clf_b) <- "B cell"
-#' @export
-'cell_type<-' <- function(classifier, value) {
+#' @rdname cell_type
+setReplaceMethod('cell_type', c("classifier" = "scAnnotatR"), function(classifier, value) {
   # check if new thres is a string
   if (is.character(value) && nchar(value) > 0 && length(value) == 1)
     classifier@cell_type <- value
@@ -373,14 +380,22 @@ parent <- function(classifier) {
   
   # return or not?
   classifier
-}
+})
 
 #' Setter for predicting probability threshold
 #' 
-#' @param classifier scAnnotatR object. 
-#' The object is returned from the train_classifier function.
+#' @param classifier the classifier whose predicting probability threshold 
+#' will be changed
 #' @param value the new threshold
 #' 
+#' @return classifier with the new threshold.
+#' @export
+setGeneric('p_thres<-', function(classifier, value) 
+  standardGeneric("p_thres<-"))
+
+#' @inherit p_thres<-
+#' @param classifier scAnnotatR object. 
+#' The object is returned from the train_classifier function.
 #' @return scAnnotatR object with the new threshold.
 #' @examples
 #' data("tirosh_mel80_example")
@@ -392,8 +407,8 @@ parent <- function(classifier) {
 #' classifier = clf_b)
 #' # assign a new threhold probability for prediction
 #' p_thres(clf_b) <- 0.4
-#' @export
-"p_thres<-" <- function(classifier, value) {
+#' @rdname p_thres
+setReplaceMethod('p_thres', c("classifier" = "scAnnotatR"), function(classifier, value) {
   # check if new thres > 0
   if (is.numeric(value) && value > 0)
     classifier@p_thres <- value
@@ -402,18 +417,26 @@ parent <- function(classifier) {
   
   # return or not?
   classifier
-}
+})
 
 #' Setter for parent
 #' 
-#' @param classifier scAnnotatR object. 
-#' The object is returned from the train_classifier function.
+#' @param classifier the classifier whose parent will be changed
 #' @param value the new parent
 #' 
-#' @return scAnnotatR object with the new parent.
+#' @return the classifier with the new parent.
+#' @rdname internal
+setGeneric('parent<-', function(classifier, value) 
+  standardGeneric("parent<-"))
+
+#' @inherit parent<-
+#' @param classifier scAnnotatR object. 
+#' The object is returned from the train_classifier function.
+#' @return scAnnotatR object with the new parent
+#' 
 #' @rdname internal
 #' 
-"parent<-" <- function(classifier, value) {
+setReplaceMethod('parent', c("classifier" = "scAnnotatR"), function(classifier, value) {
   # check if new thres > 0
   if (!is.character(value) || nchar(value) == 0 || length(value) != 1)
     stop("New parent must be a non empty string.", call. = FALSE)
@@ -422,18 +445,26 @@ parent <- function(classifier) {
     
   # return or not?
   classifier
-}
+})
 
 #' Setter for clf.
 #' Change of clf will also lead to change of features.
+#' @param classifier the classifier whose classifying model will be changed
+#' @param value the new core model
 #' 
+#' @return the classifier with the new core model.
+#' @rdname internal
+setGeneric('clf<-', function(classifier, value) 
+  standardGeneric("clf<-"))
+
+#' @inherit clf<-
 #' @param classifier scAnnotatR object. 
 #' The object is returned from the train_classifier function.
 #' @param value the new classifier
 #' 
 #' @return scAnnotatR object with the new trained classifier.
 #' @rdname internal
-"clf<-" <- function(classifier, value) {
+setReplaceMethod('clf', c("classifier" = "scAnnotatR"), function(classifier, value) {
   # set new classifier
   if (is.na(parent(classifier))) {
     classifier@clf <- value
@@ -451,10 +482,19 @@ parent <- function(classifier) {
   
   # return or not?
   classifier
-}
+})
 
 #' Setter for features. Users are not allowed to change features. 
 #' 
+#' @param classifier the classifier whose features will be changed
+#' @param value the new lsit of features
+#' 
+#' @return the classifier with the new features
+#' @rdname internal
+setGeneric('features<-', function(classifier, value) 
+  standardGeneric("features<-"))
+
+#' @inherit features<-
 #' @param classifier scAnnotatR object. 
 #' The object is returned from the train_classifier function.
 #' @param value the new classifier
@@ -462,11 +502,11 @@ parent <- function(classifier) {
 #' @return scAnnotatR object with the new features.
 #' @rdname internal
 #' 
-"features<-" <- function(classifier, value) {
+setReplaceMethod('features', c("classifier" = "scAnnotatR"), function(classifier, value) {
   # set new features
   if (is.character(value) && any(nchar(value)) > 0)
     classifier@features <- value
   
   # return or not?
   classifier
-}
+})

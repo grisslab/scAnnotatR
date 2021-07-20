@@ -2,15 +2,23 @@
 % Please edit documentation in R/class.R
 \name{cell_type}
 \alias{cell_type}
+\alias{cell_type<-,scAnnotatR-method}
 \title{cell_type}
 \usage{
 cell_type(classifier)
+
+\S4method{cell_type}{scAnnotatR}(classifier) <- value
 }
 \arguments{
-\item{classifier}{\code{\link{scAnnotatR}} object}
+\item{classifier}{scAnnotatR object. 
+The object is returned from the train_classifier function.}
+
+\item{value}{the new cell type}
 }
 \value{
 cell type of object
+
+scAnnotatR object with the new cell type
 }
 \description{
 Returns the cell type for the given classifier.
@@ -23,4 +31,10 @@ clf_b <- train_classifier(train_obj = tirosh_mel80_example,
 cell_type = "B cells", features = selected_features_B)
 cell_type(clf_b)
 
+data("tirosh_mel80_example")
+selected_features_B = c("CD19", "MS4A1", "CD79A")
+set.seed(123)
+clf_b <- train_classifier(train_obj = tirosh_mel80_example, 
+features = selected_features_B, cell_type = "B cells")
+cell_type(clf_b) <- "B cell"
 }

@@ -11,10 +11,11 @@ a list of \code{\link{scAnnotatR}} objects
 default_models
 }
 \description{
-Pretrained classifier obtained by training Sade-Feldman dataset
-and testing on Jerby-Arnon dataset.
+Pretrained classifier obtained by training and testing on the 
+Sade-Feldman melanoma dataset, the Jerby-Arnon melanoma dataset, the Haniffa
+Skin Cell Atlas and the Haniffa Covid-19 Cell Atlas.
 }
 \author{
-Vy Nguyen, November 2020
+Vy Nguyen, June 2021
 }
 \keyword{datasets}

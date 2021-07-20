@@ -2,15 +2,23 @@
 % Please edit documentation in R/class.R
 \name{p_thres}
 \alias{p_thres}
+\alias{p_thres<-,scAnnotatR-method}
 \title{p_thres}
 \usage{
 p_thres(classifier)
+
+\S4method{p_thres}{scAnnotatR}(classifier) <- value
 }
 \arguments{
-\item{classifier}{scAnnotatR object}
+\item{classifier}{scAnnotatR object. 
+The object is returned from the train_classifier function.}
+
+\item{value}{the new threshold}
 }
 \value{
 Predicting probability threshold of object
+
+scAnnotatR object with the new threshold.
 }
 \description{
 Returns the probability threshold for the given classifier.
@@ -23,4 +31,13 @@ clf_b <- train_classifier(train_obj = tirosh_mel80_example,
 features = selected_features_B, cell_type = "B cells")
 p_thres(clf_b)
 
+data("tirosh_mel80_example")
+selected_features_B = c("CD19", "MS4A1", "CD79A")
+set.seed(123)
+clf_b <- train_classifier(train_obj = tirosh_mel80_example, 
+features = selected_features_B, cell_type = "B cells")
+clf_b_test <- test_classifier(test_obj = tirosh_mel80_example, 
+classifier = clf_b)
+# assign a new threhold probability for prediction
+p_thres(clf_b) <- 0.4
 }
