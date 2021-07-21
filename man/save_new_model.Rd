@@ -4,7 +4,7 @@
 \alias{save_new_model}
 \title{Save a model to the package}
 \usage{
-save_new_model(new_model, include.default = TRUE, path.to.models = ".")
+save_new_model(new_model, include.default = TRUE, path.to.models = tempdir())
 }
 \arguments{
 \item{new_model}{new model to be added into the classification tree}
@@ -37,11 +37,11 @@ clf_t <- train_classifier(train_obj = tirosh_mel80_example,
 features = selected_features_T, cell_type = "t cells")
 
 # save the trained classifier to system 
-# (test classifier can be used before this step)
-save_new_model(new_model = clf_t, path.to.models = ".")
+# test classifier can be used before this step
+save_new_model(new_model = clf_t, path.to.models = tempdir())
 
 # verify if new model has been saved
-print(names(load("./new_models.rda")))
+print(names(load(file.path(tempdir(), "new_models.rda"))))
 delete_model("t cells")
 
 }

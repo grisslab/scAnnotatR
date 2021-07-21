@@ -117,7 +117,7 @@ load_models <- function(path_to_models) {
     utils::data("default_models", envir = data_env)
     model_list <- data_env[["default_models"]]
   } else {
-    models_path <- paste0(path_to_models, "/new_models.rda")
+    models_path <- file.path(path_to_models, "new_models.rda")
     if (!file.exists(models_path)) {
       cat("No model found in provided path to models")
     } else {

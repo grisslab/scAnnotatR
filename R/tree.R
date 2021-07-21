@@ -26,20 +26,20 @@
 #' features = selected_features_T, cell_type = "t cells")
 #' 
 #' # save the trained classifier to system 
-#' # (test classifier can be used before this step)
-#' save_new_model(new_model = clf_t, path.to.models = ".")
+#' # test classifier can be used before this step
+#' save_new_model(new_model = clf_t, path.to.models = tempdir())
 #' 
 #' # verify if new model has been saved
-#' print(names(load("./new_models.rda")))
+#' print(names(load(file.path(tempdir(), "new_models.rda"))))
 #' delete_model("t cells")
 #' 
 #' @export
 save_new_model <- function(new_model, include.default = TRUE, 
-                    path.to.models = ".") {
+                    path.to.models = tempdir()) {
   default_models <- NULL
   
   utils::data("default_models")
-  new_models.file.path = paste0(path.to.models, "/new_models.rda")
+  new_models.file.path = file.path(path.to.models, "new_models.rda")
   
   if (file.exists(new_models.file.path)) {
     load(new_models.file.path)
@@ -92,21 +92,21 @@ save_new_model <- function(new_model, include.default = TRUE,
 #' plant_tree()
 #' 
 #' @export
-plant_tree <- function(models.file.path = c("default", ".")) { 
-  new_models <- default_models <- NULL
+plant_tree <- function(models.file.path = c("default", tempdir())) { 
+  data_env <- new.env(parent = emptyenv())
   
   root.name <- "cell types"
   if ("default" %in% models.file.path) {
-    utils::data("default_models", envir = environment())
-    model_list <- default_models
+    utils::data("default_models", envir = data_env)
+    model_list <- data_env[['default_models']]
   } else {
-    models_file_path <- paste0(models.file.path, "/new_models.rda")
+    models_file_path <- file.path(models.file.path, "new_models.rda")
     if (!file.exists(models_file_path)) {
       stop("No file exists in the indicated models file path", 
            call. = FALSE)
     } else {
-      load(models_file_path, envir = environment())
-      model_list <- new_models
+      load(models_file_path, envir = data_env)
+      model_list <- data_env[['new_models']]
     }
   }
   
@@ -167,14 +167,16 @@ plant_tree <- function(models.file.path = c("default", ".")) {
 #' # delete classifier from system
 #' delete_model("t cells")
 #' @export
-delete_model <- function(cell_type, path.to.models = ".") {
+delete_model <- function(cell_type, path.to.models = tempdir()) {
   new_models <- NULL
+  data_env <- new.env(parent = emptyenv())
   
-  new_models.file.path <- paste0(path.to.models, "/new_models.rda")
+  new_models.file.path <- file.path(path.to.models, "new_models.rda")
   if (!file.exists(new_models.file.path)) {
     stop("No list of models available", call. = FALSE)
   } else {
-    load(new_models.file.path, envir = environment())
+    load(new_models.file.path, envir = data_env)
+    new_models <- data_env[['new_models']]
   }
   
   if (is.null(new_models))

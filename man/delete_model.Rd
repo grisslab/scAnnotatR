@@ -4,7 +4,7 @@
 \alias{delete_model}
 \title{Delete model/branch from package}
 \usage{
-delete_model(cell_type, path.to.models = ".")
+delete_model(cell_type, path.to.models = tempdir())
 }
 \arguments{
 \item{cell_type}{string indicating the cell type of which 
