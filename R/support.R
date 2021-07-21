@@ -110,19 +110,20 @@ transform_to_zscore <- function(mat) {
 #' @rdname internal
 load_models <- function(path_to_models) {
   # prevents R CMD check note
-  model_list <- new_models <- default_models <- NULL
+  model_list <- NULL
+  data_env <- new.env(parent = emptyenv())
   
   if ("default" %in% path_to_models) {
-    utils::data("default_models", envir = environment())
-    model_list <- default_models
+    utils::data("default_models", envir = data_env)
+    model_list <- data_env[["default_models"]]
   } else {
     models_path <- paste0(path_to_models, "/new_models.rda")
     if (!file.exists(models_path)) {
       cat("No model found in provided path to models")
     } else {
-      load(models_path, envir = environment()) 
+      load(models_path, envir = data_env) 
       # models are stored in a variable called new_models
-      model_list <- new_models
+      model_list <- data_env[["new_models"]]
     }
   }
   
