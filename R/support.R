@@ -73,7 +73,7 @@ train_func <- function(mat, tag) {
 
   mat <- as.data.frame(mat)
   mat$tag <- tag
-  clf <- caret::train(form = tag ~ ., data = mat, 
+  caret_model <- caret::train(form = tag ~ ., data = mat, 
                       method = "svmLinear",
                       tuneGrid = data.frame(.C = 1),
                       metrix = "Accuracy",
@@ -81,7 +81,7 @@ train_func <- function(mat, tag) {
                         classProbs = TRUE, trim = TRUE, sampling = 'down',
                         returnData = FALSE, returnResamp = 'none')
                       ) 
-  return(clf)
+  return(caret_model)
 }
 
 #' Transform whole matrix of counts to z-score
@@ -113,7 +113,7 @@ load_models <- function(path_to_models) {
   model_list <- NULL
   data_env <- new.env(parent = emptyenv())
   
-  if ("default" %in% path_to_models) {
+  if (path_to_models == "default") {
     utils::data("default_models", envir = data_env)
     model_list <- data_env[["default_models"]]
   } else {
@@ -158,10 +158,10 @@ select_marker_genes <- function(mat, marker_genes) {
 #' Check label coherence in parent and child cell type
 #' 
 #' @param obj object
-#' @param pos_parent a vector indicating parent clf prediction
+#' @param pos_parent a vector indicating parent classifier prediction
 #' @param parent_cell name of parent cell type
 #' @param cell_type name of child cell type
-#' @param target_cell_type alternative cell types (in case of testing clf)
+#' @param target_cell_type alternative cell types (in case of testing classifier)
 #' @param ... arguments passed to other methods
 #' 
 #' @return list of adjusted object and adjusted tag slot
@@ -425,31 +425,31 @@ setMethod("construct_tag_vect", c("obj" = "SingleCellExperiment"),
   return(named_tag)
 })
 
-#' Process parent clf
+#' Process parent classifier
 #' 
 #' @param obj object
 #' @param parent_tag_slot string, name of annotation tag slot in object 
 #' indicating pre-assigned/predicted parent cell type
 #' @param parent_cell_type name of parent cell type
-#' @param parent_clf \code{\link{scAnnotatR}} object corresponding 
+#' @param parent_classifier \code{\link{scAnnotatR}} object corresponding 
 #' to classification model for the parent cell type
 #' @param path_to_models path to databases, or by default
 #' @param zscore boolean indicating the transformation of gene expression 
 #' in object to zscore or not
 #' @param ... arguments passed to other methods
 #' 
-#' @return list of cells which are positive to parent clf
+#' @return list of cells which are positive to parent classifier
 #' 
 #' @importFrom stats predict
 #' @import dplyr
 #' 
 #' @rdname internal
-setGeneric("process_parent_clf", 
-           function(obj, parent_tag_slot, parent_cell_type, parent_clf, 
+setGeneric("process_parent_classifier", 
+           function(obj, parent_tag_slot, parent_cell_type, parent_classifier, 
                     path_to_models, zscore = TRUE, ...) 
-             standardGeneric("process_parent_clf"))
+             standardGeneric("process_parent_classifier"))
 
-#' @inherit process_parent_clf
+#' @inherit process_parent_classifier
 #' 
 #' @description Process parent classifier in a \code{\link{Seurat}} object
 #' 
@@ -461,41 +461,41 @@ setGeneric("process_parent_clf",
 #' @importFrom Seurat Idents
 #' 
 #' @rdname internal
-setMethod("process_parent_clf", c("obj" = "Seurat"), 
+setMethod("process_parent_classifier", c("obj" = "Seurat"), 
           function(obj, parent_tag_slot, parent_cell_type, 
-                   parent_clf, path_to_models, zscore = TRUE, 
+                   parent_classifier, path_to_models, zscore = TRUE, 
                    seurat_assay, seurat_slot, ...) {
-  pos_parent <- parent.clf <- . <- model_list <- NULL
+  pos_parent <- parent.classifier <- . <- model_list <- NULL
   
-  if (is.na(parent_cell_type) && !is.null(parent_clf))
-    parent_cell_type <- cell_type(parent_clf)
+  if (is.na(parent_cell_type) && !is.null(parent_classifier))
+    parent_cell_type <- cell_type(parent_classifier)
   
   # if sub cell type is indicated
   if (!is.na(parent_cell_type)) {
     #-- apply parent cell classifier
-    if (is.null(parent_clf)) {
+    if (is.null(parent_classifier)) {
       message("Parent classifier not provided. Try finding available model.")
       
       model_list <- load_models(path_to_models)
       
       if (parent_cell_type %in% names(model_list)) {
-        parent.clf <- model_list[[parent_cell_type]]
+        parent.classifier <- model_list[[parent_cell_type]]
       } else {
         message("No available model for parent cell type")
       }
     }
     else {
-      parent.clf <- parent_clf
+      parent.classifier <- parent_classifier
     }
     
-    if (!is.null(parent.clf)) {
+    if (!is.null(parent.classifier)) {
       message("Apply pretrained model for parent cell type.")
       
       # convert Seurat object to matrix
       mat = Seurat::GetAssayData(object = obj, 
                                  assay = seurat_assay, slot = seurat_slot)
       
-      filtered_mat <- select_marker_genes(mat, marker_genes(parent.clf))
+      filtered_mat <- select_marker_genes(mat, marker_genes(parent.classifier))
       
       filtered_mat <- t(as.matrix(filtered_mat))
       
@@ -508,9 +508,9 @@ setMethod("process_parent_clf", c("obj" = "Seurat"),
       colnames(filtered_mat) <- gsub('-', '_', colnames(filtered_mat))
       
       # predict
-      pred = stats::predict(clf(parent.clf), filtered_mat, type = "prob") %>% 
+      pred = stats::predict(caret_model(parent.classifier), filtered_mat, type = "prob") %>% 
            dplyr::mutate('class' = apply(., 1, 
-           function(x) if(x[1] >= p_thres(parent.clf)) {"yes"} else {"no"}))
+           function(x) if(x[1] >= p_thres(parent.classifier)) {"yes"} else {"no"}))
       rownames(pred) <- rownames(filtered_mat)
       pos_parent <- rownames(pred[pred$class == "yes",])
     } else if (!is.null(parent_tag_slot)) { # try with predicted tag slot
@@ -525,7 +525,7 @@ setMethod("process_parent_clf", c("obj" = "Seurat"),
         pos_parent <- colnames(obj)[tolower(cell_type_anno) == 
                                       tolower(parent_cell_type)]
       }
-    } else { # only parent cell type provided but no parent clf can be used
+    } else { # only parent cell type provided but no parent classifier can be used
       stop("Neither parent classifier nor parent tag slot applied. 
            Parent cell type verification failed. 
            Please check parent classifier/parent tag slot
@@ -534,11 +534,11 @@ setMethod("process_parent_clf", c("obj" = "Seurat"),
   }
   
   return_val <- list('pos_parent' = pos_parent, 'parent_cell' = parent_cell_type, 
-                     'parent.clf' = parent.clf, 'model_list' = model_list)
+                     'parent.classifier' = parent.classifier, 'model_list' = model_list)
   return(return_val)
 })
 
-#' @inherit process_parent_clf
+#' @inherit process_parent_classifier
 #' 
 #' @description Process parent classifier in 
 #' a \code{\link{SingleCellExperiment}} object
@@ -550,40 +550,40 @@ setMethod("process_parent_clf", c("obj" = "Seurat"),
 #' @importFrom SummarizedExperiment assay
 #' 
 #' @rdname internal
-setMethod("process_parent_clf", c("obj" = "SingleCellExperiment"), 
-          function(obj, parent_tag_slot, parent_cell_type, parent_clf, 
+setMethod("process_parent_classifier", c("obj" = "SingleCellExperiment"), 
+          function(obj, parent_tag_slot, parent_cell_type, parent_classifier, 
                    path_to_models, zscore = TRUE, sce_assay, ...) {
-  pos_parent <- parent.clf <- . <- model_list <- NULL
+  pos_parent <- parent.classifier <- . <- model_list <- NULL
   
-  if (is.na(parent_cell_type) && !is.null(parent_clf))
-    parent_cell_type <- cell_type(parent_clf)
+  if (is.na(parent_cell_type) && !is.null(parent_classifier))
+    parent_cell_type <- cell_type(parent_classifier)
   
   # if sub cell type is indicated
   if (!is.na(parent_cell_type)) {
     #-- apply parent cell classifier
     # get parent classifier
-    if (is.null(parent_clf)) {
+    if (is.null(parent_classifier)) {
       message("Parent classifier not provided. Try finding available model.")
       
       model_list <- load_models(path_to_models)
       
       if (parent_cell_type %in% names(model_list)) {
-        parent.clf <- model_list[[parent_cell_type]]
+        parent.classifier <- model_list[[parent_cell_type]]
       } else {
         message("No available model for parent cell type")
       }
     }
     else {
-      parent.clf <- parent_clf
+      parent.classifier <- parent_classifier
     }
     
-    if (!is.null(parent.clf)) {
+    if (!is.null(parent.classifier)) {
       message("Apply pretrained model for parent cell type.\n")
       
       # convert Seurat object to matrix
       mat = SummarizedExperiment::assay(obj, sce_assay)
       
-      filtered_mat <- select_marker_genes(mat, marker_genes(parent.clf))
+      filtered_mat <- select_marker_genes(mat, marker_genes(parent.classifier))
       filtered_mat <- t(as.matrix(filtered_mat))
       
       # transform mat to zscore values
@@ -595,9 +595,9 @@ setMethod("process_parent_clf", c("obj" = "SingleCellExperiment"),
       colnames(filtered_mat) <- gsub('-', '_', colnames(filtered_mat))
       
       # predict
-      pred = stats::predict(clf(parent.clf), filtered_mat, type = "prob") %>% 
+      pred = stats::predict(caret_model(parent.classifier), filtered_mat, type = "prob") %>% 
         dplyr::mutate('class' = apply(., 1, 
-        function(x) if(x[1] >= p_thres(parent.clf)) {"yes"} else {"no"}))
+        function(x) if(x[1] >= p_thres(parent.classifier)) {"yes"} else {"no"}))
       rownames(pred) <- rownames(filtered_mat)
       pos_parent <- rownames(pred[pred$class == "yes",])
     } else if (!is.null(parent_tag_slot)) { # try with predicted tag slot
@@ -607,7 +607,7 @@ setMethod("process_parent_clf", c("obj" = "SingleCellExperiment"),
       pos_parent <- colnames(obj)[tolower(cell_type_anno) 
                                   == tolower(parent_cell_type)]
     } else { 
-      # only parent cell type provided but no parent clf/tag slot can be used
+      # only parent cell type provided but no parent classifier/tag slot can be used
       stop("Neither parent classifier nor parent tag slot applied. 
            Parent cell type verification failed. 
            Please check parent classifier/parent 
@@ -616,7 +616,7 @@ setMethod("process_parent_clf", c("obj" = "SingleCellExperiment"),
   }
   
   return_val <- list('pos_parent' = pos_parent, 'parent_cell'= parent_cell_type,
-                     'parent.clf' = parent.clf, 'model_list' = model_list)
+                     'parent.classifier' = parent.classifier, 'model_list' = model_list)
   return(return_val)
 })
 
@@ -643,7 +643,7 @@ make_prediction <- function(mat, classifier, pred_cells,
   colnames(mat) <- gsub('-', '_', colnames(mat))
   
   # predict
-  pred = stats::predict(clf(classifier), mat, type = "prob") %>%
+  pred = stats::predict(caret_model(classifier), mat, type = "prob") %>%
     dplyr::mutate('class' = apply(., 1, function(x)
       if(x[1] >= p_thres(classifier)) {"yes"} else {"no"}))
   rownames(pred) <- rownames(mat)
@@ -750,7 +750,7 @@ simplify_prediction <- function(meta.data, full_pred, classifiers) {
 verify_parent <- function(mat, classifier, meta.data) {
   pos_parent <- applicable_mat <- NULL
   
-  # parent clf, if avai, always has to be applied before children clf.
+  # parent classifier, if avai, always has to be applied before children classifier.
   parent_slot <- paste0(
     c(unlist(strsplit(parent(classifier), split = " ")), "class"), 
     collapse = "_")
@@ -771,13 +771,13 @@ verify_parent <- function(mat, classifier, meta.data) {
   return(applicable_mat)
 }
 
-#' Test clf performance
+#' Test classifier performance
 #'
 #' @param mat expression matrix
 #' @param classifier classifier
 #' @param tag tag of data
 #' 
-#' @return clf performance
+#' @return classifier performance
 #' @import dplyr
 #' @import pROC
 #' @importFrom stats predict
@@ -795,7 +795,7 @@ test_performance <- function(mat, classifier, tag) {
   
   # predict
   for (thres in iter) {
-    test_pred = stats::predict(clf(classifier), mat, type = "prob") %>% 
+    test_pred = stats::predict(caret_model(classifier), mat, type = "prob") %>% 
       dplyr::mutate('class' = apply(., 1, function(x) 
         if(x[1] >= thres) {1} else {0}))
     rownames(test_pred) <- rownames(mat)
@@ -845,7 +845,7 @@ test_performance <- function(mat, classifier, tag) {
   return(return_val)
 }
 
-#' Test clf performance
+#' Test classifier performance
 #'
 #' @param clusts cluster info
 #' @param most_probable_cell_type predicted cell type

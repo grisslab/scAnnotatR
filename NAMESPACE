@@ -2,9 +2,9 @@
 
 export("cell_type<-")
 export("p_thres<-")
+export(caret_model)
 export(cell_type)
 export(classify_cells)
-export(clf)
 export(delete_model)
 export(marker_genes)
 export(p_thres)

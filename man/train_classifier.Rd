@@ -11,8 +11,8 @@ train_classifier(
   cell_type,
   marker_genes,
   parent_cell = NA_character_,
-  parent_clf = NULL,
-  path_to_models = c("default", "."),
+  parent_classifier = NULL,
+  path_to_models = "default",
   zscore = TRUE,
   ...
 )
@@ -22,8 +22,8 @@ train_classifier(
   cell_type,
   marker_genes,
   parent_cell = NA_character_,
-  parent_clf = NULL,
-  path_to_models = c("default", "."),
+  parent_classifier = NULL,
+  path_to_models = "default",
   zscore = TRUE,
   seurat_tag_slot = "active.ident",
   seurat_parent_tag_slot = "predicted_cell_type",
@@ -37,8 +37,8 @@ train_classifier(
   cell_type,
   marker_genes,
   parent_cell = NA_character_,
-  parent_clf = NULL,
-  path_to_models = c("default", "."),
+  parent_classifier = NULL,
+  path_to_models = "default",
   zscore = TRUE,
   sce_tag_slot = "ident",
   sce_parent_tag_slot = "predicted_cell_type",
@@ -54,7 +54,7 @@ If the training model has parent, parent_tag_slot may have been indicated.
 This field would have been filled out automatically 
 if user precedently run classify_cells function. 
 If no (predicted) cell type annotation provided, 
-the function can be run if 1- parent_cell or 2- parent_clf is provided.}
+the function can be run if 1- parent_cell or 2- parent_classifier is provided.}
 
 \item{cell_type}{string indicating the name of the subtype
 This must exactly match cell tag/label if cell tag/label is a string.}
@@ -65,7 +65,7 @@ This must exactly match cell tag/label if cell tag/label is a string.}
 if parent cell type classifier has already been saved in model database.
 Adjust path_to_models for exact database.}
 
-\item{parent_clf}{classification model for the parent cell type}
+\item{parent_classifier}{classification model for the parent cell type}
 
 \item{path_to_models}{path to the folder containing the model database. 
 As default, the pretrained models in the package will be used. 
@@ -143,13 +143,13 @@ selected_marker_genes_B = c("CD19", "MS4A1", "CD79A")
 # train the classifier, the "cell_type" argument must match 
 # the cell labels in the data, except upper/lower case
 set.seed(123)
-clf_b <- train_classifier(train_obj = tirosh_mel80_example, 
+classifier_b <- train_classifier(train_obj = tirosh_mel80_example, 
 marker_genes = selected_marker_genes_B, cell_type = "b cells")
 
 # classify cell types using B cell classifier, 
 # a test classifier process may be used before applying the classifier 
 tirosh_mel80_example <- classify_cells(classify_obj = tirosh_mel80_example, 
-classifiers = c(clf_b))
+classifiers = c(classifier_b))
 
 # tag all cells that are plasma cells (random example here)
 tirosh_mel80_example[['plasma_cell_tag']] <- c(rep(1, 80), rep(0, 400))
@@ -162,8 +162,8 @@ p_marker_genes = c("SDC1", "CD19", "CD79A")
 # the "tag_slot" parameter tells the classifier to use this cell meta data
 # for the training process.
 set.seed(123)
-plasma_clf <- train_classifier(train_obj = tirosh_mel80_example, 
-cell_type = "Plasma cell", marker_genes = p_marker_genes, parent_clf = clf_b, 
-seurat_tag_slot = 'plasma_cell_tag')
+plasma_classifier <- train_classifier(train_obj = tirosh_mel80_example, 
+cell_type = "Plasma cell", marker_genes = p_marker_genes, 
+parent_classifier = classifier_b, seurat_tag_slot = 'plasma_cell_tag')
 
 }

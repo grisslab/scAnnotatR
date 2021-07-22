@@ -33,12 +33,12 @@ data("tirosh_mel80_example")
 # train classifier
 selected_marker_genes_T = c("CD4", "CD8A", "CD8B")
 set.seed(123)
-clf_t <- train_classifier(train_obj = tirosh_mel80_example, 
+classifier_t <- train_classifier(train_obj = tirosh_mel80_example, 
 marker_genes = selected_marker_genes_T, cell_type = "t cells")
 
 # save the trained classifier to system 
 # test classifier can be used before this step
-save_new_model(new_model = clf_t, path.to.models = tempdir())
+save_new_model(new_model = classifier_t, path.to.models = tempdir())
 
 # verify if new model has been saved
 print(names(load(file.path(tempdir(), "new_models.rda"))))

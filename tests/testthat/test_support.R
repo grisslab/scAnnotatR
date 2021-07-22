@@ -91,15 +91,16 @@ test_that("A tag vector construction works", {
   expect_equal(tag_vect, bin_vect)
 })
 
-test_that("Process parent clf works", {
+test_that("Process parent classifier works", {
   data("tirosh_mel80_example")
   example_data <- subset(tirosh_mel80_example, cells = 1:10)
   
   tag <- c(rep('ABC', 4), rep('CDE', 4), rep('DEF', 2))
   example_data[['example_tag']] <- tag
   
-  return_val <- process_parent_clf(example_data, parent_tag_slot = 'example_tag', 
-                                   'ABC', NULL, '.', seurat_assay = 'RNA', 
-                                   seurat_slot = 'data')
+  return_val <- process_parent_classifier(example_data, 
+                                          parent_tag_slot = 'example_tag', 
+                                          'ABC', NULL, '.', seurat_assay = 'RNA', 
+                                          seurat_slot = 'data')
   expect_equal(sort(return_val$pos_parent), sort(colnames(example_data)[1:4]))
 })

@@ -22,12 +22,12 @@
 #' # train classifier
 #' selected_marker_genes_T = c("CD4", "CD8A", "CD8B")
 #' set.seed(123)
-#' clf_t <- train_classifier(train_obj = tirosh_mel80_example, 
+#' classifier_t <- train_classifier(train_obj = tirosh_mel80_example, 
 #' marker_genes = selected_marker_genes_T, cell_type = "t cells")
 #' 
 #' # save the trained classifier to system 
 #' # test classifier can be used before this step
-#' save_new_model(new_model = clf_t, path.to.models = tempdir())
+#' save_new_model(new_model = classifier_t, path.to.models = tempdir())
 #' 
 #' # verify if new model has been saved
 #' print(names(load(file.path(tempdir(), "new_models.rda"))))
@@ -92,11 +92,11 @@ save_new_model <- function(new_model, include.default = TRUE,
 #' plant_tree()
 #' 
 #' @export
-plant_tree <- function(models.file.path = c("default", tempdir())) { 
+plant_tree <- function(models.file.path = "default") { 
   data_env <- new.env(parent = emptyenv())
   
   root.name <- "cell types"
-  if ("default" %in% models.file.path) {
+  if (models.file.path == "default") {
     utils::data("default_models", envir = data_env)
     model_list <- data_env[['default_models']]
   } else {
@@ -158,14 +158,14 @@ plant_tree <- function(models.file.path = c("default", tempdir())) {
 #' # train a classifier
 #' set.seed(123)
 #' selected_marker_genes_T = c("CD4", "CD8A", "CD8B")
-#' clf_t <- train_classifier(train_obj = tirosh_mel80_example, 
+#' classifier_t <- train_classifier(train_obj = tirosh_mel80_example, 
 #' marker_genes = selected_marker_genes_T, cell_type = "t cells")
 #' 
 #' # save a classifier to system
-#' save_new_model(new_model = clf_t)
+#' save_new_model(new_model = classifier_t, path.to.models = tempdir())
 #' 
 #' # delete classifier from system
-#' delete_model("t cells")
+#' delete_model("t cells", path.to.models = tempdir())
 #' @export
 delete_model <- function(cell_type, path.to.models = tempdir()) {
   new_models <- NULL

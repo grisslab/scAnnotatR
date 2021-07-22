@@ -27,17 +27,17 @@ Returns the probability threshold for the given classifier.
 data("tirosh_mel80_example")
 selected_marker_genes_B = c("CD19", "MS4A1", "CD79A")
 set.seed(123)
-clf_b <- train_classifier(train_obj = tirosh_mel80_example, 
+classifier_b <- train_classifier(train_obj = tirosh_mel80_example, 
 marker_genes = selected_marker_genes_B, cell_type = "B cells")
-p_thres(clf_b)
+p_thres(classifier_b)
 
 data("tirosh_mel80_example")
 selected_marker_genes_B = c("CD19", "MS4A1", "CD79A")
 set.seed(123)
-clf_b <- train_classifier(train_obj = tirosh_mel80_example, 
+classifier_b <- train_classifier(train_obj = tirosh_mel80_example, 
 marker_genes = selected_marker_genes_B, cell_type = "B cells")
-clf_b_test <- test_classifier(test_obj = tirosh_mel80_example, 
-classifier = clf_b)
+classifier_b_test <- test_classifier(test_obj = tirosh_mel80_example, 
+classifier = classifier_b)
 # assign a new threhold probability for prediction
-p_thres(clf_b) <- 0.4
+p_thres(classifier_b) <- 0.4
 }

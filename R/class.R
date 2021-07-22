@@ -8,7 +8,7 @@ setOldClass("train")
 #' Generally, scAnnotatR objects are never created directly.
 #' 
 #' @slot cell_type character. Name of the cell type.
-#' @slot clf list. Trained model returned by caret train function.
+#' @slot caret_model list. Trained model returned by caret train function.
 #' @slot marker_genes vector/character containing marker genes 
 #' used for the training.
 #' @slot p_thres numeric. 
@@ -23,15 +23,15 @@ setOldClass("train")
 #' # train a classifier, for ex: B cell
 #' selected_marker_genes_B = c("CD19", "MS4A1", "CD79A")
 #' set.seed(123)
-#' clf_b <- train_classifier(train_obj = tirosh_mel80_example, 
+#' classifier_b <- train_classifier(train_obj = tirosh_mel80_example, 
 #'                           marker_genes = selected_marker_genes_B, 
 #'                           cell_type = "B cells")
 #'
-#' clf_b
+#' classifier_b
 #' @export
 scAnnotatR <- setClass("scAnnotatR",
                        slots = list(cell_type = "character", 
-                       clf = "train", 
+                       caret_model = "train", 
                        marker_genes = "character", 
                        p_thres = "numeric",
                        parent = "character"))
@@ -39,16 +39,16 @@ scAnnotatR <- setClass("scAnnotatR",
 # ---- constructor function
 
 #' @param cell_type character. Name of the cell type.
-#' @param clf list. Trained model returned by caret train function.
+#' @param caret_model list. Trained model returned by caret train function.
 #' @param marker_genes vector/character containing marker genes used for the training.
 #' @param p_thres numeric. 
 #' Probability threshold for the cell type to be assigned for a cell.
 #' @param parent character. Parent cell type.
 #' @export
-scAnnotatR <- function(cell_type, clf, marker_genes, p_thres, parent) {
+scAnnotatR <- function(cell_type, caret_model, marker_genes, p_thres, parent) {
     classifier <- methods::new("scAnnotatR",
                             cell_type = cell_type,
-                            clf = clf,
+                            caret_model = caret_model,
                             marker_genes = marker_genes,
                             p_thres = p_thres,
                             parent = parent)
@@ -71,10 +71,10 @@ checkObjectValidity <- function(object) {
     return(cell_type.val)
     }
   
-    # check clf
-    clf.val <- checkClassifierValidity(clf(object))
-    if (is.character(clf.val)) {
-      return(clf.val)
+    # check caret_model
+    caret_model.val <- checkCaretModelValidity(caret_model(object))
+    if (is.character(caret_model.val)) {
+      return(caret_model.val)
     }
     
     # check marker_genes
@@ -192,14 +192,14 @@ checkPThresValidity <- function(p_thres) {
 
 #' Check validity of classifier
 #'
-#' @param clf Classifier to check.
+#' @param caret_model Classifier to check.
 #'
 #' @return TRUE if the classifier is valid or the reason why it is not.
 #' @rdname internal
-checkClassifierValidity <- function(clf) {
-  # clf must be a list
-  if (!is.list(clf)) {
-    return("'clf' must be of class 'list'")
+checkCaretModelValidity <- function(caret_model) {
+  # caret_model must be a list
+  if (!is.list(caret_model)) {
+    return("'caret_model' must be of class 'list'")
   }
   
   # make sure that the object is returned from caret train func
@@ -219,9 +219,9 @@ setValidity("scAnnotatR", checkObjectValidity)
 #' data("tirosh_mel80_example")
 #' selected_marker_genes_B = c("CD19", "MS4A1", "CD79A")
 #' set.seed(123)
-#' clf_b <- train_classifier(train_obj = tirosh_mel80_example, 
+#' classifier_b <- train_classifier(train_obj = tirosh_mel80_example, 
 #' marker_genes = selected_marker_genes_B, cell_type = "B cells")
-#' clf_b
+#' classifier_b
 #' 
 #' @export
 #' @rdname show
@@ -251,18 +251,18 @@ setMethod("show", c("object" = "scAnnotatR"), function(object) {
 #' data("tirosh_mel80_example")
 #' selected_marker_genes_B = c("CD19", "MS4A1", "CD79A")
 #' set.seed(123)
-#' clf_b <- train_classifier(train_obj = tirosh_mel80_example, 
+#' classifier_b <- train_classifier(train_obj = tirosh_mel80_example, 
 #' cell_type = "B cells", marker_genes = selected_marker_genes_B)
-#' cell_type(clf_b)
+#' cell_type(classifier_b)
 #' 
 #' @export
 cell_type <- function(classifier) {
   return(classifier@cell_type) 
 }
 
-#' clf
+#' caret_model
 #' 
-#' Returns the classifier of the \code{\link{scAnnotatR}} object
+#' Returns the caret model of the \code{\link{scAnnotatR}} object
 #' 
 #' @param classifier \code{\link{scAnnotatR}} object
 #' 
@@ -273,13 +273,13 @@ cell_type <- function(classifier) {
 #' data("tirosh_mel80_example")
 #' selected_marker_genes_B = c("CD19", "MS4A1", "CD79A")
 #' set.seed(123)
-#' clf_b <- train_classifier(train_obj = tirosh_mel80_example, 
+#' classifier_b <- train_classifier(train_obj = tirosh_mel80_example, 
 #' marker_genes = selected_marker_genes_B, cell_type = "B cells")
-#' clf(clf_b)
+#' caret_model(classifier_b)
 #'  
 #' @export
-clf <- function(classifier) {
-  return(classifier@clf)
+caret_model <- function(classifier) {
+  return(classifier@caret_model)
 }
 
 #' marker_genes
@@ -294,9 +294,9 @@ clf <- function(classifier) {
 #' data("tirosh_mel80_example")
 #' selected_marker_genes_B = c("CD19", "MS4A1", "CD79A")
 #' set.seed(123)
-#' clf_b <- train_classifier(train_obj = tirosh_mel80_example, 
+#' classifier_b <- train_classifier(train_obj = tirosh_mel80_example, 
 #' marker_genes = selected_marker_genes_B, cell_type = "B cells")
-#' marker_genes(clf_b)
+#' marker_genes(classifier_b)
 #' 
 #' @export
 marker_genes <- function(classifier) {
@@ -315,9 +315,9 @@ marker_genes <- function(classifier) {
 #' data("tirosh_mel80_example")
 #' selected_marker_genes_B = c("CD19", "MS4A1", "CD79A")
 #' set.seed(123)
-#' clf_b <- train_classifier(train_obj = tirosh_mel80_example, 
+#' classifier_b <- train_classifier(train_obj = tirosh_mel80_example, 
 #' marker_genes = selected_marker_genes_B, cell_type = "B cells")
-#' p_thres(clf_b)
+#' p_thres(classifier_b)
 #' 
 #' @export
 #' 
@@ -337,9 +337,9 @@ p_thres <- function(classifier) {
 #' data("tirosh_mel80_example")
 #' selected_marker_genes_B = c("CD19", "MS4A1", "CD79A")
 #' set.seed(123)
-#' clf_b <- train_classifier(train_obj = tirosh_mel80_example, 
+#' classifier_b <- train_classifier(train_obj = tirosh_mel80_example, 
 #' marker_genes = selected_marker_genes_B, cell_type = "B cells")
-#' parent(clf_b)
+#' parent(classifier_b)
 #' 
 #' @export
 parent <- function(classifier) {
@@ -367,9 +367,9 @@ setGeneric('cell_type<-', function(classifier, value)
 #' data("tirosh_mel80_example")
 #' selected_marker_genes_B = c("CD19", "MS4A1", "CD79A")
 #' set.seed(123)
-#' clf_b <- train_classifier(train_obj = tirosh_mel80_example, 
+#' classifier_b <- train_classifier(train_obj = tirosh_mel80_example, 
 #' marker_genes = selected_marker_genes_B, cell_type = "B cells")
-#' cell_type(clf_b) <- "B cell"
+#' cell_type(classifier_b) <- "B cell"
 #' @rdname cell_type
 setReplaceMethod('cell_type', c("classifier" = "scAnnotatR"), 
                  function(classifier, value) {
@@ -402,12 +402,12 @@ setGeneric('p_thres<-', function(classifier, value)
 #' data("tirosh_mel80_example")
 #' selected_marker_genes_B = c("CD19", "MS4A1", "CD79A")
 #' set.seed(123)
-#' clf_b <- train_classifier(train_obj = tirosh_mel80_example, 
+#' classifier_b <- train_classifier(train_obj = tirosh_mel80_example, 
 #' marker_genes = selected_marker_genes_B, cell_type = "B cells")
-#' clf_b_test <- test_classifier(test_obj = tirosh_mel80_example, 
-#' classifier = clf_b)
+#' classifier_b_test <- test_classifier(test_obj = tirosh_mel80_example, 
+#' classifier = classifier_b)
 #' # assign a new threhold probability for prediction
-#' p_thres(clf_b) <- 0.4
+#' p_thres(classifier_b) <- 0.4
 #' @rdname p_thres
 setReplaceMethod('p_thres', c("classifier" = "scAnnotatR"), 
                  function(classifier, value) {
@@ -450,28 +450,28 @@ setReplaceMethod('parent', c("classifier" = "scAnnotatR"),
   classifier
 })
 
-#' Setter for clf.
-#' Change of clf will also lead to change of marker_genes.
+#' Setter for caret_model.
+#' Change of caret_model will also lead to change of marker_genes.
 #' @param classifier the classifier whose classifying model will be changed
 #' @param value the new core model
 #' 
-#' @return the classifier with the new core model.
+#' @return the classifier with the new core caret model.
 #' @rdname internal
-setGeneric('clf<-', function(classifier, value) 
-  standardGeneric("clf<-"))
+setGeneric('caret_model<-', function(classifier, value) 
+  standardGeneric("caret_model<-"))
 
-#' @inherit clf<-
+#' @inherit caret_model<-
 #' @param classifier scAnnotatR object. 
 #' The object is returned from the train_classifier function.
 #' @param value the new classifier
 #' 
 #' @return scAnnotatR object with the new trained classifier.
 #' @rdname internal
-setReplaceMethod('clf', c("classifier" = "scAnnotatR"), 
+setReplaceMethod('caret_model', c("classifier" = "scAnnotatR"), 
                  function(classifier, value) {
   # set new classifier
   if (is.na(parent(classifier))) {
-    classifier@clf <- value
+    classifier@caret_model <- value
     
     # set new marker_genes
     new_marker_genes <- labels(value$terms)

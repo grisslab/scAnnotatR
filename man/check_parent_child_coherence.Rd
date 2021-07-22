@@ -26,13 +26,13 @@
 \arguments{
 \item{obj}{object}
 
-\item{pos_parent}{a vector indicating parent clf prediction}
+\item{pos_parent}{a vector indicating parent classifier prediction}
 
 \item{parent_cell}{name of parent cell type}
 
 \item{cell_type}{name of cell type}
 
-\item{target_cell_type}{alternative cell types (in case of testing clf)}
+\item{target_cell_type}{alternative cell types (in case of testing classifier)}
 
 \item{tag_slot}{tag slot in \code{\link{SingleCellExperiment}} object 
 indicating cell type}
@@ -54,7 +54,7 @@ the classifier with the new parent.
 
 scAnnotatR object with the new parent
 
-the classifier with the new core model.
+the classifier with the new core caret model.
 
 scAnnotatR object with the new trained classifier.
 
@@ -81,7 +81,7 @@ adjusted \code{\link{SingleCellExperiment}} object
 
 a binary vector for cell tag
 
-list of cells which are positive to parent clf
+list of cells which are positive to parent classifier
 
 prediction
 
@@ -89,7 +89,7 @@ simplified prediction
 
 applicable matrix
 
-clf performance
+classifier performance
 }
 \description{
 Check label coherence in parent and 

@@ -19,8 +19,8 @@ Show object
 data("tirosh_mel80_example")
 selected_marker_genes_B = c("CD19", "MS4A1", "CD79A")
 set.seed(123)
-clf_b <- train_classifier(train_obj = tirosh_mel80_example, 
+classifier_b <- train_classifier(train_obj = tirosh_mel80_example, 
 marker_genes = selected_marker_genes_B, cell_type = "B cells")
-clf_b
+classifier_b
 
 }

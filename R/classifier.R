@@ -11,14 +11,14 @@
 #' This field would have been filled out automatically 
 #' if user precedently run classify_cells function. 
 #' If no (predicted) cell type annotation provided, 
-#' the function can be run if 1- parent_cell or 2- parent_clf is provided.
+#' the function can be run if 1- parent_cell or 2- parent_classifier is provided.
 #' @param cell_type string indicating the name of the subtype
 #' This must exactly match cell tag/label if cell tag/label is a string.
 #' @param marker_genes list of marker genes used for the new training model
 #' @param parent_cell string indicated the name of the parent cell type, 
 #' if parent cell type classifier has already been saved in model database.
 #' Adjust path_to_models for exact database.  
-#' @param parent_clf classification model for the parent cell type
+#' @param parent_classifier classification model for the parent cell type
 #' @param path_to_models path to the folder containing the model database. 
 #' As default, the pretrained models in the package will be used. 
 #' If user has trained new models, indicate the folder containing the 
@@ -39,7 +39,7 @@
 setGeneric("train_classifier", 
            function(train_obj, cell_type, marker_genes, 
                     parent_cell = NA_character_, 
-                    parent_clf = NULL, path_to_models = c("default", "."), 
+                    parent_classifier = NULL, path_to_models = "default", 
                     zscore = TRUE, ...) 
              standardGeneric("train_classifier"))
 
@@ -76,13 +76,13 @@ setGeneric("train_classifier",
 #' # train the classifier, the "cell_type" argument must match 
 #' # the cell labels in the data, except upper/lower case
 #' set.seed(123)
-#' clf_b <- train_classifier(train_obj = tirosh_mel80_example, 
+#' classifier_b <- train_classifier(train_obj = tirosh_mel80_example, 
 #' marker_genes = selected_marker_genes_B, cell_type = "b cells")
 #' 
 #' # classify cell types using B cell classifier, 
 #' # a test classifier process may be used before applying the classifier 
 #' tirosh_mel80_example <- classify_cells(classify_obj = tirosh_mel80_example, 
-#' classifiers = c(clf_b))
+#' classifiers = c(classifier_b))
 #' 
 #' # tag all cells that are plasma cells (random example here)
 #' tirosh_mel80_example[['plasma_cell_tag']] <- c(rep(1, 80), rep(0, 400))
@@ -95,16 +95,16 @@ setGeneric("train_classifier",
 #' # the "tag_slot" parameter tells the classifier to use this cell meta data
 #' # for the training process.
 #' set.seed(123)
-#' plasma_clf <- train_classifier(train_obj = tirosh_mel80_example, 
-#' cell_type = "Plasma cell", marker_genes = p_marker_genes, parent_clf = clf_b, 
-#' seurat_tag_slot = 'plasma_cell_tag')
+#' plasma_classifier <- train_classifier(train_obj = tirosh_mel80_example, 
+#' cell_type = "Plasma cell", marker_genes = p_marker_genes, 
+#' parent_classifier = classifier_b, seurat_tag_slot = 'plasma_cell_tag')
 #' 
 #' @importFrom Seurat GetAssayData
 #' 
 #' @rdname train_classifier
 setMethod("train_classifier", c("train_obj" = "Seurat"), 
           function(train_obj, cell_type, marker_genes, parent_cell = NA_character_,
-                   parent_clf = NULL, path_to_models = c("default", "."), 
+                   parent_classifier = NULL, path_to_models = "default", 
                    zscore = TRUE, seurat_tag_slot = "active.ident", 
                    seurat_parent_tag_slot = "predicted_cell_type", 
                    seurat_assay = 'RNA', seurat_slot = 'counts', ...) {
@@ -113,8 +113,8 @@ setMethod("train_classifier", c("train_obj" = "Seurat"),
                              assay = seurat_assay, slot = seurat_slot)
   
   #--- part of parent cell type
-  parent_process <- process_parent_clf(
-    train_obj, seurat_parent_tag_slot, parent_cell, parent_clf, 
+  parent_process <- process_parent_classifier(
+    train_obj, seurat_parent_tag_slot, parent_cell, parent_classifier, 
     path_to_models, zscore, seurat_assay, seurat_slot
   )
   
@@ -163,22 +163,22 @@ setMethod("train_classifier", c("train_obj" = "Seurat"),
   colnames(mat) <- gsub('-', '_', colnames(mat))
   
   # train
-  clf <- train_func(mat, train_tag)
+  caret_model <- train_func(mat, train_tag)
   
   # remove this info to reduce memory
-  clf$resampledCM <- clf$call <- clf$times <- NULL
+  caret_model$resampledCM <- caret_model$call <- caret_model$times <- NULL
   p_thres <- 0.5
   
-  marker_genes <- labels(clf$terms)
+  marker_genes <- labels(caret_model$terms)
   marker_genes <- gsub('_', '-', marker_genes) # convert back underscore to hyphen
-  object <- scAnnotatR(cell_type, clf, marker_genes, p_thres, 
+  object <- scAnnotatR(cell_type, caret_model, marker_genes, p_thres, 
                              NA_character_)
   
   # only assign parent if pretrained model for parent cell type is avai
   parent_check <- 
     (
-      !is.null(parent_process$parent.clf) && 
-        tolower(cell_type(parent_process$parent.clf)) == 
+      !is.null(parent_process$parent.classifier) && 
+        tolower(cell_type(parent_process$parent.classifier)) == 
         tolower(parent_process$parent_cell)
     ) || (
       tolower(parent_process$parent_cell) %in% 
@@ -212,7 +212,7 @@ setMethod("train_classifier", c("train_obj" = "Seurat"),
 #' @rdname train_classifier
 setMethod("train_classifier", c("train_obj" = "SingleCellExperiment"), 
           function(train_obj, cell_type, marker_genes, parent_cell = NA_character_,
-                   parent_clf = NULL, path_to_models = c("default", "."), 
+                   parent_classifier = NULL, path_to_models = "default", 
                    zscore = TRUE, sce_tag_slot = "ident", 
                    sce_parent_tag_slot = "predicted_cell_type", 
                    sce_assay = 'logcounts', ...) {
@@ -223,8 +223,8 @@ setMethod("train_classifier", c("train_obj" = "SingleCellExperiment"),
   mat = SummarizedExperiment::assay(train_obj, sce_assay)
   
   #--- part of parent cell type
-  parent_process <- process_parent_clf(
-    train_obj, sce_parent_tag_slot, parent_cell, parent_clf, 
+  parent_process <- process_parent_classifier(
+    train_obj, sce_parent_tag_slot, parent_cell, parent_classifier, 
     path_to_models, zscore, sce_assay
   )
   
@@ -271,22 +271,22 @@ setMethod("train_classifier", c("train_obj" = "SingleCellExperiment"),
   colnames(mat) <- gsub('-', '_', colnames(mat))
   
   # train
-  clf <- train_func(mat, train_tag)
+  caret_model <- train_func(mat, train_tag)
   
   # remove this info to reduce memory
-  clf$resampledCM <- clf$call <- clf$times <- NULL
+  caret_model$resampledCM <- caret_model$call <- caret_model$times <- NULL
   p_thres <- 0.5
   
-  marker_genes <- labels(clf$terms)
+  marker_genes <- labels(caret_model$terms)
   marker_genes <- gsub('_', '-', marker_genes) # convert back underscore to hyphen
-  object <- scAnnotatR(cell_type, clf, marker_genes, p_thres, 
+  object <- scAnnotatR(cell_type, caret_model, marker_genes, p_thres, 
                              NA_character_)
   
   # only assign parent if pretrained model for parent cell type is avai
   parent_check <-
     (
-      !is.null(parent_process$parent.clf) && 
-        tolower(cell_type(parent_process$parent.clf)) == 
+      !is.null(parent_process$parent.classifier) && 
+        tolower(cell_type(parent_process$parent.classifier)) == 
         tolower(parent_process$parent_cell)
     ) || (
       tolower(parent_process$parent_cell) %in% 
@@ -307,7 +307,7 @@ setMethod("train_classifier", c("train_obj" = "SingleCellExperiment"),
 #' that can be considered as the main cell type in classifier, 
 #' for example, c("plasma cell", "b cell", "b cells", "activating b cell"). 
 #' Default as NULL.
-#' @param parent_clf \code{\link{scAnnotatR}} object
+#' @param parent_classifier \code{\link{scAnnotatR}} object
 #' corresponding to classification model for the parent cell type
 #' @param path_to_models path to the folder containing the list of models. 
 #' As default, the pretrained models in the package will be used. 
@@ -330,8 +330,8 @@ setMethod("train_classifier", c("train_obj" = "SingleCellExperiment"),
 #' @export
 setGeneric("test_classifier", function(test_obj, classifier, 
                                        target_cell_type = NULL, 
-                                       parent_clf = NULL, 
-                                       path_to_models = c("default", "."), 
+                                       parent_classifier = NULL, 
+                                       path_to_models = "default", 
                                        zscore = TRUE, ...) 
   standardGeneric("test_classifier"))
 
@@ -362,14 +362,14 @@ setGeneric("test_classifier", function(test_obj, classifier,
 #' # train the classifier
 #' selected_marker_genes_B = c("CD19", "MS4A1", "CD79A")
 #' set.seed(123)
-#' clf_b <- train_classifier(train_obj = tirosh_mel80_example, 
+#' classifier_b <- train_classifier(train_obj = tirosh_mel80_example, 
 #' marker_genes = selected_marker_genes_B, cell_type = "B cells")
 #' 
 #' # test the classifier, target cell type can be in other formats or
 #' # alternative cell type that can be considered as the classified cell type 
-#' clf_b_test <- test_classifier(test_obj = tirosh_mel80_example, 
-#' classifier = clf_b, target_cell_type = c("B cell"))
-#' clf_b_test
+#' classifier_b_test <- test_classifier(test_obj = tirosh_mel80_example, 
+#' classifier = classifier_b, target_cell_type = c("B cell"))
+#' classifier_b_test
 #' 
 #' @importFrom Seurat GetAssayData
 #'
@@ -377,7 +377,7 @@ setGeneric("test_classifier", function(test_obj, classifier,
 setMethod("test_classifier", c("test_obj" = "Seurat", 
                                "classifier" = "scAnnotatR"), 
           function(test_obj, classifier, target_cell_type = NULL, 
-                   parent_clf = NULL, path_to_models = c("default", "."), 
+                   parent_classifier = NULL, path_to_models = "default", 
                    zscore = TRUE, seurat_tag_slot = "active.ident", 
                    seurat_parent_tag_slot = "predicted_cell_type", 
                    seurat_assay = 'RNA', seurat_slot = 'counts', ...) {
@@ -392,9 +392,9 @@ setMethod("test_classifier", c("test_obj" = "Seurat",
   }
   
   #--- parent cell type
-  # process parent clf
-  parent_process <- process_parent_clf(
-    test_obj, seurat_parent_tag_slot, parent(classifier), parent_clf,
+  # process parent classifier
+  parent_process <- process_parent_classifier(
+    test_obj, seurat_parent_tag_slot, parent(classifier), parent_classifier,
     path_to_models, zscore, seurat_assay, seurat_slot
   )
   
@@ -463,7 +463,7 @@ setMethod("test_classifier", c("test_obj" = "Seurat",
 setMethod("test_classifier", c("test_obj" = "SingleCellExperiment", 
                                "classifier" = "scAnnotatR"), 
           function(test_obj, classifier, target_cell_type = NULL, 
-                   parent_clf = NULL, path_to_models = c("default", "."), 
+                   parent_classifier = NULL, path_to_models = "default", 
                    zscore = TRUE, sce_tag_slot = "ident", 
                    sce_parent_tag_slot = "predicted_cell_type", 
                    sce_assay = 'logcounts', ...) {
@@ -480,9 +480,9 @@ setMethod("test_classifier", c("test_obj" = "SingleCellExperiment",
   }
   
   #--- parent cell type
-  # process parent clf
-  parent_process <- process_parent_clf(
-    test_obj, sce_parent_tag_slot, parent(classifier), parent_clf, 
+  # process parent classifier
+  parent_process <- process_parent_classifier(
+    test_obj, sce_parent_tag_slot, parent(classifier), parent_classifier, 
     path_to_models, zscore, sce_assay
   )
   
@@ -539,14 +539,14 @@ setMethod("test_classifier", c("test_obj" = "SingleCellExperiment",
 #' # train a classifier, for ex: B cell
 #' selected_marker_genes_B = c("CD19", "MS4A1", "CD79A")
 #' set.seed(123)
-#' clf_b <- train_classifier(train_obj = tirosh_mel80_example, 
+#' classifier_b <- train_classifier(train_obj = tirosh_mel80_example, 
 #' marker_genes = selected_marker_genes_B, cell_type = "B cells")
 #' 
-#' clf_b_test <- test_classifier(test_obj = tirosh_mel80_example, 
-#' classifier = clf_b)
+#' classifier_b_test <- test_classifier(test_obj = tirosh_mel80_example, 
+#' classifier = classifier_b)
 #' 
 #' # run plot curve on the test result
-#' roc_curve <- plot_roc_curve(test_result = clf_b_test)
+#' roc_curve <- plot_roc_curve(test_result = classifier_b_test)
 #' @import ROCR
 #' @import ggplot2
 #' @export
@@ -601,7 +601,7 @@ plot_roc_curve <- function(test_result) {
 #' @export
 setGeneric("classify_cells", function(classify_obj, classifiers = NULL, 
                                       cell_types = "all", chunk_size = 5000,
-                                      path_to_models = c("default", "."),
+                                      path_to_models = "default",
                                       ignore_ambiguous_result = FALSE, 
                                       cluster_slot = NULL, ...) 
   standardGeneric("classify_cells"))
@@ -625,17 +625,17 @@ setGeneric("classify_cells", function(classify_obj, classifiers = NULL,
 #' 
 #' # train the classifier
 #' set.seed(123)
-#' clf_b <- train_classifier(train_obj = tirosh_mel80_example, 
+#' classifier_b <- train_classifier(train_obj = tirosh_mel80_example, 
 #' marker_genes = selected_marker_genes_B, cell_type = "B cells")
 #' 
 #' # do the same thing with other cell types, for example, T cells
 #' selected_marker_genes_T = c("CD4", "CD8A", "CD8B")
 #' set.seed(123)
-#' clf_t <- train_classifier(train_obj = tirosh_mel80_example, 
+#' classifier_t <- train_classifier(train_obj = tirosh_mel80_example, 
 #' marker_genes = selected_marker_genes_T, cell_type = "T cells")
 #' 
 #' # create a list of classifiers
-#' classifier_ls <- list(clf_b, clf_t)
+#' classifier_ls <- list(classifier_b, classifier_t)
 #' 
 #' # classify cells with list of classifiers
 #' seurat.obj <- classify_cells(classify_obj = tirosh_mel80_example, 
@@ -649,7 +649,7 @@ setGeneric("classify_cells", function(classify_obj, classifiers = NULL,
 #' 
 setMethod("classify_cells", c("classify_obj" = "Seurat"), 
           function(classify_obj, classifiers = NULL, cell_types = "all", 
-                   chunk_size = 5000, path_to_models = c("default", "."), 
+                   chunk_size = 5000, path_to_models = "default", 
                    ignore_ambiguous_result = FALSE, 
                    cluster_slot = 'seurat_clusters', 
                    seurat_assay = 'RNA', seurat_slot = 'counts', ...) {
@@ -688,7 +688,7 @@ setMethod("classify_cells", c("classify_obj" = "Seurat"),
     for (classifier in classifiers) {
       if (!is.na(parent(classifier))) {
         applicable_mat <- verify_parent(mat.chunk, classifier, obj.chunk[[]])
-        # no parent clf provided or no positive to parent clf
+        # no parent classifier provided or no positive to parent classifier
         if (is.null(applicable_mat)) next 
       } else applicable_mat <- mat.chunk
   
@@ -759,7 +759,7 @@ setMethod("classify_cells", c("classify_obj" = "Seurat"),
 #' @rdname classify_cells
 setMethod("classify_cells", c("classify_obj" = "SingleCellExperiment"), 
           function(classify_obj, classifiers = NULL, cell_types = "all", 
-                   chunk_size = 5000, path_to_models = c("default", "."), 
+                   chunk_size = 5000, path_to_models = "default", 
                    ignore_ambiguous_result = FALSE, 
                    sce_assay = 'logcounts', cluster_slot = NULL, ...) {
   # solve duplication of cell names
@@ -800,7 +800,7 @@ setMethod("classify_cells", c("classify_obj" = "SingleCellExperiment"),
       if (!is.na(parent(classifier))) { 
         applicable_mat <- verify_parent(mat.chunk, classifier, 
                                         colData(obj.chunk))
-        # no parent clf provided or no positive to parent clf
+        # no parent classifier provided or no positive to parent classifier
         if (is.null(applicable_mat)) next 
       } else applicable_mat <- mat.chunk
       

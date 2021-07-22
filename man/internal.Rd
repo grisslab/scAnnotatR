@@ -6,11 +6,11 @@
 \alias{checkMarkerGenesValidity}
 \alias{checkParentValidity}
 \alias{checkPThresValidity}
-\alias{checkClassifierValidity}
+\alias{checkCaretModelValidity}
 \alias{parent<-}
 \alias{parent<-,scAnnotatR-method}
-\alias{clf<-}
-\alias{clf<-,scAnnotatR-method}
+\alias{caret_model<-}
+\alias{caret_model<-,scAnnotatR-method}
 \alias{marker_genes<-}
 \alias{marker_genes<-,scAnnotatR-method}
 \alias{balance_dataset}
@@ -25,9 +25,9 @@
 \alias{construct_tag_vect}
 \alias{construct_tag_vect,Seurat-method}
 \alias{construct_tag_vect,SingleCellExperiment-method}
-\alias{process_parent_clf}
-\alias{process_parent_clf,Seurat-method}
-\alias{process_parent_clf,SingleCellExperiment-method}
+\alias{process_parent_classifier}
+\alias{process_parent_classifier,Seurat-method}
+\alias{process_parent_classifier,SingleCellExperiment-method}
 \alias{make_prediction}
 \alias{simplify_prediction}
 \alias{verify_parent}
@@ -45,15 +45,15 @@ checkParentValidity(parent)
 
 checkPThresValidity(p_thres)
 
-checkClassifierValidity(clf)
+checkCaretModelValidity(caret_model)
 
 parent(classifier) <- value
 
 \S4method{parent}{scAnnotatR}(classifier) <- value
 
-clf(classifier) <- value
+caret_model(classifier) <- value
 
-\S4method{clf}{scAnnotatR}(classifier) <- value
+\S4method{caret_model}{scAnnotatR}(classifier) <- value
 
 marker_genes(classifier) <- value
 
@@ -90,21 +90,21 @@ construct_tag_vect(obj, cell_type, ...)
 
 \S4method{construct_tag_vect}{SingleCellExperiment}(obj, cell_type, tag_slot)
 
-process_parent_clf(
+process_parent_classifier(
   obj,
   parent_tag_slot,
   parent_cell_type,
-  parent_clf,
+  parent_classifier,
   path_to_models,
   zscore = TRUE,
   ...
 )
 
-\S4method{process_parent_clf}{Seurat}(
+\S4method{process_parent_classifier}{Seurat}(
   obj,
   parent_tag_slot,
   parent_cell_type,
-  parent_clf,
+  parent_classifier,
   path_to_models,
   zscore = TRUE,
   seurat_assay,
@@ -112,11 +112,11 @@ process_parent_clf(
   ...
 )
 
-\S4method{process_parent_clf}{SingleCellExperiment}(
+\S4method{process_parent_classifier}{SingleCellExperiment}(
   obj,
   parent_tag_slot,
   parent_cell_type,
-  parent_clf,
+  parent_classifier,
   path_to_models,
   zscore = TRUE,
   sce_assay,
@@ -144,7 +144,7 @@ classify_clust(clusts, most_probable_cell_type)
 
 \item{p_thres}{Classifier probability threshold to check.}
 
-\item{clf}{Classifier to check.}
+\item{caret_model}{Classifier to check.}
 
 \item{classifier}{classifier}
 
@@ -158,11 +158,11 @@ classify_clust(clusts, most_probable_cell_type)
 
 \item{obj}{object}
 
-\item{pos_parent}{a vector indicating parent clf prediction}
+\item{pos_parent}{a vector indicating parent classifier prediction}
 
 \item{parent_cell}{name of parent cell type}
 
-\item{target_cell_type}{alternative cell types (in case of testing clf)}
+\item{target_cell_type}{alternative cell types (in case of testing classifier)}
 
 \item{...}{arguments passed to other methods}
 
@@ -174,7 +174,7 @@ indicating pre-assigned/predicted parent cell type}
 
 \item{parent_cell_type}{name of parent cell type}
 
-\item{parent_clf}{\code{\link{scAnnotatR}} object corresponding 
+\item{parent_classifier}{\code{\link{scAnnotatR}} object corresponding 
 to classification model for the parent cell type}
 
 \item{zscore}{boolean indicating the transformation of gene expression 
@@ -219,7 +219,7 @@ the classifier with the new parent.
 
 scAnnotatR object with the new parent
 
-the classifier with the new core model.
+the classifier with the new core caret model.
 
 scAnnotatR object with the new trained classifier.
 
@@ -246,7 +246,7 @@ adjusted \code{\link{SingleCellExperiment}} object
 
 a binary vector for cell tag
 
-list of cells which are positive to parent clf
+list of cells which are positive to parent classifier
 
 prediction
 
@@ -254,7 +254,7 @@ simplified prediction
 
 applicable matrix
 
-clf performance
+classifier performance
 }
 \description{
 Check if a scAnnotatR object is valid

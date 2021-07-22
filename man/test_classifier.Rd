@@ -10,8 +10,8 @@ test_classifier(
   test_obj,
   classifier,
   target_cell_type = NULL,
-  parent_clf = NULL,
-  path_to_models = c("default", "."),
+  parent_classifier = NULL,
+  path_to_models = "default",
   zscore = TRUE,
   ...
 )
@@ -20,8 +20,8 @@ test_classifier(
   test_obj,
   classifier,
   target_cell_type = NULL,
-  parent_clf = NULL,
-  path_to_models = c("default", "."),
+  parent_classifier = NULL,
+  path_to_models = "default",
   zscore = TRUE,
   seurat_tag_slot = "active.ident",
   seurat_parent_tag_slot = "predicted_cell_type",
@@ -34,8 +34,8 @@ test_classifier(
   test_obj,
   classifier,
   target_cell_type = NULL,
-  parent_clf = NULL,
-  path_to_models = c("default", "."),
+  parent_classifier = NULL,
+  path_to_models = "default",
   zscore = TRUE,
   sce_tag_slot = "ident",
   sce_parent_tag_slot = "predicted_cell_type",
@@ -53,7 +53,7 @@ that can be considered as the main cell type in classifier,
 for example, c("plasma cell", "b cell", "b cells", "activating b cell"). 
 Default as NULL.}
 
-\item{parent_clf}{\code{\link{scAnnotatR}} object
+\item{parent_classifier}{\code{\link{scAnnotatR}} object
 corresponding to classification model for the parent cell type}
 
 \item{path_to_models}{path to the folder containing the list of models. 
@@ -125,13 +125,13 @@ data("tirosh_mel80_example")
 # train the classifier
 selected_marker_genes_B = c("CD19", "MS4A1", "CD79A")
 set.seed(123)
-clf_b <- train_classifier(train_obj = tirosh_mel80_example, 
+classifier_b <- train_classifier(train_obj = tirosh_mel80_example, 
 marker_genes = selected_marker_genes_B, cell_type = "B cells")
 
 # test the classifier, target cell type can be in other formats or
 # alternative cell type that can be considered as the classified cell type 
-clf_b_test <- test_classifier(test_obj = tirosh_mel80_example, 
-classifier = clf_b, target_cell_type = c("B cell"))
-clf_b_test
+classifier_b_test <- test_classifier(test_obj = tirosh_mel80_example, 
+classifier = classifier_b, target_cell_type = c("B cell"))
+classifier_b_test
 
 }

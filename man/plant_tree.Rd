@@ -4,7 +4,7 @@
 \alias{plant_tree}
 \title{Plant tree from list of models}
 \usage{
-plant_tree(models.file.path = c("default", tempdir()))
+plant_tree(models.file.path = "default")
 }
 \arguments{
 \item{models.file.path}{list of models. If not provided, 

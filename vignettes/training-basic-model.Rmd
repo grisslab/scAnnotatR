@@ -147,12 +147,12 @@ from the majority group. To use the same set of cells while training multiple
 times for one model, users can use `set.seed`. 
 ```{r}
 set.seed(123)
-clf_B <- train_classifier(train_obj = train_set, cell_type = "B cells", 
+classifier_B <- train_classifier(train_obj = train_set, cell_type = "B cells", 
                           marker_genes = selected_marker_genes_B,
                           sce_assay = 'counts', sce_tag_slot = 'B_cell')
 ```
 ```{r}
-clf_B
+classifier_B
 ```
 The classification model is a `scAnnotatR` object. 
 Details about the classification model are accessible via getter methods. 
@@ -160,7 +160,7 @@ Details about the classification model are accessible via getter methods.
 For example:
 
 ```{r}
-clf(clf_B)
+caret_model(classifier_B)
 ```
 
 ## Test model
@@ -169,7 +169,7 @@ The `test_classifier` model automatically tests a classifier's performance
 against another dataset. Here, we used the `test_set` created before:
 
 ```{r}
-clf_B_test <- test_classifier(test_obj = test_set, classifier = clf_B, 
+classifier_B_test <- test_classifier(test_obj = test_set, classifier = classifier_B, 
                               sce_assay = 'counts', sce_tag_slot = 'B_cell')
 ```
 
@@ -191,7 +191,7 @@ Every classifier internally consists of a trained SVM and a probability threshol
 this threshold are classified as the respective cell type. The *overall_roc* slot summarizes the True Positive Rate (sensitivity) and False Positive Rate (1 - specificity) obtained by the trained model according to different thresholds.
 
 ```{r}
-clf_B_test$overall_roc
+classifier_B_test$overall_roc
 ```
 
 In this example of B cell classifier, the current threshold is at 0.5. The higher sensitivity can be reached if we set the p_thres at 0.4. However, we will then have lower specificity, which means that we will incorrectly classify some cells as B cells. At the sime time, we may not retrieve all actual B cells with higher p_thres (0.6, for example).
@@ -202,7 +202,7 @@ There is of course a certain trade-off between the sensitivity and the specifici
 
 Apart from numbers, we also provide a method to plot the ROC curve. 
 ```{r}
-roc_curve <- plot_roc_curve(test_result = clf_B_test)
+roc_curve <- plot_roc_curve(test_result = classifier_B_test)
 ```
 ```{r}
 plot(roc_curve)
@@ -233,7 +233,7 @@ New classification models can be stored using the `save_new_model` function:
 
 ```{r}
 # no copy of pretrained models is performed
-save_new_model(new_model = clf_B, path.to.models = tempdir(),
+save_new_model(new_model = classifier_B, path.to.models = tempdir(),
                include.default = FALSE) 
 ```
 

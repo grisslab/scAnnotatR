@@ -4,14 +4,14 @@
 \alias{scAnnotatR}
 \title{scAnnotatR class.}
 \usage{
-scAnnotatR(cell_type, clf, marker_genes, p_thres, parent)
+scAnnotatR(cell_type, caret_model, marker_genes, p_thres, parent)
 
-scAnnotatR(cell_type, clf, marker_genes, p_thres, parent)
+scAnnotatR(cell_type, caret_model, marker_genes, p_thres, parent)
 }
 \arguments{
 \item{cell_type}{character. Name of the cell type.}
 
-\item{clf}{list. Trained model returned by caret train function.}
+\item{caret_model}{list. Trained model returned by caret train function.}
 
 \item{marker_genes}{vector/character containing marker genes used for the training.}
 
@@ -32,7 +32,7 @@ Generally, scAnnotatR objects are never created directly.
 \describe{
 \item{\code{cell_type}}{character. Name of the cell type.}
 
-\item{\code{clf}}{list. Trained model returned by caret train function.}
+\item{\code{caret_model}}{list. Trained model returned by caret train function.}
 
 \item{\code{marker_genes}}{vector/character containing marker genes 
 used for the training.}
@@ -50,9 +50,9 @@ data("tirosh_mel80_example")
 # train a classifier, for ex: B cell
 selected_marker_genes_B = c("CD19", "MS4A1", "CD79A")
 set.seed(123)
-clf_b <- train_classifier(train_obj = tirosh_mel80_example, 
+classifier_b <- train_classifier(train_obj = tirosh_mel80_example, 
                           marker_genes = selected_marker_genes_B, 
                           cell_type = "B cells")
 
-clf_b
+classifier_b
 }

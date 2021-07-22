@@ -61,8 +61,8 @@ library(scAnnotatR)
 
 ```{r}
 data("default_models")
-clf_B <- default_models[['B cells']]
-clf_B
+classifier_B <- default_models[['B cells']]
+classifier_B
 ```
 ## Preparing train object and test object
 
@@ -176,32 +176,32 @@ AND the path to that database, for example: `parent_cell = 'B cells', path.to.mo
 Train the child classifier:
 ```{r}
 set.seed(123)
-clf_plasma <- train_classifier(train_obj = train_set, 
+classifier_plasma <- train_classifier(train_obj = train_set, 
 marker_genes = selected_marker_genes_plasma, cell_type = "Plasma cells", 
-sce_assay = 'counts', sce_tag_slot = 'plasma', parent_clf = clf_B)
+sce_assay = 'counts', sce_tag_slot = 'plasma', parent_classifier = classifier_B)
 ```
 If the  cells classifier has not been loaded to the current working space, 
 an equivalent training process should be:
 ```{r}
 set.seed(123)
-clf_plasma <- train_classifier(train_obj = train_set, 
+classifier_plasma <- train_classifier(train_obj = train_set, 
 marker_genes = selected_marker_genes_plasma, cell_type = "Plasma cells", 
 sce_assay = 'counts', sce_tag_slot = 'plasma', parent_cell = 'B cells')
 ```
 ```{r}
-clf_plasma
+classifier_plasma
 ```
 ```{r}
-clf(clf_plasma)
+caret_model(classifier_plasma)
 ```
 
 ## Test model
 
 The parent classifier must be also set in test method.
 ```{r}
-clf_plasma_test <- test_classifier(test_obj = test_set, 
-classifier = clf_plasma, sce_assay = 'counts', sce_tag_slot = 'plasma', 
-parent_clf = clf_B)
+classifier_plasma_test <- test_classifier(test_obj = test_set, 
+classifier = classifier_plasma, sce_assay = 'counts', sce_tag_slot = 'plasma', 
+parent_classifier = classifier_B)
 ```
 
 ### Interpreting test model result
@@ -211,8 +211,8 @@ probability threshold according to the research project or personal preference
 and plot a roc curve.
 
 ```{r}
-print(clf_plasma_test$auc)
-roc_curve <- plot_roc_curve(test_result = clf_plasma_test)
+print(classifier_plasma_test$auc)
+roc_curve <- plot_roc_curve(test_result = classifier_plasma_test)
 plot(roc_curve)
 ```
 
@@ -236,9 +236,9 @@ we have to save the parent classifier first, e.g. the classifier for B cells.
 
 ```{r}
 # no copy of pretrained models is performed
-save_new_model(new_model = clf_B, path.to.models = tempdir(), 
+save_new_model(new_model = classifier_B, path.to.models = tempdir(), 
                include.default = FALSE) 
-save_new_model(new_model = clf_plasma, path.to.models = tempdir(), 
+save_new_model(new_model = classifier_plasma, path.to.models = tempdir(), 
                include.default = FALSE) 
 ```
 
