@@ -103,18 +103,18 @@ data("tirosh_mel80_example")
 
 # train one classifier for one cell type, for ex, B cell
 # define genes to use to classify this cell type
-selected_features_B = c("CD19", "MS4A1", "CD79A")
+selected_marker_genes_B = c("CD19", "MS4A1", "CD79A")
 
 # train the classifier
 set.seed(123)
 clf_b <- train_classifier(train_obj = tirosh_mel80_example, 
-features = selected_features_B, cell_type = "B cells")
+marker_genes = selected_marker_genes_B, cell_type = "B cells")
 
 # do the same thing with other cell types, for example, T cells
-selected_features_T = c("CD4", "CD8A", "CD8B")
+selected_marker_genes_T = c("CD4", "CD8A", "CD8B")
 set.seed(123)
 clf_t <- train_classifier(train_obj = tirosh_mel80_example, 
-features = selected_features_T, cell_type = "T cells")
+marker_genes = selected_marker_genes_T, cell_type = "T cells")
 
 # create a list of classifiers
 classifier_ls <- list(clf_b, clf_t)

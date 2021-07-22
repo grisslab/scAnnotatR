@@ -112,13 +112,13 @@ We may want to check the number of cells in each category:
 table(train_set$B_cell)
 ```
 
-## Defining features
+## Defining marker genes
 
-Next, we define a set of features, which will be used in training the 
+Next, we define a set of marker genes, which will be used in training the 
 classification model. Supposing we are training a model for classifying 
-B cells, we define the set of features as follows:
+B cells, we define the set of marker genes as follows:
 ```{r}
-selected_features_B <- c("CD19", "MS4A1", "CD79A", "CD79B", 'CD27', 'IGHG1', 'IGHG2', 'IGHM',
+selected_marker_genes_B <- c("CD19", "MS4A1", "CD79A", "CD79B", 'CD27', 'IGHG1', 'IGHG2', 'IGHM',
                          "CR2", "MEF2C", 'VPREB3', 'CD86', 'LY86', "BLK", "DERL3")
 ```
 
@@ -128,7 +128,7 @@ When the model is being trained, three pieces of information must be
 provided: 
 
   * the Seurat/SCE object used for training
-  * the set of applied features
+  * the set of applied marker genes
   * the cell type defining the trained model
 
 In case the dataset does not contain any cell classified as the target
@@ -148,7 +148,7 @@ times for one model, users can use `set.seed`.
 ```{r}
 set.seed(123)
 clf_B <- train_classifier(train_obj = train_set, cell_type = "B cells", 
-                          features = selected_features_B,
+                          marker_genes = selected_marker_genes_B,
                           sce_assay = 'counts', sce_tag_slot = 'B_cell')
 ```
 ```{r}
@@ -210,8 +210,8 @@ plot(roc_curve)
 
 ### Which model to choose?
 
-Changes in the training data, in the set of features and in the prediction probability
-threshold will all lead to a change in model performance.
+Changes in the training data, in the set of marker genes and in the prediction 
+probability threshold will all lead to a change in model performance.
 
 There are several ways to evaluate the trained model, including the overall 
 accuracy, the AUC score and the sensitivity/specificity of the model when 

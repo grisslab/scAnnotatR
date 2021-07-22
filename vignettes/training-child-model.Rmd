@@ -145,14 +145,14 @@ table(train_set$plasma)
 # 1: plasma cells, 0: not plasma cells
 ```
 
-## Defining set of features
+## Defining set of marker genes
 
-Next, we define a set of features, which will be used for the child 
+Next, we define a set of marker genes, which will be used for the child 
 classification model. Supposing we are training a model for classifying plasma 
-cells, we define the set of features as follows:
+cells, we define the set of marker genes as follows:
 
 ```{r}
-selected_features_plasma <- c('BACH2', 'BLK', 'CD14', 'CD19', 'CD27', 'CD37', 
+selected_marker_genes_plasma <- c('BACH2', 'BLK', 'CD14', 'CD19', 'CD27', 'CD37', 
 'CD38', 'CD40LG', 'CD74', 'CD79A', 'CD79B', 'CD83', 'CD84', 'CD86', 'CR2', 
 'DERL3', 'FLI1', 'IGHG1', 'IGHG2', 'IGHM', 'IL2RA', 'IRF8', 'LRMP', 'LY86', 
 'MCL1', 'MEF2C', 'MME', 'MS4A1', 'MVK', 'MZB1', 'POU2AF1', 'PTEN', 'RASGRP2', 
@@ -177,7 +177,7 @@ Train the child classifier:
 ```{r}
 set.seed(123)
 clf_plasma <- train_classifier(train_obj = train_set, 
-features = selected_features_plasma, cell_type = "Plasma cells", 
+marker_genes = selected_marker_genes_plasma, cell_type = "Plasma cells", 
 sce_assay = 'counts', sce_tag_slot = 'plasma', parent_clf = clf_B)
 ```
 If the  cells classifier has not been loaded to the current working space, 
@@ -185,7 +185,7 @@ an equivalent training process should be:
 ```{r}
 set.seed(123)
 clf_plasma <- train_classifier(train_obj = train_set, 
-features = selected_features_plasma, cell_type = "Plasma cells", 
+marker_genes = selected_marker_genes_plasma, cell_type = "Plasma cells", 
 sce_assay = 'counts', sce_tag_slot = 'plasma', parent_cell = 'B cells')
 ```
 ```{r}

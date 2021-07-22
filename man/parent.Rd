@@ -17,10 +17,10 @@ Returns the parent of the cell type corresponding to the given classifier.
 }
 \examples{
 data("tirosh_mel80_example")
-selected_features_B = c("CD19", "MS4A1", "CD79A")
+selected_marker_genes_B = c("CD19", "MS4A1", "CD79A")
 set.seed(123)
 clf_b <- train_classifier(train_obj = tirosh_mel80_example, 
-features = selected_features_B, cell_type = "B cells")
+marker_genes = selected_marker_genes_B, cell_type = "B cells")
 parent(clf_b)
 
 }

@@ -32,13 +32,13 @@ test_that("Z-score transformation transforms expression to z-score", {
   expect_true(all(mean_compare))
 })
 
-test_that("Features selection selectes correct features", {
+test_that("marker genes selection selectes correct marker genes", {
   data("tirosh_mel80_example")
   example_data <- GetAssayData(tirosh_mel80_example)
   
-  features <- c('CD19', 'MS4A1', 'CD8A', 'CD8B')
-  filtered_mat <- select_features(example_data, features)
-  expect_equal(sort(rownames(filtered_mat)), sort(features))
+  marker_genes <- c('CD19', 'MS4A1', 'CD8A', 'CD8B')
+  filtered_mat <- select_marker_genes(example_data, marker_genes)
+  expect_equal(sort(rownames(filtered_mat)), sort(marker_genes))
 })
 
 test_that("Check parent-child coherence checks parent-child coherence", {

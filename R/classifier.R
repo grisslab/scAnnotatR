@@ -14,7 +14,7 @@
 #' the function can be run if 1- parent_cell or 2- parent_clf is provided.
 #' @param cell_type string indicating the name of the subtype
 #' This must exactly match cell tag/label if cell tag/label is a string.
-#' @param features list of features used for the new training model
+#' @param marker_genes list of marker genes used for the new training model
 #' @param parent_cell string indicated the name of the parent cell type, 
 #' if parent cell type classifier has already been saved in model database.
 #' Adjust path_to_models for exact database.  
@@ -37,7 +37,7 @@
 #' 
 #' @export
 setGeneric("train_classifier", 
-           function(train_obj, cell_type, features, 
+           function(train_obj, cell_type, marker_genes, 
                     parent_cell = NA_character_, 
                     parent_clf = NULL, path_to_models = c("default", "."), 
                     zscore = TRUE, ...) 
@@ -71,13 +71,13 @@ setGeneric("train_classifier",
 #' table(Seurat::Idents(tirosh_mel80_example))
 #' 
 #' # define genes to use to classify this cell type (B cells in this example)
-#' selected_features_B = c("CD19", "MS4A1", "CD79A")
+#' selected_marker_genes_B = c("CD19", "MS4A1", "CD79A")
 #' 
 #' # train the classifier, the "cell_type" argument must match 
 #' # the cell labels in the data, except upper/lower case
 #' set.seed(123)
 #' clf_b <- train_classifier(train_obj = tirosh_mel80_example, 
-#' features = selected_features_B, cell_type = "b cells")
+#' marker_genes = selected_marker_genes_B, cell_type = "b cells")
 #' 
 #' # classify cell types using B cell classifier, 
 #' # a test classifier process may be used before applying the classifier 
@@ -87,8 +87,8 @@ setGeneric("train_classifier",
 #' # tag all cells that are plasma cells (random example here)
 #' tirosh_mel80_example[['plasma_cell_tag']] <- c(rep(1, 80), rep(0, 400))
 #' 
-#' # set new features for the subtype
-#' p_features = c("SDC1", "CD19", "CD79A")
+#' # set new marker genes for the subtype
+#' p_marker_genes = c("SDC1", "CD19", "CD79A")
 #' 
 #' # train the classifier, the "B cell" classifier is used as parent. 
 #' # This means, only cells already classified as "B cells" will be evaluated.
@@ -96,14 +96,14 @@ setGeneric("train_classifier",
 #' # for the training process.
 #' set.seed(123)
 #' plasma_clf <- train_classifier(train_obj = tirosh_mel80_example, 
-#' cell_type = "Plasma cell", features = p_features, parent_clf = clf_b, 
+#' cell_type = "Plasma cell", marker_genes = p_marker_genes, parent_clf = clf_b, 
 #' seurat_tag_slot = 'plasma_cell_tag')
 #' 
 #' @importFrom Seurat GetAssayData
 #' 
 #' @rdname train_classifier
 setMethod("train_classifier", c("train_obj" = "Seurat"), 
-          function(train_obj, cell_type, features, parent_cell = NA_character_,
+          function(train_obj, cell_type, marker_genes, parent_cell = NA_character_,
                    parent_clf = NULL, path_to_models = c("default", "."), 
                    zscore = TRUE, seurat_tag_slot = "active.ident", 
                    seurat_parent_tag_slot = "predicted_cell_type", 
@@ -134,8 +134,8 @@ setMethod("train_classifier", c("train_obj" = "Seurat"),
   # filter cells
   train_obj <- filter_cells(train_obj, seurat_tag_slot)
   
-  # feature selection
-  mat <- select_features(mat, features)
+  # marker genes selection
+  mat <- select_marker_genes(mat, marker_genes)
   
   # transpose mat
   mat <- t(as.matrix(mat))
@@ -169,9 +169,9 @@ setMethod("train_classifier", c("train_obj" = "Seurat"),
   clf$resampledCM <- clf$call <- clf$times <- NULL
   p_thres <- 0.5
   
-  features <- labels(clf$terms)
-  features <- gsub('_', '-', features) # convert back underscore to hyphen
-  object <- scAnnotatR(cell_type, clf, features, p_thres, 
+  marker_genes <- labels(clf$terms)
+  marker_genes <- gsub('_', '-', marker_genes) # convert back underscore to hyphen
+  object <- scAnnotatR(cell_type, clf, marker_genes, p_thres, 
                              NA_character_)
   
   # only assign parent if pretrained model for parent cell type is avai
@@ -211,7 +211,7 @@ setMethod("train_classifier", c("train_obj" = "Seurat"),
 #' 
 #' @rdname train_classifier
 setMethod("train_classifier", c("train_obj" = "SingleCellExperiment"), 
-          function(train_obj, cell_type, features, parent_cell = NA_character_,
+          function(train_obj, cell_type, marker_genes, parent_cell = NA_character_,
                    parent_clf = NULL, path_to_models = c("default", "."), 
                    zscore = TRUE, sce_tag_slot = "ident", 
                    sce_parent_tag_slot = "predicted_cell_type", 
@@ -243,8 +243,8 @@ setMethod("train_classifier", c("train_obj" = "SingleCellExperiment"),
   # filter cells
   train_obj <- filter_cells(train_obj, sce_tag_slot)
   
-  # feature selection
-  mat <- select_features(mat, features)
+  # marker genes selection
+  mat <- select_marker_genes(mat, marker_genes)
   
   # transpose mat
   mat <- t(as.matrix(mat))
@@ -277,9 +277,9 @@ setMethod("train_classifier", c("train_obj" = "SingleCellExperiment"),
   clf$resampledCM <- clf$call <- clf$times <- NULL
   p_thres <- 0.5
   
-  features <- labels(clf$terms)
-  features <- gsub('_', '-', features) # convert back underscore to hyphen
-  object <- scAnnotatR(cell_type, clf, features, p_thres, 
+  marker_genes <- labels(clf$terms)
+  marker_genes <- gsub('_', '-', marker_genes) # convert back underscore to hyphen
+  object <- scAnnotatR(cell_type, clf, marker_genes, p_thres, 
                              NA_character_)
   
   # only assign parent if pretrained model for parent cell type is avai
@@ -360,10 +360,10 @@ setGeneric("test_classifier", function(test_obj, classifier,
 #' data("tirosh_mel80_example")
 #' 
 #' # train the classifier
-#' selected_features_B = c("CD19", "MS4A1", "CD79A")
+#' selected_marker_genes_B = c("CD19", "MS4A1", "CD79A")
 #' set.seed(123)
 #' clf_b <- train_classifier(train_obj = tirosh_mel80_example, 
-#' features = selected_features_B, cell_type = "B cells")
+#' marker_genes = selected_marker_genes_B, cell_type = "B cells")
 #' 
 #' # test the classifier, target cell type can be in other formats or
 #' # alternative cell type that can be considered as the classified cell type 
@@ -412,8 +412,8 @@ setMethod("test_classifier", c("test_obj" = "Seurat",
   # filter cells
   test_obj <- filter_cells(test_obj, seurat_tag_slot)
   
-  # perform features selection
-  test_mat <- select_features(test_mat, features(classifier))
+  # perform marker genes selection
+  test_mat <- select_marker_genes(test_mat, marker_genes(classifier))
   
   # transpose mat
   test_mat <- t(as.matrix(test_mat))
@@ -500,8 +500,8 @@ setMethod("test_classifier", c("test_obj" = "SingleCellExperiment",
   # filter cells
   test_obj <- filter_cells(test_obj, sce_tag_slot)
   
-  # perform features selection
-  test_mat <- select_features(test_mat, features(classifier))
+  # perform marker genes selection
+  test_mat <- select_marker_genes(test_mat, marker_genes(classifier))
   
   # transpose mat
   test_mat <- t(as.matrix(test_mat))
@@ -537,10 +537,10 @@ setMethod("test_classifier", c("test_obj" = "SingleCellExperiment",
 #' data("tirosh_mel80_example")
 #' 
 #' # train a classifier, for ex: B cell
-#' selected_features_B = c("CD19", "MS4A1", "CD79A")
+#' selected_marker_genes_B = c("CD19", "MS4A1", "CD79A")
 #' set.seed(123)
 #' clf_b <- train_classifier(train_obj = tirosh_mel80_example, 
-#' features = selected_features_B, cell_type = "B cells")
+#' marker_genes = selected_marker_genes_B, cell_type = "B cells")
 #' 
 #' clf_b_test <- test_classifier(test_obj = tirosh_mel80_example, 
 #' classifier = clf_b)
@@ -621,18 +621,18 @@ setGeneric("classify_cells", function(classify_obj, classifiers = NULL,
 #' 
 #' # train one classifier for one cell type, for ex, B cell
 #' # define genes to use to classify this cell type
-#' selected_features_B = c("CD19", "MS4A1", "CD79A")
+#' selected_marker_genes_B = c("CD19", "MS4A1", "CD79A")
 #' 
 #' # train the classifier
 #' set.seed(123)
 #' clf_b <- train_classifier(train_obj = tirosh_mel80_example, 
-#' features = selected_features_B, cell_type = "B cells")
+#' marker_genes = selected_marker_genes_B, cell_type = "B cells")
 #' 
 #' # do the same thing with other cell types, for example, T cells
-#' selected_features_T = c("CD4", "CD8A", "CD8B")
+#' selected_marker_genes_T = c("CD4", "CD8A", "CD8B")
 #' set.seed(123)
 #' clf_t <- train_classifier(train_obj = tirosh_mel80_example, 
-#' features = selected_features_T, cell_type = "T cells")
+#' marker_genes = selected_marker_genes_T, cell_type = "T cells")
 #' 
 #' # create a list of classifiers
 #' classifier_ls <- list(clf_b, clf_t)
@@ -661,16 +661,16 @@ setMethod("classify_cells", c("classify_obj" = "Seurat"),
     else classifiers <- model_list
   }
   
-  union.features <- unique(unname(unlist(lapply(classifiers, 
-                                                function(x) features(x)))))
+  union.marker_genes <- unique(unname(unlist(lapply(classifiers, 
+                                                function(x) marker_genes(x)))))
   mat = Seurat::GetAssayData(object = classify_obj, 
                              assay = seurat_assay, slot = seurat_slot)
   # if expression matrix is not dgCMatrix: DelayedMatrix for ex.
   if (!is(mat, 'dgCMatrix'))
     mat <- as(mat, "dgCMatrix")
   
-  # reduce features to reduce computational complexity
-  mat <- select_features(mat, union.features)
+  # reduce marker genes to reduce computational complexity
+  mat <- select_marker_genes(mat, union.marker_genes)
   mat <- t(transform_to_zscore(t(as.matrix(mat))))
   
   nchunks = ceiling(ncol(classify_obj)/chunk_size)
@@ -692,7 +692,7 @@ setMethod("classify_cells", c("classify_obj" = "Seurat"),
         if (is.null(applicable_mat)) next 
       } else applicable_mat <- mat.chunk
   
-      filtered_mat <- select_features(applicable_mat, features(classifier))
+      filtered_mat <- select_marker_genes(applicable_mat, marker_genes(classifier))
       filtered_mat <- t(as.matrix(filtered_mat))
       
       prediction <- make_prediction(
@@ -772,15 +772,15 @@ setMethod("classify_cells", c("classify_obj" = "SingleCellExperiment"),
     else classifiers <- model_list
   }
   
-  union.features <- unique(unname(unlist(lapply(classifiers, 
-                                                function(x) features(x)))))
+  union.marker_genes <- unique(unname(unlist(lapply(classifiers, 
+                                                function(x) marker_genes(x)))))
   # if expression matrix is not dgCMatrix: DelayedMatrix for ex.
   mat = SummarizedExperiment::assay(classify_obj, sce_assay, withDimnames = FALSE)
   if (!is(mat, 'dgCMatrix'))
     mat <- as(mat, "dgCMatrix")
   
-  # reduce features to reduce computational complexity
-  mat <- select_features(mat, union.features)
+  # reduce marker_genes to reduce computational complexity
+  mat <- select_marker_genes(mat, union.marker_genes)
   mat <- t(transform_to_zscore(t(as.matrix(mat))))
   
   # split dataset into multiple chunks to reduce running time
@@ -804,7 +804,7 @@ setMethod("classify_cells", c("classify_obj" = "SingleCellExperiment"),
         if (is.null(applicable_mat)) next 
       } else applicable_mat <- mat.chunk
       
-      filtered_mat <- select_features(applicable_mat, features(classifier))
+      filtered_mat <- select_marker_genes(applicable_mat, marker_genes(classifier))
       filtered_mat <- t(as.matrix(filtered_mat))
       
       prediction <- make_prediction(

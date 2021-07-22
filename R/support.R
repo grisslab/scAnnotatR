@@ -1,7 +1,7 @@
 #' Balance training dataset
 #'
 #' @param mat count matrix of dimension m x n,
-#' corresponding to m cells and n features
+#' corresponding to m cells and n marker genes
 #' @param tag named list of training tags/labels (yes/no)
 #' corresponding to a specific cell type, name and length of
 #' list must be coherent with cells in mat
@@ -50,7 +50,7 @@ balance_dataset <- function(mat, tag) {
 #' Call training method
 #' 
 #' @param mat count matrix of dimension m x n
-#' corresponding to m cells and n features. 
+#' corresponding to m cells and n marker genes. 
 #' @param tag named list of training tags/labels (yes/no) 
 #' corresponding to a specific cell type, name and length of 
 #' list must be coherent with cells in mat
@@ -87,7 +87,7 @@ train_func <- function(mat, tag) {
 #' Transform whole matrix of counts to z-score
 #' 
 #' @param mat count matrix of dimension m x n 
-#' corresponding to m cells and n features
+#' corresponding to m cells and n marker genes
 #' 
 #' @return row wise center-scaled count matrix
 #' 
@@ -130,27 +130,25 @@ load_models <- function(path_to_models) {
   return(model_list)
 }
 
-#' Perform features selection and handle missing features
+#' Perform marker genes selection and handle missing marker genes
 #' 
 #' @param mat count matrix of dimension n x m 
-#' corresponding to m cells and n features
-#' @param features list of selected features
+#' corresponding to m cells and n marker genes
+#' @param marker_genes list of selected marker genes
 #' 
 #' @return filtered matrix
 #' @rdname internal
-select_features <- function(mat, features) {
-  filtered_mat <- mat[rownames(mat) %in% features,, drop = FALSE]
+select_marker_genes <- function(mat, marker_genes) {
+  filtered_mat <- mat[rownames(mat) %in% marker_genes,, drop = FALSE]
   
-  # perform features selection
-  if (any(!features %in% rownames(filtered_mat))) { 
-    # cannot perform features selection
-    # cat("Not enough features for parent classifier. 
-    # Cannot rerun pretrained classifier for parent cell type.\n")
-    addi_features <- features[!features %in% rownames(filtered_mat)]
+  # perform marker genes selection
+  if (any(!marker_genes %in% rownames(filtered_mat))) { 
+    # cannot perform marker genes selection
+    addi_marker_genes <- marker_genes[!marker_genes %in% rownames(filtered_mat)]
     zero_vec <- c(rep(0, ncol(filtered_mat)))
-    for (feature in addi_features) {
+    for (marker in addi_marker_genes) {
       filtered_mat <- rbind(filtered_mat, zero_vec)
-      rownames(filtered_mat)[nrow(filtered_mat)] <- feature
+      rownames(filtered_mat)[nrow(filtered_mat)] <- marker
     }
   }
   
@@ -497,7 +495,7 @@ setMethod("process_parent_clf", c("obj" = "Seurat"),
       mat = Seurat::GetAssayData(object = obj, 
                                  assay = seurat_assay, slot = seurat_slot)
       
-      filtered_mat <- select_features(mat, features(parent.clf))
+      filtered_mat <- select_marker_genes(mat, marker_genes(parent.clf))
       
       filtered_mat <- t(as.matrix(filtered_mat))
       
@@ -585,7 +583,7 @@ setMethod("process_parent_clf", c("obj" = "SingleCellExperiment"),
       # convert Seurat object to matrix
       mat = SummarizedExperiment::assay(obj, sce_assay)
       
-      filtered_mat <- select_features(mat, features(parent.clf))
+      filtered_mat <- select_marker_genes(mat, marker_genes(parent.clf))
       filtered_mat <- t(as.matrix(filtered_mat))
       
       # transform mat to zscore values

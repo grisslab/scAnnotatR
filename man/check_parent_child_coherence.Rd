@@ -42,7 +42,7 @@ TRUE if the classifier is valid or the reason why it is not
 
 TRUE if the cell type is valid or the reason why it is not.
 
-TRUE if the features is valid or the reason why it is not.
+TRUE if the marker_genes is valid or the reason why it is not.
 
 TRUE if the parent is valid or the reason why it is not.
 
@@ -58,9 +58,9 @@ the classifier with the new core model.
 
 scAnnotatR object with the new trained classifier.
 
-the classifier with the new features
+the classifier with the new marker genes
 
-scAnnotatR object with the new features.
+scAnnotatR object with the new marker genes.
 
 a list of balanced count matrix
 and corresponding tags of balanced count matrix

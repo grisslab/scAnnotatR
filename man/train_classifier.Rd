@@ -9,7 +9,7 @@
 train_classifier(
   train_obj,
   cell_type,
-  features,
+  marker_genes,
   parent_cell = NA_character_,
   parent_clf = NULL,
   path_to_models = c("default", "."),
@@ -20,7 +20,7 @@ train_classifier(
 \S4method{train_classifier}{Seurat}(
   train_obj,
   cell_type,
-  features,
+  marker_genes,
   parent_cell = NA_character_,
   parent_clf = NULL,
   path_to_models = c("default", "."),
@@ -35,7 +35,7 @@ train_classifier(
 \S4method{train_classifier}{SingleCellExperiment}(
   train_obj,
   cell_type,
-  features,
+  marker_genes,
   parent_cell = NA_character_,
   parent_clf = NULL,
   path_to_models = c("default", "."),
@@ -59,7 +59,7 @@ the function can be run if 1- parent_cell or 2- parent_clf is provided.}
 \item{cell_type}{string indicating the name of the subtype
 This must exactly match cell tag/label if cell tag/label is a string.}
 
-\item{features}{list of features used for the new training model}
+\item{marker_genes}{list of marker genes used for the new training model}
 
 \item{parent_cell}{string indicated the name of the parent cell type, 
 if parent cell type classifier has already been saved in model database.
@@ -138,13 +138,13 @@ data("tirosh_mel80_example")
 table(Seurat::Idents(tirosh_mel80_example))
 
 # define genes to use to classify this cell type (B cells in this example)
-selected_features_B = c("CD19", "MS4A1", "CD79A")
+selected_marker_genes_B = c("CD19", "MS4A1", "CD79A")
 
 # train the classifier, the "cell_type" argument must match 
 # the cell labels in the data, except upper/lower case
 set.seed(123)
 clf_b <- train_classifier(train_obj = tirosh_mel80_example, 
-features = selected_features_B, cell_type = "b cells")
+marker_genes = selected_marker_genes_B, cell_type = "b cells")
 
 # classify cell types using B cell classifier, 
 # a test classifier process may be used before applying the classifier 
@@ -154,8 +154,8 @@ classifiers = c(clf_b))
 # tag all cells that are plasma cells (random example here)
 tirosh_mel80_example[['plasma_cell_tag']] <- c(rep(1, 80), rep(0, 400))
 
-# set new features for the subtype
-p_features = c("SDC1", "CD19", "CD79A")
+# set new marker genes for the subtype
+p_marker_genes = c("SDC1", "CD19", "CD79A")
 
 # train the classifier, the "B cell" classifier is used as parent. 
 # This means, only cells already classified as "B cells" will be evaluated.
@@ -163,7 +163,7 @@ p_features = c("SDC1", "CD19", "CD79A")
 # for the training process.
 set.seed(123)
 plasma_clf <- train_classifier(train_obj = tirosh_mel80_example, 
-cell_type = "Plasma cell", features = p_features, parent_clf = clf_b, 
+cell_type = "Plasma cell", marker_genes = p_marker_genes, parent_clf = clf_b, 
 seurat_tag_slot = 'plasma_cell_tag')
 
 }

@@ -123,10 +123,10 @@ B cells, or target_cell_type is set c("plasma cells").
 data("tirosh_mel80_example")
 
 # train the classifier
-selected_features_B = c("CD19", "MS4A1", "CD79A")
+selected_marker_genes_B = c("CD19", "MS4A1", "CD79A")
 set.seed(123)
 clf_b <- train_classifier(train_obj = tirosh_mel80_example, 
-features = selected_features_B, cell_type = "B cells")
+marker_genes = selected_marker_genes_B, cell_type = "B cells")
 
 # test the classifier, target cell type can be in other formats or
 # alternative cell type that can be considered as the classified cell type 

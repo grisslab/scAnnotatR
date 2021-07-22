@@ -9,7 +9,7 @@ setOldClass("train")
 #' 
 #' @slot cell_type character. Name of the cell type.
 #' @slot clf list. Trained model returned by caret train function.
-#' @slot features vector/character containing features 
+#' @slot marker_genes vector/character containing marker genes 
 #' used for the training.
 #' @slot p_thres numeric. 
 #' Probability threshold for the cell type to be assigned for a cell.
@@ -21,10 +21,10 @@ setOldClass("train")
 #' data("tirosh_mel80_example")
 #' 
 #' # train a classifier, for ex: B cell
-#' selected_features_B = c("CD19", "MS4A1", "CD79A")
+#' selected_marker_genes_B = c("CD19", "MS4A1", "CD79A")
 #' set.seed(123)
 #' clf_b <- train_classifier(train_obj = tirosh_mel80_example, 
-#'                           features = selected_features_B, 
+#'                           marker_genes = selected_marker_genes_B, 
 #'                           cell_type = "B cells")
 #'
 #' clf_b
@@ -32,7 +32,7 @@ setOldClass("train")
 scAnnotatR <- setClass("scAnnotatR",
                        slots = list(cell_type = "character", 
                        clf = "train", 
-                       features = "character", 
+                       marker_genes = "character", 
                        p_thres = "numeric",
                        parent = "character"))
 
@@ -40,16 +40,16 @@ scAnnotatR <- setClass("scAnnotatR",
 
 #' @param cell_type character. Name of the cell type.
 #' @param clf list. Trained model returned by caret train function.
-#' @param features vector/character containing features used for the training.
+#' @param marker_genes vector/character containing marker genes used for the training.
 #' @param p_thres numeric. 
 #' Probability threshold for the cell type to be assigned for a cell.
 #' @param parent character. Parent cell type.
 #' @export
-scAnnotatR <- function(cell_type, clf, features, p_thres, parent) {
+scAnnotatR <- function(cell_type, clf, marker_genes, p_thres, parent) {
     classifier <- methods::new("scAnnotatR",
                             cell_type = cell_type,
                             clf = clf,
-                            features = features,
+                            marker_genes = marker_genes,
                             p_thres = p_thres,
                             parent = parent)
     return(classifier)
@@ -77,10 +77,10 @@ checkObjectValidity <- function(object) {
       return(clf.val)
     }
     
-    # check features
-    features.val <- checkFeaturesValidity(features(object))
-    if (is.character(features.val)) {
-      return(features.val)
+    # check marker_genes
+    marker_genes.val <- checkMarkerGenesValidity(marker_genes(object))
+    if (is.character(marker_genes.val)) {
+      return(marker_genes.val)
     }
     
     # check p_thres
@@ -123,26 +123,26 @@ checkCellTypeValidity <- function(cell_type) {
   return(TRUE)
 }
 
-#' Check validity of classifier features.
+#' Check validity of classifier marker_genes.
 #'
-#' @param features Classifier features to check.
+#' @param marker_genes Classifier marker genes to check.
 #'
-#' @return TRUE if the features is valid or the reason why it is not.
+#' @return TRUE if the marker_genes is valid or the reason why it is not.
 #' @rdname internal
-checkFeaturesValidity <- function(features) {
-  # features must be a vector
-  if (!is(features, "character")) {
-    return("'features' must be of class 'character'")
+checkMarkerGenesValidity <- function(marker_genes) {
+  # marker_genes must be a vector
+  if (!is(marker_genes, "character")) {
+    return("'marker_genes' must be of class 'character'")
   }
   
-  # features must only contain at least one element
-  if (length(features) < 1) {
-    return("'features' must be a vector containing at least one feature")
+  # marker_genes must only contain at least one element
+  if (length(marker_genes) < 1) {
+    return("'marker_genes' must be a vector containing at least one feature")
   }
   
-  # features must not be empty
-  if (any(nchar(features) < 1)) {
-    return("'features' must be set")
+  # marker_genes must not be empty
+  if (any(nchar(marker_genes) < 1)) {
+    return("'marker_genes' must be set")
   }
   
   return(TRUE)
@@ -217,18 +217,18 @@ setValidity("scAnnotatR", checkObjectValidity)
 #' 
 #' @examples
 #' data("tirosh_mel80_example")
-#' selected_features_B = c("CD19", "MS4A1", "CD79A")
+#' selected_marker_genes_B = c("CD19", "MS4A1", "CD79A")
 #' set.seed(123)
 #' clf_b <- train_classifier(train_obj = tirosh_mel80_example, 
-#' features = selected_features_B, cell_type = "B cells")
+#' marker_genes = selected_marker_genes_B, cell_type = "B cells")
 #' clf_b
 #' 
 #' @export
 #' @rdname show
 setMethod("show", c("object" = "scAnnotatR"), function(object) {
   cat("An object of class scAnnotatR for", cell_type(object), "\n")
-  cat("*", toString(length(features(object))), "features applied:", 
-                     paste(features(object), collapse = ', '), "\n")
+  cat("*", toString(length(marker_genes(object))), "marker genes applied:", 
+                     paste(marker_genes(object), collapse = ', '), "\n")
   cat("* Predicting probability threshold:", toString(p_thres(object)), "\n")
   if (!is.na(parent(object)) && length(parent(object)) == 1) {
     cat("* A child model of:", parent(object), "\n")
@@ -249,10 +249,10 @@ setMethod("show", c("object" = "scAnnotatR"), function(object) {
 #' 
 #' @examples
 #' data("tirosh_mel80_example")
-#' selected_features_B = c("CD19", "MS4A1", "CD79A")
+#' selected_marker_genes_B = c("CD19", "MS4A1", "CD79A")
 #' set.seed(123)
 #' clf_b <- train_classifier(train_obj = tirosh_mel80_example, 
-#' cell_type = "B cells", features = selected_features_B)
+#' cell_type = "B cells", marker_genes = selected_marker_genes_B)
 #' cell_type(clf_b)
 #' 
 #' @export
@@ -271,10 +271,10 @@ cell_type <- function(classifier) {
 #' 
 #' @examples
 #' data("tirosh_mel80_example")
-#' selected_features_B = c("CD19", "MS4A1", "CD79A")
+#' selected_marker_genes_B = c("CD19", "MS4A1", "CD79A")
 #' set.seed(123)
 #' clf_b <- train_classifier(train_obj = tirosh_mel80_example, 
-#' features = selected_features_B, cell_type = "B cells")
+#' marker_genes = selected_marker_genes_B, cell_type = "B cells")
 #' clf(clf_b)
 #'  
 #' @export
@@ -282,25 +282,25 @@ clf <- function(classifier) {
   return(classifier@clf)
 }
 
-#' features
+#' marker_genes
 #' 
-#' Returns the set of features for the given classifier.
+#' Returns the set of marker genes for the given classifier.
 #' 
 #' @param classifier scAnnotatR object
 #' 
-#' @return Applied features of object
+#' @return Applied marker genes of object
 #' 
 #' @examples
 #' data("tirosh_mel80_example")
-#' selected_features_B = c("CD19", "MS4A1", "CD79A")
+#' selected_marker_genes_B = c("CD19", "MS4A1", "CD79A")
 #' set.seed(123)
 #' clf_b <- train_classifier(train_obj = tirosh_mel80_example, 
-#' features = selected_features_B, cell_type = "B cells")
-#' features(clf_b)
+#' marker_genes = selected_marker_genes_B, cell_type = "B cells")
+#' marker_genes(clf_b)
 #' 
 #' @export
-features <- function(classifier) {
-  return(classifier@features)
+marker_genes <- function(classifier) {
+  return(classifier@marker_genes)
 }
 
 #' p_thres
@@ -313,10 +313,10 @@ features <- function(classifier) {
 #' 
 #' @examples
 #' data("tirosh_mel80_example")
-#' selected_features_B = c("CD19", "MS4A1", "CD79A")
+#' selected_marker_genes_B = c("CD19", "MS4A1", "CD79A")
 #' set.seed(123)
 #' clf_b <- train_classifier(train_obj = tirosh_mel80_example, 
-#' features = selected_features_B, cell_type = "B cells")
+#' marker_genes = selected_marker_genes_B, cell_type = "B cells")
 #' p_thres(clf_b)
 #' 
 #' @export
@@ -335,10 +335,10 @@ p_thres <- function(classifier) {
 #' 
 #' @examples
 #' data("tirosh_mel80_example")
-#' selected_features_B = c("CD19", "MS4A1", "CD79A")
+#' selected_marker_genes_B = c("CD19", "MS4A1", "CD79A")
 #' set.seed(123)
 #' clf_b <- train_classifier(train_obj = tirosh_mel80_example, 
-#' features = selected_features_B, cell_type = "B cells")
+#' marker_genes = selected_marker_genes_B, cell_type = "B cells")
 #' parent(clf_b)
 #' 
 #' @export
@@ -365,13 +365,14 @@ setGeneric('cell_type<-', function(classifier, value)
 #' @return scAnnotatR object with the new cell type
 #' @examples
 #' data("tirosh_mel80_example")
-#' selected_features_B = c("CD19", "MS4A1", "CD79A")
+#' selected_marker_genes_B = c("CD19", "MS4A1", "CD79A")
 #' set.seed(123)
 #' clf_b <- train_classifier(train_obj = tirosh_mel80_example, 
-#' features = selected_features_B, cell_type = "B cells")
+#' marker_genes = selected_marker_genes_B, cell_type = "B cells")
 #' cell_type(clf_b) <- "B cell"
 #' @rdname cell_type
-setReplaceMethod('cell_type', c("classifier" = "scAnnotatR"), function(classifier, value) {
+setReplaceMethod('cell_type', c("classifier" = "scAnnotatR"), 
+                 function(classifier, value) {
   # check if new thres is a string
   if (is.character(value) && nchar(value) > 0 && length(value) == 1)
     classifier@cell_type <- value
@@ -399,16 +400,17 @@ setGeneric('p_thres<-', function(classifier, value)
 #' @return scAnnotatR object with the new threshold.
 #' @examples
 #' data("tirosh_mel80_example")
-#' selected_features_B = c("CD19", "MS4A1", "CD79A")
+#' selected_marker_genes_B = c("CD19", "MS4A1", "CD79A")
 #' set.seed(123)
 #' clf_b <- train_classifier(train_obj = tirosh_mel80_example, 
-#' features = selected_features_B, cell_type = "B cells")
+#' marker_genes = selected_marker_genes_B, cell_type = "B cells")
 #' clf_b_test <- test_classifier(test_obj = tirosh_mel80_example, 
 #' classifier = clf_b)
 #' # assign a new threhold probability for prediction
 #' p_thres(clf_b) <- 0.4
 #' @rdname p_thres
-setReplaceMethod('p_thres', c("classifier" = "scAnnotatR"), function(classifier, value) {
+setReplaceMethod('p_thres', c("classifier" = "scAnnotatR"), 
+                 function(classifier, value) {
   # check if new thres > 0
   if (is.numeric(value) && value > 0)
     classifier@p_thres <- value
@@ -436,7 +438,8 @@ setGeneric('parent<-', function(classifier, value)
 #' 
 #' @rdname internal
 #' 
-setReplaceMethod('parent', c("classifier" = "scAnnotatR"), function(classifier, value) {
+setReplaceMethod('parent', c("classifier" = "scAnnotatR"), 
+                 function(classifier, value) {
   # check if new thres > 0
   if (!is.character(value) || nchar(value) == 0 || length(value) != 1)
     stop("New parent must be a non empty string.", call. = FALSE)
@@ -448,7 +451,7 @@ setReplaceMethod('parent', c("classifier" = "scAnnotatR"), function(classifier, 
 })
 
 #' Setter for clf.
-#' Change of clf will also lead to change of features.
+#' Change of clf will also lead to change of marker_genes.
 #' @param classifier the classifier whose classifying model will be changed
 #' @param value the new core model
 #' 
@@ -464,16 +467,17 @@ setGeneric('clf<-', function(classifier, value)
 #' 
 #' @return scAnnotatR object with the new trained classifier.
 #' @rdname internal
-setReplaceMethod('clf', c("classifier" = "scAnnotatR"), function(classifier, value) {
+setReplaceMethod('clf', c("classifier" = "scAnnotatR"), 
+                 function(classifier, value) {
   # set new classifier
   if (is.na(parent(classifier))) {
     classifier@clf <- value
     
-    # set new features
-    new_features <- labels(value$terms)
+    # set new marker_genes
+    new_marker_genes <- labels(value$terms)
     # convert underscore to hyphen if exists
-    new_features <- gsub('_', '-', new_features) 
-    features(classifier) <- new_features
+    new_marker_genes <- gsub('_', '-', new_marker_genes) 
+    marker_genes(classifier) <- new_marker_genes
   } else {
     stop("Can only assign new classifier for a cell type that has no parent.
     For a sub cell type: train a new classifier based on parent classifier.", 
@@ -484,28 +488,29 @@ setReplaceMethod('clf', c("classifier" = "scAnnotatR"), function(classifier, val
   classifier
 })
 
-#' Setter for features. Users are not allowed to change features. 
+#' Setter for marker_genes. Users are not allowed to change marker_genes. 
 #' 
-#' @param classifier the classifier whose features will be changed
-#' @param value the new lsit of features
+#' @param classifier the classifier whose marker genes will be changed
+#' @param value the new list of marker genes
 #' 
-#' @return the classifier with the new features
+#' @return the classifier with the new marker genes
 #' @rdname internal
-setGeneric('features<-', function(classifier, value) 
-  standardGeneric("features<-"))
+setGeneric('marker_genes<-', function(classifier, value) 
+  standardGeneric("marker_genes<-"))
 
-#' @inherit features<-
+#' @inherit marker_genes<-
 #' @param classifier scAnnotatR object. 
 #' The object is returned from the train_classifier function.
 #' @param value the new classifier
 #' 
-#' @return scAnnotatR object with the new features.
+#' @return scAnnotatR object with the new marker genes.
 #' @rdname internal
 #' 
-setReplaceMethod('features', c("classifier" = "scAnnotatR"), function(classifier, value) {
-  # set new features
+setReplaceMethod('marker_genes', c("classifier" = "scAnnotatR"), 
+                 function(classifier, value) {
+  # set new marker_genes
   if (is.character(value) && any(nchar(value)) > 0)
-    classifier@features <- value
+    classifier@marker_genes <- value
   
   # return or not?
   classifier

@@ -26,9 +26,9 @@ data("tirosh_mel80_example")
 
 # train a classifier
 set.seed(123)
-selected_features_T = c("CD4", "CD8A", "CD8B")
+selected_marker_genes_T = c("CD4", "CD8A", "CD8B")
 clf_t <- train_classifier(train_obj = tirosh_mel80_example, 
-features = selected_features_T, cell_type = "t cells")
+marker_genes = selected_marker_genes_T, cell_type = "t cells")
 
 # save a classifier to system
 save_new_model(new_model = clf_t)

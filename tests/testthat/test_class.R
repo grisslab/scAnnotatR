@@ -17,12 +17,12 @@ test_that("Set probability threshold changes probability threshold", {
   expect_equal(clf_B@p_thres, 0.6)
 })
 
-test_that("Set classifier changes classifier and features", {
+test_that("Set classifier changes classifier and marker genes", {
   data("default_models")
   clf_B <- default_models[['B cells']]
   clf_T <- default_models[['T cells']]
   
   clf(clf_B) <- clf(clf_T)
   expect_true(all.equal(clf_B@clf, clf(clf_T)))
-  expect_true(all.equal(clf_B@features, clf_T@features))
+  expect_true(all.equal(clf_B@marker_genes, clf_T@marker_genes))
 })

@@ -3,7 +3,7 @@
 \name{checkObjectValidity}
 \alias{checkObjectValidity}
 \alias{checkCellTypeValidity}
-\alias{checkFeaturesValidity}
+\alias{checkMarkerGenesValidity}
 \alias{checkParentValidity}
 \alias{checkPThresValidity}
 \alias{checkClassifierValidity}
@@ -11,13 +11,13 @@
 \alias{parent<-,scAnnotatR-method}
 \alias{clf<-}
 \alias{clf<-,scAnnotatR-method}
-\alias{features<-}
-\alias{features<-,scAnnotatR-method}
+\alias{marker_genes<-}
+\alias{marker_genes<-,scAnnotatR-method}
 \alias{balance_dataset}
 \alias{train_func}
 \alias{transform_to_zscore}
 \alias{load_models}
-\alias{select_features}
+\alias{select_marker_genes}
 \alias{check_parent_child_coherence}
 \alias{filter_cells}
 \alias{filter_cells,Seurat-method}
@@ -39,7 +39,7 @@ checkObjectValidity(object)
 
 checkCellTypeValidity(cell_type)
 
-checkFeaturesValidity(features)
+checkMarkerGenesValidity(marker_genes)
 
 checkParentValidity(parent)
 
@@ -55,9 +55,9 @@ clf(classifier) <- value
 
 \S4method{clf}{scAnnotatR}(classifier) <- value
 
-features(classifier) <- value
+marker_genes(classifier) <- value
 
-\S4method{features}{scAnnotatR}(classifier) <- value
+\S4method{marker_genes}{scAnnotatR}(classifier) <- value
 
 balance_dataset(mat, tag)
 
@@ -67,7 +67,7 @@ transform_to_zscore(mat)
 
 load_models(path_to_models)
 
-select_features(mat, features)
+select_marker_genes(mat, marker_genes)
 
 check_parent_child_coherence(
   obj,
@@ -138,7 +138,7 @@ classify_clust(clusts, most_probable_cell_type)
 
 \item{cell_type}{name of cell type}
 
-\item{features}{list of selected features}
+\item{marker_genes}{list of selected marker genes}
 
 \item{parent}{Classifier parent to check.}
 
@@ -207,7 +207,7 @@ TRUE if the classifier is valid or the reason why it is not
 
 TRUE if the cell type is valid or the reason why it is not.
 
-TRUE if the features is valid or the reason why it is not.
+TRUE if the marker_genes is valid or the reason why it is not.
 
 TRUE if the parent is valid or the reason why it is not.
 
@@ -223,9 +223,9 @@ the classifier with the new core model.
 
 scAnnotatR object with the new trained classifier.
 
-the classifier with the new features
+the classifier with the new marker genes
 
-scAnnotatR object with the new features.
+scAnnotatR object with the new marker genes.
 
 a list of balanced count matrix
 and corresponding tags of balanced count matrix
