@@ -19,15 +19,13 @@
 \alias{load_models}
 \alias{select_marker_genes}
 \alias{check_parent_child_coherence}
+\alias{check_parent_child_coherence,dgCMatrix,vector-method}
 \alias{filter_cells}
-\alias{filter_cells,Seurat-method}
-\alias{filter_cells,SingleCellExperiment-method}
+\alias{filter_cells,dgCMatrix,vector-method}
 \alias{construct_tag_vect}
-\alias{construct_tag_vect,Seurat-method}
-\alias{construct_tag_vect,SingleCellExperiment-method}
+\alias{construct_tag_vect,vector-method}
 \alias{process_parent_classifier}
-\alias{process_parent_classifier,Seurat-method}
-\alias{process_parent_classifier,SingleCellExperiment-method}
+\alias{process_parent_classifier,dgCMatrix-method}
 \alias{make_prediction}
 \alias{simplify_prediction}
 \alias{verify_parent}
@@ -70,57 +68,47 @@ load_models(path_to_models)
 select_marker_genes(mat, marker_genes)
 
 check_parent_child_coherence(
-  obj,
+  mat,
+  tag,
   pos_parent,
   parent_cell,
   cell_type,
-  target_cell_type,
-  ...
+  target_cell_type
 )
 
-filter_cells(obj, tag_slot)
+\S4method{check_parent_child_coherence}{dgCMatrix,vector}(
+  mat,
+  tag,
+  pos_parent,
+  parent_cell,
+  cell_type,
+  target_cell_type
+)
 
-\S4method{filter_cells}{Seurat}(obj, tag_slot)
+filter_cells(mat, tag)
 
-\S4method{filter_cells}{SingleCellExperiment}(obj, tag_slot)
+\S4method{filter_cells}{dgCMatrix,vector}(mat, tag)
 
-construct_tag_vect(obj, cell_type, ...)
+construct_tag_vect(tag, cell_type)
 
-\S4method{construct_tag_vect}{Seurat}(obj, cell_type, tag_slot)
-
-\S4method{construct_tag_vect}{SingleCellExperiment}(obj, cell_type, tag_slot)
+\S4method{construct_tag_vect}{vector}(tag, cell_type)
 
 process_parent_classifier(
-  obj,
-  parent_tag_slot,
+  mat,
+  parent_tag,
   parent_cell_type,
   parent_classifier,
   path_to_models,
-  zscore = TRUE,
-  ...
+  zscore = TRUE
 )
 
-\S4method{process_parent_classifier}{Seurat}(
-  obj,
-  parent_tag_slot,
+\S4method{process_parent_classifier}{dgCMatrix}(
+  mat,
+  parent_tag,
   parent_cell_type,
   parent_classifier,
   path_to_models,
-  zscore = TRUE,
-  seurat_assay,
-  seurat_slot,
-  ...
-)
-
-\S4method{process_parent_classifier}{SingleCellExperiment}(
-  obj,
-  parent_tag_slot,
-  parent_cell_type,
-  parent_classifier,
-  path_to_models,
-  zscore = TRUE,
-  sce_assay,
-  ...
+  zscore = TRUE
 )
 
 make_prediction(mat, classifier, pred_cells, ignore_ambiguous_result = TRUE)
@@ -156,21 +144,14 @@ classify_clust(clusts, most_probable_cell_type)
 
 \item{path_to_models}{path to databases, or by default}
 
-\item{obj}{object}
-
 \item{pos_parent}{a vector indicating parent classifier prediction}
 
 \item{parent_cell}{name of parent cell type}
 
 \item{target_cell_type}{alternative cell types (in case of testing classifier)}
 
-\item{...}{arguments passed to other methods}
-
-\item{tag_slot}{tag slot in \code{\link{SingleCellExperiment}} object 
-indicating cell type}
-
-\item{parent_tag_slot}{string, name of annotation tag slot in object 
-indicating pre-assigned/predicted parent cell type}
+\item{parent_tag}{vector, named list indicating pre-assigned/predicted 
+parent cell type}
 
 \item{parent_cell_type}{name of parent cell type}
 
@@ -179,14 +160,6 @@ to classification model for the parent cell type}
 
 \item{zscore}{boolean indicating the transformation of gene expression 
 in object to zscore or not}
-
-\item{seurat_assay}{name of assay to use in \code{\link{Seurat}} object}
-
-\item{seurat_slot}{type of expression data to use in 
-\code{\link{Seurat}} object}
-
-\item{sce_assay}{name of assay to use 
-in \code{\link{SingleCellExperiment}} object}
 
 \item{pred_cells}{a whole prediction for all cells}
 
@@ -238,11 +211,9 @@ list of classifiers
 
 filtered matrix
 
-list of adjusted object and adjusted tag slot
+list of adjusted tag
 
-adjusted \code{\link{Seurat}} object
-
-adjusted \code{\link{SingleCellExperiment}} object
+filtered matrix and corresponding tag
 
 a binary vector for cell tag
 
@@ -258,21 +229,4 @@ classifier performance
 }
 \description{
 Check if a scAnnotatR object is valid
-
-Filter cells from ambiguous chars and 
-non applicable cells in a \code{\link{Seurat}} object
-
-Filter cells from ambiguous chars and non applicable cells
-in a \code{\link{SingleCellExperiment}} object
-
-Construct a uniform tag vector for all forms of labels 
-in a \code{\link{Seurat}} object
-
-Construct a uniform tag vector for all forms of labels
-in a \code{\link{SingleCellExperiment}} object
-
-Process parent classifier in a \code{\link{Seurat}} object
-
-Process parent classifier in 
-a \code{\link{SingleCellExperiment}} object
 }

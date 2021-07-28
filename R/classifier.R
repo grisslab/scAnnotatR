@@ -112,58 +112,75 @@ setMethod("train_classifier", c("train_obj" = "Seurat"),
   mat = Seurat::GetAssayData(object = train_obj, 
                              assay = seurat_assay, slot = seurat_slot)
   
-  #--- part of parent cell type
-  parent_process <- process_parent_classifier(
-    train_obj, seurat_parent_tag_slot, parent_cell, parent_classifier, 
-    path_to_models, zscore, seurat_assay, seurat_slot
-  )
-  
-  # check parent-child coherence
-  if (!is.null(parent_process$pos_parent)) {
-    check_res <- check_parent_child_coherence(
-      train_obj, parent_process$pos_parent, parent_process$parent_cell, 
-      cell_type, cell_type, seurat_tag_slot
-    )
-    train_obj <- check_res$adjusted_object
-    seurat_tag_slot <- check_res$adjusted_tag_slot
+  if (seurat_tag_slot == "active.ident") {
+    tag <- Seurat::Idents(train_obj)
+  } else {
+    tag <- train_obj[[seurat_tag_slot]][,1]
+    names(tag) <- colnames(train_obj)
   }
   
+  if (seurat_parent_tag_slot == "active.ident") {
+    parent_tag <- Seurat::Idents(train_obj)
+  } else if (seurat_parent_tag_slot %in% colnames(train_obj[[]])) {
+    parent_tag <- train_obj[[seurat_parent_tag_slot]][,1]
+    names(parent_tag) <- colnames(train_obj)
+  } else parent_tag <- NULL
+  
+  object <- train_classifier_func(mat, tag, cell_type, marker_genes,
+                                  parent_tag, parent_cell, parent_classifier,
+                                  path_to_models, zscore)
+  return(object)
+})
+
+train_classifier_func <- function(mat, tag, cell_type, marker_genes, 
+                                  parent_tag, parent_cell, parent_classifier, 
+                                  path_to_models, zscore) {
+  #--- part of parent cell type
+  processed_parent <- process_parent_classifier(
+    mat, parent_tag, parent_cell, parent_classifier, path_to_models, zscore
+  )
+
+  # check parent-child coherence
+  if (!is.null(processed_parent$pos_parent)) {
+    tag <- check_parent_child_coherence(
+      mat, tag, processed_parent$pos_parent, processed_parent$parent_cell,
+      cell_type, cell_type)
+  }
   #--- end of part of parent cell type
   
   #--- part of cell type
   # filter cells
-  train_obj <- filter_cells(train_obj, seurat_tag_slot)
+  filt <- filter_cells(mat, tag)
+  train_mat <- filt$mat
+  train_tag <- filt$tag
   
   # marker genes selection
-  mat <- select_marker_genes(mat, marker_genes)
+  train_mat <- select_marker_genes(train_mat, marker_genes)
   
   # transpose mat
-  mat <- t(as.matrix(mat))
+  train_mat <- t(as.matrix(train_mat))
   
   # transform mat to zscore values
   if (zscore == TRUE)
-    mat <- transform_to_zscore(mat)
-  
-  # exclude all eliminated cells
-  mat <- mat[colnames(train_obj),, drop = FALSE]
+    train_mat <- transform_to_zscore(train_mat)
   
   # construct cell tag to yes/no values
-  train_tag <- construct_tag_vect(train_obj, cell_type, seurat_tag_slot)
+  train_tag <- construct_tag_vect(train_tag, cell_type) # should be named list
   
   # if cell type not found in tag
   if (all(train_tag != "yes")) {
     stop("Cell type not available in train data. Please verify cell type.", 
          call. = FALSE)
   }
-
+  
   # transform list to factor
   train_tag <- factor(train_tag, levels = c('yes', 'no'))
   
   # convert hyphen (-) by underscore (_)
-  colnames(mat) <- gsub('-', '_', colnames(mat))
+  colnames(train_mat) <- gsub('-', '_', colnames(train_mat))
   
   # train
-  caret_model <- train_func(mat, train_tag)
+  caret_model <- train_func(train_mat, train_tag)
   
   # remove this info to reduce memory
   caret_model$resampledCM <- caret_model$call <- caret_model$times <- NULL
@@ -172,22 +189,22 @@ setMethod("train_classifier", c("train_obj" = "Seurat"),
   marker_genes <- labels(caret_model$terms)
   marker_genes <- gsub('_', '-', marker_genes) # convert back underscore to hyphen
   object <- scAnnotatR(cell_type, caret_model, marker_genes, p_thres, 
-                             NA_character_)
+                       NA_character_)
   
   # only assign parent if pretrained model for parent cell type is avai
   parent_check <- 
     (
-      !is.null(parent_process$parent.classifier) && 
-        tolower(cell_type(parent_process$parent.classifier)) == 
-        tolower(parent_process$parent_cell)
+      !is.null(processed_parent$parent.classifier) && 
+        tolower(cell_type(processed_parent$parent.classifier)) == 
+        tolower(processed_parent$parent_cell)
     ) || (
-      tolower(parent_process$parent_cell) %in% 
-        tolower(names(parent_process$model_list))
+      tolower(processed_parent$parent_cell) %in% 
+        tolower(names(processed_parent$model_list))
     )
-  if (parent_check) parent(object) <- parent_process$parent_cell
+  if (parent_check) parent(object) <- processed_parent$parent_cell
   
   return(object)
-})
+}
 
 #' @inherit train_classifier
 #' 
@@ -222,77 +239,17 @@ setMethod("train_classifier", c("train_obj" = "SingleCellExperiment"),
   # convert Seurat object to matrix
   mat = SummarizedExperiment::assay(train_obj, sce_assay)
   
-  #--- part of parent cell type
-  parent_process <- process_parent_classifier(
-    train_obj, sce_parent_tag_slot, parent_cell, parent_classifier, 
-    path_to_models, zscore, sce_assay
-  )
+  tag = SummarizedExperiment::colData(train_obj)[, sce_tag_slot]
+  names(tag) <- colnames(train_obj)
   
-  # check parent-child coherence
-  if (!is.null(parent_process$pos_parent)) {
-    check_res <- check_parent_child_coherence(
-      train_obj, parent_process$pos_parent, parent_process$parent_cell,
-      cell_type,cell_type,sce_tag_slot
-    )
-    train_obj <- check_res$adjusted_object
-    sce_tag_slot <- check_res$adjusted_tag_slot
-  }
-  #--- end of part of parent cell type
+  if (sce_parent_tag_slot %in% colnames(SummarizedExperiment::colData(train_obj))) {
+    parent_tag <- SummarizedExperiment::colData(train_obj)[, sce_parent_tag_slot]
+    names(parent_tag) <- colnames(train_obj)
+  } else parent_tag <- NULL
   
-  #--- part of cell type
-  # filter cells
-  train_obj <- filter_cells(train_obj, sce_tag_slot)
-  
-  # marker genes selection
-  mat <- select_marker_genes(mat, marker_genes)
-  
-  # transpose mat
-  mat <- t(as.matrix(mat))
-  
-  # transform mat to zscore values
-  if (zscore == TRUE) mat <- transform_to_zscore(mat)
-  
-  # exclude all eliminated cells
-  mat <- mat[colnames(train_obj),, drop = FALSE]
-  
-  # construct cell tag to yes/no values
-  train_tag <- construct_tag_vect(train_obj, cell_type, sce_tag_slot)
-  
-  # if cell type not found in tag
-  if (all(train_tag != "yes")) {
-    stop("Cell type not available in train data. Please verify cell type.", 
-         call. = FALSE)
-  }
-  
-  # transform list to factor
-  train_tag <- factor(train_tag, levels = c('yes', 'no'))
-  
-  # convert hyphen (-) by underscore (_)
-  colnames(mat) <- gsub('-', '_', colnames(mat))
-  
-  # train
-  caret_model <- train_func(mat, train_tag)
-  
-  # remove this info to reduce memory
-  caret_model$resampledCM <- caret_model$call <- caret_model$times <- NULL
-  p_thres <- 0.5
-  
-  marker_genes <- labels(caret_model$terms)
-  marker_genes <- gsub('_', '-', marker_genes) # convert back underscore to hyphen
-  object <- scAnnotatR(cell_type, caret_model, marker_genes, p_thres, 
-                             NA_character_)
-  
-  # only assign parent if pretrained model for parent cell type is avai
-  parent_check <-
-    (
-      !is.null(parent_process$parent.classifier) && 
-        tolower(cell_type(parent_process$parent.classifier)) == 
-        tolower(parent_process$parent_cell)
-    ) || (
-      tolower(parent_process$parent_cell) %in% 
-        tolower(names(parent_process$model_list))
-    )
-  if (parent_check) parent(object) <- parent_process$parent_cell
+  object <- train_classifier_func(mat, tag, cell_type, marker_genes, 
+                                  parent_tag, parent_cell, parent_classifier,
+                                  path_to_models, zscore)
   
   return(object)
 })
@@ -383,9 +340,32 @@ setMethod("test_classifier", c("test_obj" = "Seurat",
                    seurat_assay = 'RNA', seurat_slot = 'counts', ...) {
   . <- fpr <- tpr <- NULL
   # convert Seurat object to matrix
-  test_mat = Seurat::GetAssayData(
+  mat = Seurat::GetAssayData(
     object = test_obj, assay = seurat_assay, slot = seurat_slot)
   
+  if (seurat_tag_slot == "active.ident") {
+    tag <- Seurat::Idents(test_obj)
+  } else {
+    tag <- test_obj[[seurat_tag_slot]][,1]
+    names(tag) <- colnames(test_obj)
+  }
+  
+  if (seurat_parent_tag_slot == "active.ident") {
+    parent_tag <- Seurat::Idents(test_obj)
+  } else if (seurat_parent_tag_slot %in% colnames(test_obj[[]])) {
+    parent_tag <- test_obj[[seurat_parent_tag_slot]][,1]
+    names(parent_tag) <- colnames(test_obj)
+  } else parent_tag <- NULL
+  
+  return_val <- test_classifier_func(mat, tag, classifier, parent_tag,
+                                     target_cell_type, parent_classifier,
+                                     path_to_models, zscore)
+  return(return_val)
+})
+
+test_classifier_func <- function(mat, tag, classifier, parent_tag, 
+                                 target_cell_type, parent_classifier,
+                                 path_to_models, zscore) {
   # target_cell_type check
   if (!tolower(cell_type(classifier)) %in% tolower(target_cell_type)) {
     target_cell_type <- append(target_cell_type, cell_type(classifier))
@@ -393,24 +373,22 @@ setMethod("test_classifier", c("test_obj" = "Seurat",
   
   #--- parent cell type
   # process parent classifier
-  parent_process <- process_parent_classifier(
-    test_obj, seurat_parent_tag_slot, parent(classifier), parent_classifier,
-    path_to_models, zscore, seurat_assay, seurat_slot
-  )
+  processed_parent <- process_parent_classifier(
+    mat, parent_tag, parent(classifier), parent_classifier, path_to_models, 
+    zscore)
   
   # check parent-child coherence
-  if (!is.null(parent_process$pos_parent)) {
-    check_res <- check_parent_child_coherence(
-      test_obj, parent_process$pos_parent, parent(classifier), 
-      cell_type(classifier), target_cell_type, seurat_tag_slot
-    )
-    test_obj <- check_res$adjusted_object
-    seurat_tag_slot <- check_res$adjusted_tag_slot
+  if (!is.null(processed_parent$pos_parent)) {
+    tag <- check_parent_child_coherence(
+      mat, tag, processed_parent$pos_parent, parent(classifier),
+      cell_type(classifier), target_cell_type)
   }
   
   #--- children cell type 
   # filter cells
-  test_obj <- filter_cells(test_obj, seurat_tag_slot)
+  filt <- filter_cells(mat, tag)
+  test_mat <- filt$mat
+  test_tag <- filt$tag
   
   # perform marker genes selection
   test_mat <- select_marker_genes(test_mat, marker_genes(classifier))
@@ -421,16 +399,13 @@ setMethod("test_classifier", c("test_obj" = "Seurat",
   # transform mat to zscore values
   if (zscore == TRUE) test_mat <- transform_to_zscore(test_mat)
   
-  # exclude all eliminated cells
-  test_mat <- test_mat[colnames(test_obj),, drop = FALSE]
-  
   # construct cell tag to yes/no values
-  test_tag <- construct_tag_vect(test_obj, target_cell_type, seurat_tag_slot)
+  test_tag <- construct_tag_vect(test_tag, target_cell_type)
   
   # if cell type not found in tag
   if (all(test_tag != "yes")) {
     stop("Cell type ", cell_type(classifier), 
-    " is not available in the test data. 
+         " is not available in the test data. 
     Overwrite the target cell type using the target_cell_type parameter 
     or verify that you chose the correct test dataset.", 
          call. = FALSE)
@@ -438,7 +413,7 @@ setMethod("test_classifier", c("test_obj" = "Seurat",
   
   return_val = test_performance(test_mat, classifier, test_tag)
   return(return_val)
-})
+}
 
 #' @inherit test_classifier
 #' 
@@ -472,57 +447,19 @@ setMethod("test_classifier", c("test_obj" = "SingleCellExperiment",
   . <- fpr <- tpr <- NULL
   
   # convert SCE object to matrix
-  test_mat = SummarizedExperiment::assay(test_obj, sce_assay)
+  mat = SummarizedExperiment::assay(test_obj, sce_assay)
   
-  # target_cell_type check
-  if (!tolower(cell_type(classifier)) %in% tolower(target_cell_type)) {
-    target_cell_type <- append(target_cell_type, cell_type(classifier))
-  }
+  tag = SummarizedExperiment::colData(test_obj)[, sce_tag_slot]
+  names(tag) <- colnames(test_obj)
   
-  #--- parent cell type
-  # process parent classifier
-  parent_process <- process_parent_classifier(
-    test_obj, sce_parent_tag_slot, parent(classifier), parent_classifier, 
-    path_to_models, zscore, sce_assay
-  )
+  if (sce_parent_tag_slot %in% colnames(SummarizedExperiment::colData(test_obj))) {
+    parent_tag <- SummarizedExperiment::colData(test_obj)[, sce_parent_tag_slot]
+    names(parent_tag) <- colnames(test_obj)
+  } else parent_tag <- NULL
   
-  # check parent-child coherence
-  if (!is.null(parent_process$pos_parent)) {
-    check_res <- check_parent_child_coherence(
-      test_obj, parent_process$pos_parent, parent(classifier), 
-      cell_type(classifier), target_cell_type, sce_tag_slot
-    )
-    test_obj <- check_res$adjusted_object
-    sce_tag_slot <- check_res$adjusted_tag_slot
-  }
-  
-  #--- children cell type 
-  # filter cells
-  test_obj <- filter_cells(test_obj, sce_tag_slot)
-  
-  # perform marker genes selection
-  test_mat <- select_marker_genes(test_mat, marker_genes(classifier))
-  
-  # transpose mat
-  test_mat <- t(as.matrix(test_mat))
-  
-  # transform mat to zscore values
-  if (zscore == TRUE) test_mat <- transform_to_zscore(test_mat)
-  
-  # exclude all eliminated cells
-  test_mat <- test_mat[colnames(test_obj),, drop = FALSE]
-  
-  # construct cell tag to yes/no values
-  test_tag <- construct_tag_vect(test_obj, target_cell_type, sce_tag_slot)
-  
-  # if cell type not found in tag
-  if (all(test_tag != "yes")) {
-    stop("Cell type ", cell_type(classifier), " is not available in the test data. 
-          Overwrite the target cell type using the target_cell_type parameter or verify that you chose the correct test dataset.", 
-         call. = FALSE)
-  }
-  
-  return_val <- test_performance(test_mat, classifier, test_tag)
+  return_val <- test_classifier_func(mat, tag, classifier, parent_tag,
+                                     target_cell_type, parent_classifier,
+                                     path_to_models, zscore)
   
   return(return_val)
 })

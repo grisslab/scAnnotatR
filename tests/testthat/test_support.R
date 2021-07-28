@@ -49,13 +49,11 @@ test_that("Check parent-child coherence checks parent-child coherence", {
   parent_cell <- 'ABC'
   
   tag <- c(rep(TRUE, 6), rep(FALSE, 4))
-  example_data[['CDE']] <- tag
+  names(tag) <- colnames(example_data)
   
-  pc_coherence <- check_parent_child_coherence(
-    example_data, parent_pos, 'ABC', 'CDE', 'CDE', tag_slot = 'CDE')
-  
-  new_obj <- pc_coherence$adjusted_object
-  new_tag <- new_obj[['new_tag_slot']][, 1]
+  mat <- GetAssayData(example_data)
+  new_tag <- check_parent_child_coherence(
+    mat, tag, parent_pos, 'ABC', 'CDE', 'CDE')
   
   yes <- new_tag[new_tag == 'yes']
   no <- new_tag[new_tag == 'no']
@@ -71,10 +69,11 @@ test_that("Filter cells filters cells", {
   example_data <- subset(tirosh_mel80_example, cells = 1:10)
   
   tag <- c(rep('ABC', 4), rep('not applicable', 4), rep(' +', 2))
-  example_data[['example_tag']] <- tag
+  names(tag) <- colnames(example_data)
+  mat <- GetAssayData(example_data)
   
-  filtered_data <- filter_cells(example_data, 'example_tag')
-  expect_equal(ncol(filtered_data), 4)
+  filtered_data <- filter_cells(mat, tag)
+  expect_equal(ncol(filtered_data$mat), 4)
 })
 
 test_that("A tag vector construction works", {
@@ -82,25 +81,26 @@ test_that("A tag vector construction works", {
   example_data <- subset(tirosh_mel80_example, cells = 1:10)
   
   tag <- c(rep('ABC', 4), rep('CDE', 4), rep('DEF', 2))
-  example_data[['example_tag']] <- tag
+  names(tag) <- colnames(example_data)
   
   bin_vect <- c(rep('yes', 4), rep('no', 6))
   names(bin_vect) <- colnames(example_data)
   
-  tag_vect <- construct_tag_vect(example_data, 'ABC', 'example_tag')
+  tag_vect <- construct_tag_vect(tag, 'ABC')
   expect_equal(tag_vect, bin_vect)
 })
 
 test_that("Process parent classifier works", {
   data("tirosh_mel80_example")
   example_data <- subset(tirosh_mel80_example, cells = 1:10)
+  mat <- GetAssayData(example_data)
   
   tag <- c(rep('ABC', 4), rep('CDE', 4), rep('DEF', 2))
-  example_data[['example_tag']] <- tag
+  names(tag) <- colnames(example_data)
   
-  return_val <- process_parent_classifier(example_data, 
-                                          parent_tag_slot = 'example_tag', 
-                                          'ABC', NULL, '.', seurat_assay = 'RNA', 
-                                          seurat_slot = 'data')
+  return_val <- process_parent_classifier(mat, 
+                                          parent_tag = tag, 
+                                          'ABC', NULL, '.')
+  
   expect_equal(sort(return_val$pos_parent), sort(colnames(example_data)[1:4]))
 })
