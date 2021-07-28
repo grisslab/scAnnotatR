@@ -456,7 +456,7 @@ simplify_prediction <- function(meta.data, full_pred, classifiers) {
       simplified[cell] <- colnames(p.prob)[which.max(p.prob)]
     }
   }
-  simplified <- gsub('_p', '', simplified)
+  simplified <- gsub('_p$', '', simplified)
   simplified <- gsub('_', ' ', simplified)
   
   # continue to deeper level: children
@@ -478,7 +478,7 @@ simplify_prediction <- function(meta.data, full_pred, classifiers) {
         } else simplified[cell] <- simplified[cell]
       }
     }
-    simplified <- gsub('_p', '', simplified)
+    simplified <- gsub('_p$', '', simplified)
     simplified <- gsub('_', ' ', simplified)
   }
   
