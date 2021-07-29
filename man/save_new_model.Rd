@@ -4,7 +4,7 @@
 \alias{save_new_model}
 \title{Save a model to the package}
 \usage{
-save_new_model(new_model, include.default = TRUE, path.to.models = tempdir())
+save_new_model(new_model, include.default = TRUE, path_to_models = tempdir())
 }
 \arguments{
 \item{new_model}{new model to be added into the classification tree}
@@ -18,7 +18,7 @@ both of them once. In addition, default pretrained models
 of the package cannot be changed or removed. 
 This can be done with the new trained model list.}
 
-\item{path.to.models}{path to the folder containing the list of new models.}
+\item{path_to_models}{path to the folder containing the list of new models.}
 }
 \value{
 no return value, but the model is now saved to database
@@ -38,7 +38,7 @@ marker_genes = selected_marker_genes_T, cell_type = "t cells")
 
 # save the trained classifier to system 
 # test classifier can be used before this step
-save_new_model(new_model = classifier_t, path.to.models = tempdir())
+save_new_model(new_model = classifier_t, path_to_models = tempdir())
 
 # verify if new model has been saved
 print(names(load(file.path(tempdir(), "new_models.rda"))))

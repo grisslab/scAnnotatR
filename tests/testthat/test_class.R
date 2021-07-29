@@ -2,7 +2,7 @@ context("scAnnotatR class functions")
 library(scAnnotatR)
 
 test_that("Set cell type changes cell type", {
-  data("default_models")
+  default_models <- load_models('default')
   classifier_B <- default_models[['B cells']]
   
   cell_type(classifier_B) <- "b cells"
@@ -10,7 +10,7 @@ test_that("Set cell type changes cell type", {
 })
 
 test_that("Set probability threshold changes probability threshold", {
-  data("default_models")
+  default_models <- load_models('default')
   classifier_B <- default_models[['B cells']]
   
   p_thres(classifier_B) <- 0.6
@@ -18,7 +18,7 @@ test_that("Set probability threshold changes probability threshold", {
 })
 
 test_that("Set classifier changes classifier and marker genes", {
-  data("default_models")
+  default_models <- load_models('default')
   classifier_B <- default_models[['B cells']]
   classifier_T <- default_models[['T cells']]
   

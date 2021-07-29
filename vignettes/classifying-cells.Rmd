@@ -64,7 +64,7 @@ library(scAnnotatR)
 The models are stored in the `default_models` object:
 
 ```{r}
-data("default_models")
+default_models <- load_models("default")
 names(default_models)
 ```
 

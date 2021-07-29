@@ -132,6 +132,79 @@ setMethod("train_classifier", c("train_obj" = "Seurat"),
   return(object)
 })
 
+#' @inherit train_classifier
+#' 
+#' @param sce_tag_slot string, name of annotation slot indicating 
+#' cell tag/label in the training object.
+#' For \code{\link{SingleCellExperiment}} object, default value is "ident".  
+#' Expected values are string (A-Z, a-z, 0-9, no special character accepted) 
+#' or binary/logical, 0/"no"/F/FALSE: not being new cell type, 
+#' 1/"yes"/T/TRUE: being new cell type.
+#' @param sce_parent_tag_slot string, name of a slot in cell meta data 
+#' indicating pre-assigned/predicted cell type. 
+#' Default field is "predicted_cell_type".
+#' This field would have been filled automatically 
+#' when user called classify_cells function. 
+#' The slot must contain only string values. 
+#' @param sce_assay name of assay to use in training object. 
+#' Default to 'logcounts' assay.
+#' 
+#' @import SingleCellExperiment
+#' @importFrom SummarizedExperiment assay
+#' 
+#' @rdname train_classifier
+setMethod("train_classifier", c("train_obj" = "SingleCellExperiment"), 
+          function(train_obj, cell_type, marker_genes, parent_cell = NA_character_,
+                   parent_classifier = NULL, path_to_models = "default", 
+                   zscore = TRUE, sce_tag_slot = "ident", 
+                   sce_parent_tag_slot = "predicted_cell_type", 
+                   sce_assay = 'logcounts', ...) {
+  # solve duplication of cell names
+  colnames(train_obj) <- make.unique(colnames(train_obj), sep = '_')
+  
+  # convert Seurat object to matrix
+  mat = SummarizedExperiment::assay(train_obj, sce_assay)
+  
+  tag = SummarizedExperiment::colData(train_obj)[, sce_tag_slot]
+  names(tag) <- colnames(train_obj)
+  
+  if (sce_parent_tag_slot %in% colnames(SummarizedExperiment::colData(train_obj))) {
+    parent_tag <- SummarizedExperiment::colData(train_obj)[, sce_parent_tag_slot]
+    names(parent_tag) <- colnames(train_obj)
+  } else parent_tag <- NULL
+  
+  object <- train_classifier_func(mat, tag, cell_type, marker_genes, 
+                                  parent_tag, parent_cell, parent_classifier,
+                                  path_to_models, zscore)
+  
+  return(object)
+})
+
+#' Train cell type from matrix
+#' 
+#' @description Train a classifier for a new cell type from expression matrix
+#' and tag 
+#' If cell type has a parent, only available for \code{\link{scAnnotatR}}
+#' object as parent cell classifying model.
+#' @param mat expression matrix of size n x m, n: genes, m: cells
+#' @param tag named list indicating cell label
+#' @param cell_type string indicating the name of the subtype
+#' This must exactly match cell tag/label if cell tag/label is a string.
+#' @param parent_tag named list indicating parent cell type
+#' @param marker_genes list of marker genes used for the new training model
+#' @param parent_cell string indicated the name of the parent cell type, 
+#' if parent cell type classifier has already been saved in model database.
+#' Adjust path_to_models for exact database.  
+#' @param parent_classifier classification model for the parent cell type
+#' @param path_to_models path to the folder containing the model database. 
+#' As default, the pretrained models in the package will be used. 
+#' If user has trained new models, indicate the folder containing the 
+#' new_models.rda file.
+#' @param zscore whether gene expression in train_obj is transformed to zscore
+#' 
+#' @return caret trained model
+#' 
+#' @rdname internal
 train_classifier_func <- function(mat, tag, cell_type, marker_genes, 
                                   parent_tag, parent_cell, parent_classifier, 
                                   path_to_models, zscore) {
@@ -139,7 +212,7 @@ train_classifier_func <- function(mat, tag, cell_type, marker_genes,
   processed_parent <- process_parent_classifier(
     mat, parent_tag, parent_cell, parent_classifier, path_to_models, zscore
   )
-
+  
   # check parent-child coherence
   if (!is.null(processed_parent$pos_parent)) {
     tag <- check_parent_child_coherence(
@@ -205,54 +278,6 @@ train_classifier_func <- function(mat, tag, cell_type, marker_genes,
   
   return(object)
 }
-
-#' @inherit train_classifier
-#' 
-#' @param sce_tag_slot string, name of annotation slot indicating 
-#' cell tag/label in the training object.
-#' For \code{\link{SingleCellExperiment}} object, default value is "ident".  
-#' Expected values are string (A-Z, a-z, 0-9, no special character accepted) 
-#' or binary/logical, 0/"no"/F/FALSE: not being new cell type, 
-#' 1/"yes"/T/TRUE: being new cell type.
-#' @param sce_parent_tag_slot string, name of a slot in cell meta data 
-#' indicating pre-assigned/predicted cell type. 
-#' Default field is "predicted_cell_type".
-#' This field would have been filled automatically 
-#' when user called classify_cells function. 
-#' The slot must contain only string values. 
-#' @param sce_assay name of assay to use in training object. 
-#' Default to 'logcounts' assay.
-#' 
-#' @import SingleCellExperiment
-#' @importFrom SummarizedExperiment assay
-#' 
-#' @rdname train_classifier
-setMethod("train_classifier", c("train_obj" = "SingleCellExperiment"), 
-          function(train_obj, cell_type, marker_genes, parent_cell = NA_character_,
-                   parent_classifier = NULL, path_to_models = "default", 
-                   zscore = TRUE, sce_tag_slot = "ident", 
-                   sce_parent_tag_slot = "predicted_cell_type", 
-                   sce_assay = 'logcounts', ...) {
-  # solve duplication of cell names
-  colnames(train_obj) <- make.unique(colnames(train_obj), sep = '_')
-  
-  # convert Seurat object to matrix
-  mat = SummarizedExperiment::assay(train_obj, sce_assay)
-  
-  tag = SummarizedExperiment::colData(train_obj)[, sce_tag_slot]
-  names(tag) <- colnames(train_obj)
-  
-  if (sce_parent_tag_slot %in% colnames(SummarizedExperiment::colData(train_obj))) {
-    parent_tag <- SummarizedExperiment::colData(train_obj)[, sce_parent_tag_slot]
-    names(parent_tag) <- colnames(train_obj)
-  } else parent_tag <- NULL
-  
-  object <- train_classifier_func(mat, tag, cell_type, marker_genes, 
-                                  parent_tag, parent_cell, parent_classifier,
-                                  path_to_models, zscore)
-  
-  return(object)
-})
 
 #' Testing process.
 #' 
@@ -363,6 +388,76 @@ setMethod("test_classifier", c("test_obj" = "Seurat",
   return(return_val)
 })
 
+#' @inherit test_classifier
+#' 
+#' @param sce_tag_slot string, name of annotation slot 
+#' indicating cell tag/label in the testing object.
+#' Strings indicating cell types are expected in this slot. 
+#' Default value is "ident".  
+#' Expected values are string (A-Z, a-z, 0-9, no special character accepted) 
+#' or binary/logical, 0/"no"/F/FALSE: not being new cell type, 
+#' 1/"yes"/T/TRUE: being new cell type.
+#' @param sce_parent_tag_slot string, name of tag slot in cell meta data
+#' indicating pre-assigned/predicted parent cell type. 
+#' Default is "predicted_cell_type".
+#' The slot must contain only string values. 
+#' @param sce_assay name of assay to use in \code{\link{SingleCellExperiment}}
+#' object, defaults to 'logcounts' assay.
+#'  
+#' @import SingleCellExperiment
+#' @importFrom SummarizedExperiment assay
+#' 
+#' @rdname test_classifier
+setMethod("test_classifier", c("test_obj" = "SingleCellExperiment", 
+                               "classifier" = "scAnnotatR"), 
+          function(test_obj, classifier, target_cell_type = NULL, 
+                   parent_classifier = NULL, path_to_models = "default", 
+                   zscore = TRUE, sce_tag_slot = "ident", 
+                   sce_parent_tag_slot = "predicted_cell_type", 
+                   sce_assay = 'logcounts', ...) {
+  # solve duplication of cell names
+  colnames(test_obj) <- make.unique(colnames(test_obj), sep = '_')
+  . <- fpr <- tpr <- NULL
+  
+  # convert SCE object to matrix
+  mat = SummarizedExperiment::assay(test_obj, sce_assay)
+  
+  tag = SummarizedExperiment::colData(test_obj)[, sce_tag_slot]
+  names(tag) <- colnames(test_obj)
+  
+  if (sce_parent_tag_slot %in% colnames(SummarizedExperiment::colData(test_obj))) {
+    parent_tag <- SummarizedExperiment::colData(test_obj)[, sce_parent_tag_slot]
+    names(parent_tag) <- colnames(test_obj)
+  } else parent_tag <- NULL
+  
+  return_val <- test_classifier_func(mat, tag, classifier, parent_tag,
+                                     target_cell_type, parent_classifier,
+                                     path_to_models, zscore)
+  
+  return(return_val)
+})
+
+#' Run testing process from matrix and tag
+#' 
+#' @description Testing process from matrix and tag 
+#' @param mat expression matrix of size n x m, n: genes, m: cells
+#' @param tag named list indicating cell label
+#' @param classifier classification model
+#' @param parent_tag named list indicating parent cell type
+#' @param target_cell_type vector indicating other cell types than cell labels 
+#' that can be considered as the main cell type in classifier, 
+#' for example, c("plasma cell", "b cell", "b cells", "activating b cell"). 
+#' Default as NULL.
+#' @param parent_classifier classification model for the parent cell type
+#' @param path_to_models path to the folder containing the model database. 
+#' As default, the pretrained models in the package will be used. 
+#' If user has trained new models, indicate the folder containing the 
+#' new_models.rda file.
+#' @param zscore whether gene expression in train_obj is transformed to zscore
+#' 
+#' @return model performance statistics
+#' 
+#' @rdname internal
 test_classifier_func <- function(mat, tag, classifier, parent_tag, 
                                  target_cell_type, parent_classifier,
                                  path_to_models, zscore) {
@@ -414,55 +509,6 @@ test_classifier_func <- function(mat, tag, classifier, parent_tag,
   return_val = test_performance(test_mat, classifier, test_tag)
   return(return_val)
 }
-
-#' @inherit test_classifier
-#' 
-#' @param sce_tag_slot string, name of annotation slot 
-#' indicating cell tag/label in the testing object.
-#' Strings indicating cell types are expected in this slot. 
-#' Default value is "ident".  
-#' Expected values are string (A-Z, a-z, 0-9, no special character accepted) 
-#' or binary/logical, 0/"no"/F/FALSE: not being new cell type, 
-#' 1/"yes"/T/TRUE: being new cell type.
-#' @param sce_parent_tag_slot string, name of tag slot in cell meta data
-#' indicating pre-assigned/predicted parent cell type. 
-#' Default is "predicted_cell_type".
-#' The slot must contain only string values. 
-#' @param sce_assay name of assay to use in \code{\link{SingleCellExperiment}}
-#' object, defaults to 'logcounts' assay.
-#'  
-#' @import SingleCellExperiment
-#' @importFrom SummarizedExperiment assay
-#' 
-#' @rdname test_classifier
-setMethod("test_classifier", c("test_obj" = "SingleCellExperiment", 
-                               "classifier" = "scAnnotatR"), 
-          function(test_obj, classifier, target_cell_type = NULL, 
-                   parent_classifier = NULL, path_to_models = "default", 
-                   zscore = TRUE, sce_tag_slot = "ident", 
-                   sce_parent_tag_slot = "predicted_cell_type", 
-                   sce_assay = 'logcounts', ...) {
-  # solve duplication of cell names
-  colnames(test_obj) <- make.unique(colnames(test_obj), sep = '_')
-  . <- fpr <- tpr <- NULL
-  
-  # convert SCE object to matrix
-  mat = SummarizedExperiment::assay(test_obj, sce_assay)
-  
-  tag = SummarizedExperiment::colData(test_obj)[, sce_tag_slot]
-  names(tag) <- colnames(test_obj)
-  
-  if (sce_parent_tag_slot %in% colnames(SummarizedExperiment::colData(test_obj))) {
-    parent_tag <- SummarizedExperiment::colData(test_obj)[, sce_parent_tag_slot]
-    names(parent_tag) <- colnames(test_obj)
-  } else parent_tag <- NULL
-  
-  return_val <- test_classifier_func(mat, tag, classifier, parent_tag,
-                                     target_cell_type, parent_classifier,
-                                     path_to_models, zscore)
-  
-  return(return_val)
-})
 
 #' Plot roc curve
 #' 

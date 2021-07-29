@@ -4,14 +4,14 @@
 \alias{delete_model}
 \title{Delete model/branch from package}
 \usage{
-delete_model(cell_type, path.to.models = tempdir())
+delete_model(cell_type, path_to_models = tempdir())
 }
 \arguments{
 \item{cell_type}{string indicating the cell type of which 
 the model will be removed from package
 Attention: deletion of a parent model will also delete all of child model.}
 
-\item{path.to.models}{path to the folder containing 
+\item{path_to_models}{path to the folder containing 
 the list of models in which the to-be-deleted model is.}
 }
 \value{
@@ -31,8 +31,8 @@ classifier_t <- train_classifier(train_obj = tirosh_mel80_example,
 marker_genes = selected_marker_genes_T, cell_type = "t cells")
 
 # save a classifier to system
-save_new_model(new_model = classifier_t, path.to.models = tempdir())
+save_new_model(new_model = classifier_t, path_to_models = tempdir())
 
 # delete classifier from system
-delete_model("t cells", path.to.models = tempdir())
+delete_model("t cells", path_to_models = tempdir())
 }

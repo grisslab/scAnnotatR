@@ -60,7 +60,7 @@ library(scAnnotatR)
 ```
 
 ```{r}
-data("default_models")
+default_models <- load_models('default')
 classifier_B <- default_models[['B cells']]
 classifier_B
 ```
@@ -171,7 +171,7 @@ parent classifier to the train method:
 for example: *parent_cell = 'B cells'*
   
   * Users can give name of a model among models available in users' database 
-AND the path to that database, for example: `parent_cell = 'B cells', path.to.models = '.'`
+AND the path to that database, for example: `parent_cell = 'B cells', path_to_models = '.'`
 
 Train the child classifier:
 ```{r}
@@ -230,15 +230,15 @@ names(default_models)
 
 In our package, the default models already include a model classifying plasma cells.
 Therefore, we will save this model to a new local database specified by the 
-*path.to.models* parameter. If you start with a fresh new local database, 
+*path_to_models* parameter. If you start with a fresh new local database, 
 there is no available parent classifier of plasma cells' classifier. Therefore,
 we have to save the parent classifier first, e.g. the classifier for B cells.
 
 ```{r}
 # no copy of pretrained models is performed
-save_new_model(new_model = classifier_B, path.to.models = tempdir(), 
+save_new_model(new_model = classifier_B, path_to_models = tempdir(), 
                include.default = FALSE) 
-save_new_model(new_model = classifier_plasma, path.to.models = tempdir(), 
+save_new_model(new_model = classifier_plasma, path_to_models = tempdir(), 
                include.default = FALSE) 
 ```
 

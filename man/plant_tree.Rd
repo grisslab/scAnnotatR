@@ -4,10 +4,10 @@
 \alias{plant_tree}
 \title{Plant tree from list of models}
 \usage{
-plant_tree(models.file.path = "default")
+plant_tree(path_to_models = "default")
 }
 \arguments{
-\item{models.file.path}{list of models. If not provided, 
+\item{path_to_models}{list of models. If not provided, 
 list of default pretrained models in the package will be used.}
 }
 \value{

@@ -233,7 +233,7 @@ New classification models can be stored using the `save_new_model` function:
 
 ```{r}
 # no copy of pretrained models is performed
-save_new_model(new_model = classifier_B, path.to.models = tempdir(),
+save_new_model(new_model = classifier_B, path_to_models = tempdir(),
                include.default = FALSE) 
 ```
 
@@ -241,7 +241,7 @@ Parameters:
 
   * **new_model**: The new model that should be added to the database in the
                    specified directory.
-  * **path.to.models**: The directory where the new models should be stored.
+  * **path_to_models**: The directory where the new models should be stored.
   * **include.default**: If set, the default models shipped with the package
                          are added to the database.
 
@@ -253,7 +253,7 @@ Models can be deleted from the model database using the `delete_model` function:
 
 ```{r}
 # delete the "B cells" model from the new database
-delete_model("B cells", path.to.models = tempdir())
+delete_model("B cells", path_to_models = tempdir())
 ```
 
 ## Session Info

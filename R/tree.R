@@ -9,7 +9,7 @@
 #' both of them once. In addition, default pretrained models
 #' of the package cannot be changed or removed. 
 #' This can be done with the new trained model list.
-#' @param path.to.models path to the folder containing the list of new models.
+#' @param path_to_models path to the folder containing the list of new models.
 #' 
 #' @return no return value, but the model is now saved to database
 #' 
@@ -27,7 +27,7 @@
 #' 
 #' # save the trained classifier to system 
 #' # test classifier can be used before this step
-#' save_new_model(new_model = classifier_t, path.to.models = tempdir())
+#' save_new_model(new_model = classifier_t, path_to_models = tempdir())
 #' 
 #' # verify if new model has been saved
 #' print(names(load(file.path(tempdir(), "new_models.rda"))))
@@ -35,20 +35,24 @@
 #' 
 #' @export
 save_new_model <- function(new_model, include.default = TRUE, 
-                    path.to.models = tempdir()) {
+                    path_to_models = tempdir()) {
   default_models <- NULL
+  data_env <- new.env(parent = emptyenv())
   
-  utils::data("default_models")
-  new_models.file.path = file.path(path.to.models, "new_models.rda")
+  new_models.file.path = file.path(path_to_models, "new_models.rda")
   
   if (file.exists(new_models.file.path)) {
-    load(new_models.file.path)
+    load(new_models.file.path, data_env)
+    new_models <- data_env[["new_models"]]
   } else {
     new_models = NULL
   }
   
   if (include.default == TRUE) {
     # default models not in new_models will be added to new_models
+    path_to_default_models <- download_data_file(TRUE)
+    load(path_to_default_models, envir = data_env)
+    default_models <- data_env[["default_models"]]
     to.be.added <- default_models[!names(default_models)%in%names(new_models)]
     new_models <- append(to.be.added, new_models)
   }
@@ -77,7 +81,7 @@ save_new_model <- function(new_model, include.default = TRUE,
 
 #' Plant tree from list of models
 #' 
-#' @param models.file.path list of models. If not provided, 
+#' @param path_to_models list of models. If not provided, 
 #' list of default pretrained models in the package will be used.
 #'  
 #' @return tree structure and plot of tree 
@@ -92,24 +96,12 @@ save_new_model <- function(new_model, include.default = TRUE,
 #' plant_tree()
 #' 
 #' @export
-plant_tree <- function(models.file.path = "default") { 
+plant_tree <- function(path_to_models = "default") { 
   data_env <- new.env(parent = emptyenv())
   
   root.name <- "cell types"
-  if (models.file.path == "default") {
-    utils::data("default_models", envir = data_env)
-    model_list <- data_env[['default_models']]
-  } else {
-    models_file_path <- file.path(models.file.path, "new_models.rda")
-    if (!file.exists(models_file_path)) {
-      stop("No file exists in the indicated models file path", 
-           call. = FALSE)
-    } else {
-      load(models_file_path, envir = data_env)
-      model_list <- data_env[['new_models']]
-    }
-  }
   
+  model_list <- load_models(path_to_models) 
   tree <- NULL
   
   if (!is.null(model_list)) {
@@ -146,7 +138,7 @@ plant_tree <- function(models.file.path = "default") {
 #' @param cell_type string indicating the cell type of which 
 #' the model will be removed from package
 #' Attention: deletion of a parent model will also delete all of child model.
-#' @param path.to.models path to the folder containing 
+#' @param path_to_models path to the folder containing 
 #' the list of models in which the to-be-deleted model is.
 #' 
 #' @return no return value, but the model is deleted from database
@@ -162,16 +154,19 @@ plant_tree <- function(models.file.path = "default") {
 #' marker_genes = selected_marker_genes_T, cell_type = "t cells")
 #' 
 #' # save a classifier to system
-#' save_new_model(new_model = classifier_t, path.to.models = tempdir())
+#' save_new_model(new_model = classifier_t, path_to_models = tempdir())
 #' 
 #' # delete classifier from system
-#' delete_model("t cells", path.to.models = tempdir())
+#' delete_model("t cells", path_to_models = tempdir())
 #' @export
-delete_model <- function(cell_type, path.to.models = tempdir()) {
+delete_model <- function(cell_type, path_to_models = tempdir()) {
   new_models <- NULL
   data_env <- new.env(parent = emptyenv())
   
-  new_models.file.path <- file.path(path.to.models, "new_models.rda")
+  if (path_to_models == 'default')
+    stop("Cannot delete default models.", call. = FALSE)
+  
+  new_models.file.path <- file.path(path_to_models, "new_models.rda")
   if (!file.exists(new_models.file.path)) {
     stop("No list of models available", call. = FALSE)
   } else {

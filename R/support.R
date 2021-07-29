@@ -107,14 +107,16 @@ transform_to_zscore <- function(mat) {
 #' @return list of classifiers
 #' 
 #' @importFrom utils data
-#' @rdname internal
+#' @rdname load_models
+#' @export
 load_models <- function(path_to_models) {
   # prevents R CMD check note
   model_list <- NULL
   data_env <- new.env(parent = emptyenv())
   
   if (path_to_models == "default") {
-    utils::data("default_models", envir = data_env)
+    models_path <- download_data_file(TRUE) # more function: if user want to save cache
+    load(models_path, envir = data_env)
     model_list <- data_env[["default_models"]]
   } else {
     models_path <- file.path(path_to_models, "new_models.rda")
@@ -609,3 +611,42 @@ classify_clust <- function(clusts, most_probable_cell_type) {
   converted_pred <- unlist(lapply(clusts, function(x) clust.pred[[x]]))
   return(converted_pred)
 }
+
+#' Create a BiocFileCache object
+#'
+#' @return BiocFileCache object 
+#' @import tools
+#' @import BiocFileCache
+#' 
+#' @rdname internal
+.get_cache <-
+  function()
+  {
+    cache <- tools::R_user_dir("scAnnotatR", which="cache")
+    BiocFileCache::BiocFileCache(cache)
+  }
+
+#' Download and store default models in cache
+#' @param verbose logical indicating downloading the file or not 
+#'
+#' @return path to the downloaded file in cache 
+#' @import BiocFileCache
+#' 
+#' @rdname internal
+download_data_file <-
+  function(verbose = FALSE)
+  {
+    fileURL <- "https://github.com/grisslab/scAnnotatR-models/blob/main/default_models.rda?raw=true"
+    
+    bfc <- .get_cache()
+    rid <- BiocFileCache::bfcquery(bfc, "default_models", "rname")$rid
+    if (!length(rid)) {
+      if (verbose)
+        message("Downloading default models..." )
+      rid <- names(BiocFileCache::bfcadd(bfc, "default_models", fileURL))
+    }
+    if (isFALSE(BiocFileCache::bfcneedsupdate(bfc, rid)))
+      BiocFileCache::bfcdownload(bfc, rid)
+    
+    BiocFileCache::bfcrpath(bfc, rids = rid)
+  }
