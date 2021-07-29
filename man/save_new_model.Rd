@@ -33,8 +33,9 @@ data("tirosh_mel80_example")
 # train classifier
 selected_marker_genes_T = c("CD4", "CD8A", "CD8B")
 set.seed(123)
-classifier_t <- train_classifier(train_obj = tirosh_mel80_example, 
-marker_genes = selected_marker_genes_T, cell_type = "t cells")
+classifier_t <- train_classifier(train_obj = tirosh_mel80_example,
+assay = 'RNA', slot = 'counts', marker_genes = selected_marker_genes_T, 
+cell_type = "t cells", tag_slot = 'active.ident')
 
 # save the trained classifier to system 
 # test classifier can be used before this step

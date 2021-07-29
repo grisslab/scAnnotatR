@@ -148,8 +148,8 @@ times for one model, users can use `set.seed`.
 ```{r}
 set.seed(123)
 classifier_B <- train_classifier(train_obj = train_set, cell_type = "B cells", 
-                          marker_genes = selected_marker_genes_B,
-                          sce_assay = 'counts', sce_tag_slot = 'B_cell')
+                                 marker_genes = selected_marker_genes_B,
+                                 assay = 'counts', tag_slot = 'B_cell')
 ```
 ```{r}
 classifier_B
@@ -169,8 +169,8 @@ The `test_classifier` model automatically tests a classifier's performance
 against another dataset. Here, we used the `test_set` created before:
 
 ```{r}
-classifier_B_test <- test_classifier(test_obj = test_set, classifier = classifier_B, 
-                              sce_assay = 'counts', sce_tag_slot = 'B_cell')
+classifier_B_test <- test_classifier(classifier = classifier_B, test_obj = test_set,  
+                                     assay = 'counts', tag_slot = 'B_cell')
 ```
 
 ### Interpreting test model result

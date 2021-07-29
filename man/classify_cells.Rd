@@ -107,14 +107,16 @@ selected_marker_genes_B = c("CD19", "MS4A1", "CD79A")
 
 # train the classifier
 set.seed(123)
-classifier_b <- train_classifier(train_obj = tirosh_mel80_example, 
-marker_genes = selected_marker_genes_B, cell_type = "B cells")
+classifier_b <- train_classifier(train_obj = tirosh_mel80_example,
+assay = 'RNA', slot = 'counts', marker_genes = selected_marker_genes_B, 
+cell_type = "b cells", tag_slot = 'active.ident')
 
 # do the same thing with other cell types, for example, T cells
 selected_marker_genes_T = c("CD4", "CD8A", "CD8B")
 set.seed(123)
-classifier_t <- train_classifier(train_obj = tirosh_mel80_example, 
-marker_genes = selected_marker_genes_T, cell_type = "T cells")
+classifier_t <- train_classifier(train_obj = tirosh_mel80_example,
+assay = 'RNA', slot = 'counts', marker_genes = selected_marker_genes_T, 
+cell_type = "T cells", tag_slot = 'active.ident')
 
 # create a list of classifiers
 classifier_ls <- list(classifier_b, classifier_t)

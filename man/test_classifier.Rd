@@ -2,51 +2,52 @@
 % Please edit documentation in R/classifier.R
 \name{test_classifier}
 \alias{test_classifier}
-\alias{test_classifier,Seurat,scAnnotatR-method}
-\alias{test_classifier,SingleCellExperiment,scAnnotatR-method}
+\alias{test_classifier,scAnnotatR-method}
 \title{Testing process.}
 \usage{
 test_classifier(
-  test_obj,
   classifier,
+  test_obj,
+  assay,
+  slot = NULL,
+  tag_slot,
   target_cell_type = NULL,
   parent_classifier = NULL,
+  parent_tag_slot = "predicted_cell_type",
   path_to_models = "default",
-  zscore = TRUE,
-  ...
+  zscore = TRUE
 )
 
-\S4method{test_classifier}{Seurat,scAnnotatR}(
-  test_obj,
+\S4method{test_classifier}{scAnnotatR}(
   classifier,
+  test_obj,
+  assay,
+  slot = NULL,
+  tag_slot,
   target_cell_type = NULL,
   parent_classifier = NULL,
+  parent_tag_slot = "predicted_cell_type",
   path_to_models = "default",
-  zscore = TRUE,
-  seurat_tag_slot = "active.ident",
-  seurat_parent_tag_slot = "predicted_cell_type",
-  seurat_assay = "RNA",
-  seurat_slot = "counts",
-  ...
-)
-
-\S4method{test_classifier}{SingleCellExperiment,scAnnotatR}(
-  test_obj,
-  classifier,
-  target_cell_type = NULL,
-  parent_classifier = NULL,
-  path_to_models = "default",
-  zscore = TRUE,
-  sce_tag_slot = "ident",
-  sce_parent_tag_slot = "predicted_cell_type",
-  sce_assay = "logcounts",
-  ...
+  zscore = TRUE
 )
 }
 \arguments{
-\item{test_obj}{xxobject that can be used for testing}
+\item{classifier}{scAnnotatR classification model}
 
-\item{classifier}{classification model}
+\item{test_obj}{object that can be used for testing}
+
+\item{assay}{name of assay to use in test_object}
+
+\item{slot}{type of expression data to use in test_object. 
+For Seurat object, some available types are: "counts", "data" and "scale.data".
+Ignore this if test_obj is \code{\link{SingleCellExperiment}} object.}
+
+\item{tag_slot}{string, name of annotation slot 
+indicating cell tag/label in the testing object.
+Strings indicating cell types are expected in this slot. 
+Expected values are string (A-Z, a-z, 0-9, no special character accepted) 
+or binary/logical, 0/"no"/F/FALSE: not being new cell type, 
+1/"yes"/T/TRUE: being new cell type.}
 
 \item{target_cell_type}{vector indicating other cell types than cell labels 
 that can be considered as the main cell type in classifier, 
@@ -56,51 +57,17 @@ Default as NULL.}
 \item{parent_classifier}{\code{\link{scAnnotatR}} object
 corresponding to classification model for the parent cell type}
 
+\item{parent_tag_slot}{string, name of tag slot in cell meta data
+indicating pre-assigned/predicted parent cell type. 
+Default field is "predicted_cell_type".
+The slot must contain only string values.}
+
 \item{path_to_models}{path to the folder containing the list of models. 
 As default, the pretrained models in the package will be used. 
 If user has trained new models, indicate the folder containing 
 the new_models.rda file.}
 
 \item{zscore}{boolean, whether gene expression is transformed to zscore}
-
-\item{...}{arguments passed to other methods}
-
-\item{seurat_tag_slot}{string, name of annotation slot 
-indicating cell tag/label in the testing object.
-Strings indicating cell types are expected in this slot. 
-For \code{\link{Seurat}} object, default value is "active.ident". 
-Expected values are string (A-Z, a-z, 0-9, no special character accepted) 
-or binary/logical, 0/"no"/F/FALSE: not being new cell type, 
-1/"yes"/T/TRUE: being new cell type.}
-
-\item{seurat_parent_tag_slot}{string, name of tag slot in cell meta data
-indicating pre-assigned/predicted parent cell type. 
-Default field is "predicted_cell_type".
-The slot must contain only string values.}
-
-\item{seurat_assay}{name of assay to use in 
-\code{\link{Seurat}} object, defaults to 'RNA' assay.}
-
-\item{seurat_slot}{type of expression data to use in 
-\code{\link{Seurat}} object. 
-Some available types are: "counts", "data" and "scale.data". 
-Default to "counts", which contains unnormalized data.}
-
-\item{sce_tag_slot}{string, name of annotation slot 
-indicating cell tag/label in the testing object.
-Strings indicating cell types are expected in this slot. 
-Default value is "ident".  
-Expected values are string (A-Z, a-z, 0-9, no special character accepted) 
-or binary/logical, 0/"no"/F/FALSE: not being new cell type, 
-1/"yes"/T/TRUE: being new cell type.}
-
-\item{sce_parent_tag_slot}{string, name of tag slot in cell meta data
-indicating pre-assigned/predicted parent cell type. 
-Default is "predicted_cell_type".
-The slot must contain only string values.}
-
-\item{sce_assay}{name of assay to use in \code{\link{SingleCellExperiment}}
-object, defaults to 'logcounts' assay.}
 }
 \value{
 result of testing process in form of a list, 
@@ -125,13 +92,15 @@ data("tirosh_mel80_example")
 # train the classifier
 selected_marker_genes_B = c("CD19", "MS4A1", "CD79A")
 set.seed(123)
-classifier_b <- train_classifier(train_obj = tirosh_mel80_example, 
-marker_genes = selected_marker_genes_B, cell_type = "B cells")
+classifier_b <- train_classifier(train_obj = tirosh_mel80_example,
+assay = 'RNA', slot = 'counts', marker_genes = selected_marker_genes_B, 
+cell_type = "b cells", tag_slot = 'active.ident')
 
 # test the classifier, target cell type can be in other formats or
 # alternative cell type that can be considered as the classified cell type 
-classifier_b_test <- test_classifier(test_obj = tirosh_mel80_example, 
-classifier = classifier_b, target_cell_type = c("B cell"))
+classifier_b_test <- test_classifier(classifier = classifier_b, 
+test_obj = tirosh_mel80_example, assay = 'RNA', slot = 'counts', 
+tag_slot = 'active.ident', target_cell_type = c("B cell"))
 classifier_b_test
 
 }

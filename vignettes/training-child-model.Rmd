@@ -178,7 +178,7 @@ Train the child classifier:
 set.seed(123)
 classifier_plasma <- train_classifier(train_obj = train_set, 
 marker_genes = selected_marker_genes_plasma, cell_type = "Plasma cells", 
-sce_assay = 'counts', sce_tag_slot = 'plasma', parent_classifier = classifier_B)
+assay = 'counts', tag_slot = 'plasma', parent_classifier = classifier_B)
 ```
 If the  cells classifier has not been loaded to the current working space, 
 an equivalent training process should be:
@@ -186,7 +186,7 @@ an equivalent training process should be:
 set.seed(123)
 classifier_plasma <- train_classifier(train_obj = train_set, 
 marker_genes = selected_marker_genes_plasma, cell_type = "Plasma cells", 
-sce_assay = 'counts', sce_tag_slot = 'plasma', parent_cell = 'B cells')
+assay = 'counts', tag_slot = 'plasma', parent_cell = 'B cells')
 ```
 ```{r}
 classifier_plasma
@@ -200,7 +200,7 @@ caret_model(classifier_plasma)
 The parent classifier must be also set in test method.
 ```{r}
 classifier_plasma_test <- test_classifier(test_obj = test_set, 
-classifier = classifier_plasma, sce_assay = 'counts', sce_tag_slot = 'plasma', 
+classifier = classifier_plasma, assay = 'counts', tag_slot = 'plasma', 
 parent_classifier = classifier_B)
 ```
 

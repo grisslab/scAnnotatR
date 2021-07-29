@@ -6,25 +6,39 @@
 #' 
 #' @param train_obj object that can be used for training the new model. 
 #' \code{\link{Seurat}} object or \code{\link{SingleCellExperiment}} object
-#' is expected.
+#' is supported.
 #' If the training model has parent, parent_tag_slot may have been indicated. 
 #' This field would have been filled out automatically 
 #' if user precedently run classify_cells function. 
 #' If no (predicted) cell type annotation provided, 
 #' the function can be run if 1- parent_cell or 2- parent_classifier is provided.
+#' @param assay name of assay to use in training object. 
+#' @param slot type of expression data to use in training object, omitted if 
+#' train_obj is \code{\link{SingleCellExperiment}} object.
 #' @param cell_type string indicating the name of the subtype
 #' This must exactly match cell tag/label if cell tag/label is a string.
 #' @param marker_genes list of marker genes used for the new training model
+#' @param tag_slot string, name of slot in cell meta data 
+#' indicating cell tag/label in the training object.
+#' Strings indicating cell types are expected in this slot.
+#' For \code{\link{Seurat}} object, default value is "active.ident".  
+#' Expected values are string (A-Z, a-z, 0-9, no special character accepted) 
+#' or binary/logical, 0/"no"/F/FALSE: not being new cell type, 
+#' 1/"yes"/T/TRUE: being new cell type.
 #' @param parent_cell string indicated the name of the parent cell type, 
 #' if parent cell type classifier has already been saved in model database.
 #' Adjust path_to_models for exact database.  
+#' @param parent_tag_slot string, name of a slot in cell meta data 
+#' indicating assigned/predicted cell type. Default is "predicted_cell_type". 
+#' This slot would have been filled automatically 
+#' if user have called classify_cells function.
+#' The slot must contain only string values. 
 #' @param parent_classifier classification model for the parent cell type
 #' @param path_to_models path to the folder containing the model database. 
 #' As default, the pretrained models in the package will be used. 
 #' If user has trained new models, indicate the folder containing the 
 #' new_models.rda file.
 #' @param zscore whether gene expression in train_obj is transformed to zscore
-#' @param ... arguments passed to other methods
 #' 
 #' @return \code{\link{scAnnotatR}} object
 #'
@@ -34,34 +48,6 @@
 #' Subtypes used in training model for parent cell types must be indicated
 #' as parent cell type. For example, when training for B cells, 
 #' plasma cells must be annotated as B cells in order to be used.
-#' 
-#' @export
-setGeneric("train_classifier", 
-           function(train_obj, cell_type, marker_genes, 
-                    parent_cell = NA_character_, 
-                    parent_classifier = NULL, path_to_models = "default", 
-                    zscore = TRUE, ...) 
-             standardGeneric("train_classifier"))
-
-#' @inherit train_classifier
-#' 
-#' @param seurat_tag_slot string, name of slot in cell meta data 
-#' indicating cell tag/label in the training object.
-#' Strings indicating cell types are expected in this slot.
-#' For \code{\link{Seurat}} object, default value is "active.ident".  
-#' Expected values are string (A-Z, a-z, 0-9, no special character accepted) 
-#' or binary/logical, 0/"no"/F/FALSE: not being new cell type, 
-#' 1/"yes"/T/TRUE: being new cell type.
-#' @param seurat_parent_tag_slot string, name of a slot in cell meta data 
-#' indicating assigned/predicted cell type. Default is "predicted_cell_type". 
-#' This slot would have been filled automatically 
-#' if user have called classify_cells function.
-#' The slot must contain only string values. 
-#' @param seurat_assay name of assay to use in training object. 
-#' Default to 'RNA' assay.
-#' @param seurat_slot type of expression data to use in training object. 
-#' For \code{\link{Seurat}} object, available types are: "counts", "data" 
-#' and "scale.data". Default to "counts", which contains unnormalized data.
 #' 
 #' @examples
 #' # load small example dataset
@@ -76,8 +62,9 @@ setGeneric("train_classifier",
 #' # train the classifier, the "cell_type" argument must match 
 #' # the cell labels in the data, except upper/lower case
 #' set.seed(123)
-#' classifier_b <- train_classifier(train_obj = tirosh_mel80_example, 
-#' marker_genes = selected_marker_genes_B, cell_type = "b cells")
+#' classifier_b <- train_classifier(train_obj = tirosh_mel80_example,
+#' assay = 'RNA', slot = 'counts', marker_genes = selected_marker_genes_B, 
+#' cell_type = "b cells", tag_slot = 'active.ident')
 #' 
 #' # classify cell types using B cell classifier, 
 #' # a test classifier process may be used before applying the classifier 
@@ -96,18 +83,78 @@ setGeneric("train_classifier",
 #' # for the training process.
 #' set.seed(123)
 #' plasma_classifier <- train_classifier(train_obj = tirosh_mel80_example, 
-#' cell_type = "Plasma cell", marker_genes = p_marker_genes, 
-#' parent_classifier = classifier_b, seurat_tag_slot = 'plasma_cell_tag')
+#' assay = 'RNA', slot = 'counts', cell_type = 'Plasma cell', 
+#' marker_genes = p_marker_genes, tag_slot = 'plasma_cell_tag',
+#' parent_classifier = classifier_b)
 #' 
-#' @importFrom Seurat GetAssayData
+#' @export
+train_classifier <- function(train_obj, assay, slot = NULL,
+                             cell_type, marker_genes, tag_slot, 
+                             parent_cell = NA_character_, 
+                             parent_tag_slot = 'predicted_cell_type',
+                             parent_classifier = NULL, path_to_models = "default", 
+                             zscore = TRUE) {
+  if (is(train_obj, 'Seurat')) {
+    object <- 
+      train_classifier_seurat(train_obj, cell_type, marker_genes, 
+                              parent_cell, parent_classifier, path_to_models, 
+                              zscore, tag_slot, parent_tag_slot, assay, slot)
+  } else if (is(train_obj, 'SingleCellExperiment')) {
+    object <- 
+      train_classifier_sce(train_obj, cell_type, marker_genes, 
+                              parent_cell, parent_classifier, path_to_models, 
+                              zscore, tag_slot, parent_tag_slot, assay)
+  } else {
+    stop('Training object of not supported class', call. = FALSE)
+  }
+  
+  return(object)
+}
+
+#' Train cell type classifier, when train_obj is Seurat object
 #' 
-#' @rdname train_classifier
-setMethod("train_classifier", c("train_obj" = "Seurat"), 
-          function(train_obj, cell_type, marker_genes, parent_cell = NA_character_,
-                   parent_classifier = NULL, path_to_models = "default", 
-                   zscore = TRUE, seurat_tag_slot = "active.ident", 
-                   seurat_parent_tag_slot = "predicted_cell_type", 
-                   seurat_assay = 'RNA', seurat_slot = 'counts', ...) {
+#' @description Train a classifier for a new cell type 
+#' If cell type has a parent, only available for \code{\link{scAnnotatR}}
+#' object as parent cell classifying model.
+#' 
+#' @param train_obj Seurat object 
+#' @param seurat_assay name of assay to use in training object. 
+#' @param seurat_slot type of expression data to use in training object
+#' @param cell_type string indicating the name of the subtype
+#' This must exactly match cell tag/label if cell tag/label is a string.
+#' @param marker_genes list of marker genes used for the new training model
+#' @param seurat_tag_slot string, name of slot in cell meta data 
+#' indicating cell tag/label in the training object.
+#' Strings indicating cell types are expected in this slot.
+#' For \code{\link{Seurat}} object, default value is "active.ident".  
+#' Expected values are string (A-Z, a-z, 0-9, no special character accepted) 
+#' or binary/logical, 0/"no"/F/FALSE: not being new cell type, 
+#' 1/"yes"/T/TRUE: being new cell type.
+#' @param parent_cell string indicated the name of the parent cell type, 
+#' if parent cell type classifier has already been saved in model database.
+#' Adjust path_to_models for exact database.  
+#' @param seurat_parent_tag_slot string, name of a slot in cell meta data 
+#' indicating assigned/predicted cell type. Default is "predicted_cell_type". 
+#' This slot would have been filled automatically 
+#' if user have called classify_cells function.
+#' The slot must contain only string values. 
+#' @param parent_classifier classification model for the parent cell type
+#' @param path_to_models path to the folder containing the model database. 
+#' As default, the pretrained models in the package will be used. 
+#' If user has trained new models, indicate the folder containing the 
+#' new_models.rda file.
+#' @param zscore whether gene expression in train_obj is transformed to zscore
+#' 
+#' @return \code{\link{scAnnotatR}} object
+#' 
+#' @importFrom Seurat GetAssayData Idents
+#' 
+#' @rdname internal
+train_classifier_seurat <- 
+  function(train_obj, cell_type, marker_genes, parent_cell = NA_character_,
+           parent_classifier = NULL, path_to_models = "default", zscore = TRUE,
+           seurat_tag_slot, seurat_parent_tag_slot = 'predicted_cell_type', 
+           seurat_assay, seurat_slot) {
   # convert Seurat object to matrix
   mat = Seurat::GetAssayData(object = train_obj, 
                              assay = seurat_assay, slot = seurat_slot)
@@ -126,43 +173,59 @@ setMethod("train_classifier", c("train_obj" = "Seurat"),
     names(parent_tag) <- colnames(train_obj)
   } else parent_tag <- NULL
   
-  object <- train_classifier_func(mat, tag, cell_type, marker_genes,
+  object <- train_classifier_from_mat(mat, tag, cell_type, marker_genes,
                                   parent_tag, parent_cell, parent_classifier,
                                   path_to_models, zscore)
   return(object)
-})
+}
 
-#' @inherit train_classifier
+#' Train cell type classifier, when train_obj is SCE object
 #' 
-#' @param sce_tag_slot string, name of annotation slot indicating 
-#' cell tag/label in the training object.
-#' For \code{\link{SingleCellExperiment}} object, default value is "ident".  
+#' @description Train a classifier for a new cell type 
+#' If cell type has a parent, only available for \code{\link{scAnnotatR}}
+#' object as parent cell classifying model.
+#' 
+#' @param train_obj SCE object 
+#' @param sce_assay name of assay to use in training object. 
+#' @param cell_type string indicating the name of the subtype
+#' This must exactly match cell tag/label if cell tag/label is a string.
+#' @param marker_genes list of marker genes used for the new training model
+#' @param sce_tag_slot string, name of slot in cell meta data 
+#' indicating cell tag/label in the training object.
+#' Strings indicating cell types are expected in this slot.
+#' For \code{\link{Seurat}} object, default value is "active.ident".  
 #' Expected values are string (A-Z, a-z, 0-9, no special character accepted) 
 #' or binary/logical, 0/"no"/F/FALSE: not being new cell type, 
 #' 1/"yes"/T/TRUE: being new cell type.
+#' @param parent_cell string indicated the name of the parent cell type, 
+#' if parent cell type classifier has already been saved in model database.
+#' Adjust path_to_models for exact database.  
 #' @param sce_parent_tag_slot string, name of a slot in cell meta data 
-#' indicating pre-assigned/predicted cell type. 
-#' Default field is "predicted_cell_type".
-#' This field would have been filled automatically 
-#' when user called classify_cells function. 
+#' indicating assigned/predicted cell type. Default is "predicted_cell_type". 
+#' This slot would have been filled automatically 
+#' if user have called classify_cells function.
 #' The slot must contain only string values. 
-#' @param sce_assay name of assay to use in training object. 
-#' Default to 'logcounts' assay.
+#' @param parent_classifier classification model for the parent cell type
+#' @param path_to_models path to the folder containing the model database. 
+#' As default, the pretrained models in the package will be used. 
+#' If user has trained new models, indicate the folder containing the 
+#' new_models.rda file.
+#' @param zscore whether gene expression in train_obj is transformed to zscore
 #' 
+#' @return \code{\link{scAnnotatR}} object
+#'  
 #' @import SingleCellExperiment
 #' @importFrom SummarizedExperiment assay
 #' 
-#' @rdname train_classifier
-setMethod("train_classifier", c("train_obj" = "SingleCellExperiment"), 
-          function(train_obj, cell_type, marker_genes, parent_cell = NA_character_,
-                   parent_classifier = NULL, path_to_models = "default", 
-                   zscore = TRUE, sce_tag_slot = "ident", 
-                   sce_parent_tag_slot = "predicted_cell_type", 
-                   sce_assay = 'logcounts', ...) {
+#' @rdname internal
+train_classifier_sce <- 
+  function(train_obj, cell_type, marker_genes, parent_cell = NA_character_,
+           parent_classifier = NULL, path_to_models = "default", zscore = TRUE, 
+           sce_tag_slot, sce_parent_tag_slot = "predicted_cell_type", sce_assay) {
   # solve duplication of cell names
   colnames(train_obj) <- make.unique(colnames(train_obj), sep = '_')
   
-  # convert Seurat object to matrix
+  # convert SCE object to matrix
   mat = SummarizedExperiment::assay(train_obj, sce_assay)
   
   tag = SummarizedExperiment::colData(train_obj)[, sce_tag_slot]
@@ -173,12 +236,12 @@ setMethod("train_classifier", c("train_obj" = "SingleCellExperiment"),
     names(parent_tag) <- colnames(train_obj)
   } else parent_tag <- NULL
   
-  object <- train_classifier_func(mat, tag, cell_type, marker_genes, 
+  object <- train_classifier_from_mat(mat, tag, cell_type, marker_genes, 
                                   parent_tag, parent_cell, parent_classifier,
                                   path_to_models, zscore)
   
   return(object)
-})
+}
 
 #' Train cell type from matrix
 #' 
@@ -205,7 +268,7 @@ setMethod("train_classifier", c("train_obj" = "SingleCellExperiment"),
 #' @return caret trained model
 #' 
 #' @rdname internal
-train_classifier_func <- function(mat, tag, cell_type, marker_genes, 
+train_classifier_from_mat <- function(mat, tag, cell_type, marker_genes, 
                                   parent_tag, parent_cell, parent_classifier, 
                                   path_to_models, zscore) {
   #--- part of parent cell type
@@ -283,21 +346,34 @@ train_classifier_func <- function(mat, tag, cell_type, marker_genes,
 #' 
 #' @description Testing process. 
 #' 
-#' @param test_obj xxobject that can be used for testing
-#' @param classifier classification model
+#' @param test_obj object that can be used for testing
+#' @param assay name of assay to use in test_object
+#' @param slot type of expression data to use in test_object. 
+#' For Seurat object, some available types are: "counts", "data" and "scale.data".
+#' Ignore this if test_obj is \code{\link{SingleCellExperiment}} object.
+#' @param classifier scAnnotatR classification model
+#' @param tag_slot string, name of annotation slot 
+#' indicating cell tag/label in the testing object.
+#' Strings indicating cell types are expected in this slot. 
+#' Expected values are string (A-Z, a-z, 0-9, no special character accepted) 
+#' or binary/logical, 0/"no"/F/FALSE: not being new cell type, 
+#' 1/"yes"/T/TRUE: being new cell type.
 #' @param target_cell_type vector indicating other cell types than cell labels 
 #' that can be considered as the main cell type in classifier, 
 #' for example, c("plasma cell", "b cell", "b cells", "activating b cell"). 
 #' Default as NULL.
 #' @param parent_classifier \code{\link{scAnnotatR}} object
 #' corresponding to classification model for the parent cell type
+#' @param parent_tag_slot string, name of tag slot in cell meta data
+#' indicating pre-assigned/predicted parent cell type. 
+#' Default field is "predicted_cell_type".
+#' The slot must contain only string values. 
 #' @param path_to_models path to the folder containing the list of models. 
 #' As default, the pretrained models in the package will be used. 
 #' If user has trained new models, indicate the folder containing 
 #' the new_models.rda file.
 #' @param zscore boolean, whether gene expression is transformed to zscore
-#' @param ... arguments passed to other methods
-#'
+#' 
 #' @return result of testing process in form of a list, 
 #' including predicted values, prediction accuracy at a probability threshold, 
 #' and roc curve information.
@@ -309,34 +385,6 @@ train_classifier_func <- function(mat, tag, cell_type, marker_genes,
 #' For example, when testing for B cells, plasma cells can be annotated as 
 #' B cells, or target_cell_type is set c("plasma cells").
 #' 
-#' @export
-setGeneric("test_classifier", function(test_obj, classifier, 
-                                       target_cell_type = NULL, 
-                                       parent_classifier = NULL, 
-                                       path_to_models = "default", 
-                                       zscore = TRUE, ...) 
-  standardGeneric("test_classifier"))
-
-#' @inherit test_classifier
-#' 
-#' @param seurat_tag_slot string, name of annotation slot 
-#' indicating cell tag/label in the testing object.
-#' Strings indicating cell types are expected in this slot. 
-#' For \code{\link{Seurat}} object, default value is "active.ident". 
-#' Expected values are string (A-Z, a-z, 0-9, no special character accepted) 
-#' or binary/logical, 0/"no"/F/FALSE: not being new cell type, 
-#' 1/"yes"/T/TRUE: being new cell type.
-#' @param seurat_parent_tag_slot string, name of tag slot in cell meta data
-#' indicating pre-assigned/predicted parent cell type. 
-#' Default field is "predicted_cell_type".
-#' The slot must contain only string values. 
-#' @param seurat_assay name of assay to use in 
-#' \code{\link{Seurat}} object, defaults to 'RNA' assay.
-#' @param seurat_slot type of expression data to use in 
-#' \code{\link{Seurat}} object. 
-#' Some available types are: "counts", "data" and "scale.data". 
-#' Default to "counts", which contains unnormalized data.
-#'  
 #' @examples
 #' # load small example dataset
 #' data("tirosh_mel80_example")
@@ -344,25 +392,92 @@ setGeneric("test_classifier", function(test_obj, classifier,
 #' # train the classifier
 #' selected_marker_genes_B = c("CD19", "MS4A1", "CD79A")
 #' set.seed(123)
-#' classifier_b <- train_classifier(train_obj = tirosh_mel80_example, 
-#' marker_genes = selected_marker_genes_B, cell_type = "B cells")
+#' classifier_b <- train_classifier(train_obj = tirosh_mel80_example,
+#' assay = 'RNA', slot = 'counts', marker_genes = selected_marker_genes_B, 
+#' cell_type = "b cells", tag_slot = 'active.ident')
 #' 
 #' # test the classifier, target cell type can be in other formats or
 #' # alternative cell type that can be considered as the classified cell type 
-#' classifier_b_test <- test_classifier(test_obj = tirosh_mel80_example, 
-#' classifier = classifier_b, target_cell_type = c("B cell"))
+#' classifier_b_test <- test_classifier(classifier = classifier_b, 
+#' test_obj = tirosh_mel80_example, assay = 'RNA', slot = 'counts', 
+#' tag_slot = 'active.ident', target_cell_type = c("B cell"))
 #' classifier_b_test
+#' 
+#' @export
+setGeneric("test_classifier", 
+           function(classifier, test_obj, assay, slot = NULL, tag_slot,
+                    target_cell_type = NULL, parent_classifier = NULL,
+                    parent_tag_slot = 'predicted_cell_type', 
+                    path_to_models = "default", zscore = TRUE) 
+  standardGeneric("test_classifier"))
+
+#' @inherit test_classifier
+#' 
+#' @rdname test_classifier
+setMethod('test_classifier', c('classifier' = 'scAnnotatR'), 
+          function(classifier, test_obj, assay, slot = NULL, tag_slot,
+                   target_cell_type = NULL, parent_classifier = NULL,
+                   parent_tag_slot = 'predicted_cell_type', 
+                   path_to_models = "default", zscore = TRUE) {
+  if (is(test_obj, 'Seurat')) {
+    return_val <- 
+      test_classifier_seurat(test_obj, classifier, target_cell_type, 
+                             parent_classifier, path_to_models, zscore, 
+                             tag_slot, parent_tag_slot, assay, slot)
+  } else if (is(test_obj, 'SingleCellExperiment')) {
+    return_val <- 
+      test_classifier_sce(test_obj, classifier, target_cell_type, 
+                          parent_classifier, path_to_models, zscore, 
+                          tag_slot, parent_tag_slot, assay)
+  } else {
+    stop('Testing object of not supported class', call. = FALSE)
+  }
+  return(return_val)
+})
+
+#' Testing process for Seurat object
+#' 
+#' @description Testing process when test object is of type Seurat
+#' 
+#' @param test_obj Seurat object used for testing
+#' @param seurat_assay name of assay to use in test_object
+#' @param seurat_slot type of expression data to use in test_object. 
+#' For Seurat object, some available types are: "counts", "data" and "scale.data".
+#' @param classifier scAnnotatR classification model
+#' @param seurat_tag_slot string, name of annotation slot 
+#' indicating cell tag/label in the testing object.
+#' Strings indicating cell types are expected in this slot. 
+#' Expected values are string (A-Z, a-z, 0-9, no special character accepted) 
+#' or binary/logical, 0/"no"/F/FALSE: not being new cell type, 
+#' 1/"yes"/T/TRUE: being new cell type.
+#' @param target_cell_type vector indicating other cell types than cell labels 
+#' that can be considered as the main cell type in classifier, 
+#' for example, c("plasma cell", "b cell", "b cells", "activating b cell"). 
+#' Default as NULL.
+#' @param parent_classifier \code{\link{scAnnotatR}} object
+#' corresponding to classification model for the parent cell type
+#' @param seurat_parent_tag_slot string, name of tag slot in cell meta data
+#' indicating pre-assigned/predicted parent cell type. 
+#' Default field is "predicted_cell_type".
+#' The slot must contain only string values. 
+#' @param path_to_models path to the folder containing the list of models. 
+#' As default, the pretrained models in the package will be used. 
+#' If user has trained new models, indicate the folder containing 
+#' the new_models.rda file.
+#' @param zscore boolean, whether gene expression is transformed to zscore
+#' 
+#' @return result of testing process in form of a list, 
+#' including predicted values, prediction accuracy at a probability threshold, 
+#' and roc curve information.
 #' 
 #' @importFrom Seurat GetAssayData
 #'
-#' @rdname test_classifier
-setMethod("test_classifier", c("test_obj" = "Seurat", 
-                               "classifier" = "scAnnotatR"), 
-          function(test_obj, classifier, target_cell_type = NULL, 
-                   parent_classifier = NULL, path_to_models = "default", 
-                   zscore = TRUE, seurat_tag_slot = "active.ident", 
-                   seurat_parent_tag_slot = "predicted_cell_type", 
-                   seurat_assay = 'RNA', seurat_slot = 'counts', ...) {
+#' @rdname internal
+test_classifier_seurat <- 
+  function(test_obj, classifier, target_cell_type = NULL, 
+           parent_classifier = NULL, path_to_models = "default", zscore = TRUE, 
+           seurat_tag_slot, seurat_parent_tag_slot = "predicted_cell_type", 
+           seurat_assay, seurat_slot) {
   . <- fpr <- tpr <- NULL
   # convert Seurat object to matrix
   mat = Seurat::GetAssayData(
@@ -382,39 +497,53 @@ setMethod("test_classifier", c("test_obj" = "Seurat",
     names(parent_tag) <- colnames(test_obj)
   } else parent_tag <- NULL
   
-  return_val <- test_classifier_func(mat, tag, classifier, parent_tag,
+  return_val <- test_classifier_from_mat(mat, tag, classifier, parent_tag,
                                      target_cell_type, parent_classifier,
                                      path_to_models, zscore)
   return(return_val)
-})
+}
 
-#' @inherit test_classifier
+#' Testing process for SCE object
 #' 
+#' @description Testing process when test object is of type SCE
+#' 
+#' @param test_obj SCE object used for testing
+#' @param sce_assay name of assay to use in test_object
+#' @param classifier scAnnotatR classification model
 #' @param sce_tag_slot string, name of annotation slot 
 #' indicating cell tag/label in the testing object.
 #' Strings indicating cell types are expected in this slot. 
-#' Default value is "ident".  
 #' Expected values are string (A-Z, a-z, 0-9, no special character accepted) 
 #' or binary/logical, 0/"no"/F/FALSE: not being new cell type, 
 #' 1/"yes"/T/TRUE: being new cell type.
+#' @param target_cell_type vector indicating other cell types than cell labels 
+#' that can be considered as the main cell type in classifier, 
+#' for example, c("plasma cell", "b cell", "b cells", "activating b cell"). 
+#' Default as NULL.
+#' @param parent_classifier \code{\link{scAnnotatR}} object
+#' corresponding to classification model for the parent cell type
 #' @param sce_parent_tag_slot string, name of tag slot in cell meta data
 #' indicating pre-assigned/predicted parent cell type. 
-#' Default is "predicted_cell_type".
+#' Default field is "predicted_cell_type".
 #' The slot must contain only string values. 
-#' @param sce_assay name of assay to use in \code{\link{SingleCellExperiment}}
-#' object, defaults to 'logcounts' assay.
-#'  
+#' @param path_to_models path to the folder containing the list of models. 
+#' As default, the pretrained models in the package will be used. 
+#' If user has trained new models, indicate the folder containing 
+#' the new_models.rda file.
+#' @param zscore boolean, whether gene expression is transformed to zscore
+#' 
+#' @return result of testing process in form of a list, 
+#' including predicted values, prediction accuracy at a probability threshold, 
+#' and roc curve information.
+#' 
 #' @import SingleCellExperiment
 #' @importFrom SummarizedExperiment assay
 #' 
-#' @rdname test_classifier
-setMethod("test_classifier", c("test_obj" = "SingleCellExperiment", 
-                               "classifier" = "scAnnotatR"), 
-          function(test_obj, classifier, target_cell_type = NULL, 
-                   parent_classifier = NULL, path_to_models = "default", 
-                   zscore = TRUE, sce_tag_slot = "ident", 
-                   sce_parent_tag_slot = "predicted_cell_type", 
-                   sce_assay = 'logcounts', ...) {
+#' @rdname internal
+test_classifier_sce <- 
+  function(test_obj, classifier, target_cell_type = NULL, 
+           parent_classifier = NULL, path_to_models = "default", zscore = TRUE, 
+           sce_tag_slot, sce_parent_tag_slot = "predicted_cell_type", sce_assay) {
   # solve duplication of cell names
   colnames(test_obj) <- make.unique(colnames(test_obj), sep = '_')
   . <- fpr <- tpr <- NULL
@@ -430,12 +559,12 @@ setMethod("test_classifier", c("test_obj" = "SingleCellExperiment",
     names(parent_tag) <- colnames(test_obj)
   } else parent_tag <- NULL
   
-  return_val <- test_classifier_func(mat, tag, classifier, parent_tag,
+  return_val <- test_classifier_from_mat(mat, tag, classifier, parent_tag,
                                      target_cell_type, parent_classifier,
                                      path_to_models, zscore)
   
   return(return_val)
-})
+}
 
 #' Run testing process from matrix and tag
 #' 
@@ -458,7 +587,7 @@ setMethod("test_classifier", c("test_obj" = "SingleCellExperiment",
 #' @return model performance statistics
 #' 
 #' @rdname internal
-test_classifier_func <- function(mat, tag, classifier, parent_tag, 
+test_classifier_from_mat <- function(mat, tag, classifier, parent_tag, 
                                  target_cell_type, parent_classifier,
                                  path_to_models, zscore) {
   # target_cell_type check
@@ -522,11 +651,13 @@ test_classifier_func <- function(mat, tag, classifier, parent_tag,
 #' # train a classifier, for ex: B cell
 #' selected_marker_genes_B = c("CD19", "MS4A1", "CD79A")
 #' set.seed(123)
-#' classifier_b <- train_classifier(train_obj = tirosh_mel80_example, 
-#' marker_genes = selected_marker_genes_B, cell_type = "B cells")
+#' classifier_b <- train_classifier(train_obj = tirosh_mel80_example,
+#' assay = 'RNA', slot = 'counts', marker_genes = selected_marker_genes_B, 
+#' cell_type = "b cells", tag_slot = 'active.ident')
 #' 
-#' classifier_b_test <- test_classifier(test_obj = tirosh_mel80_example, 
-#' classifier = classifier_b)
+#' classifier_b_test <- test_classifier(classifier = classifier_b, 
+#' test_obj = tirosh_mel80_example, assay = 'RNA', slot = 'counts', 
+#' tag_slot = 'active.ident', target_cell_type = c("B cell"))
 #' 
 #' # run plot curve on the test result
 #' roc_curve <- plot_roc_curve(test_result = classifier_b_test)
@@ -608,14 +739,16 @@ setGeneric("classify_cells", function(classify_obj, classifiers = NULL,
 #' 
 #' # train the classifier
 #' set.seed(123)
-#' classifier_b <- train_classifier(train_obj = tirosh_mel80_example, 
-#' marker_genes = selected_marker_genes_B, cell_type = "B cells")
+#' classifier_b <- train_classifier(train_obj = tirosh_mel80_example,
+#' assay = 'RNA', slot = 'counts', marker_genes = selected_marker_genes_B, 
+#' cell_type = "b cells", tag_slot = 'active.ident')
 #' 
 #' # do the same thing with other cell types, for example, T cells
 #' selected_marker_genes_T = c("CD4", "CD8A", "CD8B")
 #' set.seed(123)
-#' classifier_t <- train_classifier(train_obj = tirosh_mel80_example, 
-#' marker_genes = selected_marker_genes_T, cell_type = "T cells")
+#' classifier_t <- train_classifier(train_obj = tirosh_mel80_example,
+#' assay = 'RNA', slot = 'counts', marker_genes = selected_marker_genes_T, 
+#' cell_type = "T cells", tag_slot = 'active.ident')
 #' 
 #' # create a list of classifiers
 #' classifier_ls <- list(classifier_b, classifier_t)

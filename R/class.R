@@ -23,9 +23,9 @@ setOldClass("train")
 #' # train a classifier, for ex: B cell
 #' selected_marker_genes_B = c("CD19", "MS4A1", "CD79A")
 #' set.seed(123)
-#' classifier_b <- train_classifier(train_obj = tirosh_mel80_example, 
-#'                           marker_genes = selected_marker_genes_B, 
-#'                           cell_type = "B cells")
+#' classifier_b <- train_classifier(train_obj = tirosh_mel80_example,
+#' assay = 'RNA', slot = 'counts', marker_genes = selected_marker_genes_B, 
+#' cell_type = "B cells", tag_slot = 'active.ident')
 #'
 #' classifier_b
 #' @export
@@ -219,8 +219,9 @@ setValidity("scAnnotatR", checkObjectValidity)
 #' data("tirosh_mel80_example")
 #' selected_marker_genes_B = c("CD19", "MS4A1", "CD79A")
 #' set.seed(123)
-#' classifier_b <- train_classifier(train_obj = tirosh_mel80_example, 
-#' marker_genes = selected_marker_genes_B, cell_type = "B cells")
+#' classifier_b <- train_classifier(train_obj = tirosh_mel80_example,
+#' assay = 'RNA', slot = 'counts', marker_genes = selected_marker_genes_B, 
+#' cell_type = "B cells", tag_slot = 'active.ident')
 #' classifier_b
 #' 
 #' @export
@@ -251,8 +252,9 @@ setMethod("show", c("object" = "scAnnotatR"), function(object) {
 #' data("tirosh_mel80_example")
 #' selected_marker_genes_B = c("CD19", "MS4A1", "CD79A")
 #' set.seed(123)
-#' classifier_b <- train_classifier(train_obj = tirosh_mel80_example, 
-#' cell_type = "B cells", marker_genes = selected_marker_genes_B)
+#' classifier_b <- train_classifier(train_obj = tirosh_mel80_example,
+#' assay = 'RNA', slot = 'counts', marker_genes = selected_marker_genes_B, 
+#' cell_type = "B cells", tag_slot = 'active.ident')
 #' cell_type(classifier_b)
 #' 
 #' @export
@@ -273,8 +275,9 @@ cell_type <- function(classifier) {
 #' data("tirosh_mel80_example")
 #' selected_marker_genes_B = c("CD19", "MS4A1", "CD79A")
 #' set.seed(123)
-#' classifier_b <- train_classifier(train_obj = tirosh_mel80_example, 
-#' marker_genes = selected_marker_genes_B, cell_type = "B cells")
+#' classifier_b <- train_classifier(train_obj = tirosh_mel80_example,
+#' assay = 'RNA', slot = 'counts', marker_genes = selected_marker_genes_B, 
+#' cell_type = "B cells", tag_slot = 'active.ident')
 #' caret_model(classifier_b)
 #'  
 #' @export
@@ -294,8 +297,9 @@ caret_model <- function(classifier) {
 #' data("tirosh_mel80_example")
 #' selected_marker_genes_B = c("CD19", "MS4A1", "CD79A")
 #' set.seed(123)
-#' classifier_b <- train_classifier(train_obj = tirosh_mel80_example, 
-#' marker_genes = selected_marker_genes_B, cell_type = "B cells")
+#' classifier_b <- train_classifier(train_obj = tirosh_mel80_example,
+#' assay = 'RNA', slot = 'counts', marker_genes = selected_marker_genes_B, 
+#' cell_type = "B cells", tag_slot = 'active.ident')
 #' marker_genes(classifier_b)
 #' 
 #' @export
@@ -315,8 +319,9 @@ marker_genes <- function(classifier) {
 #' data("tirosh_mel80_example")
 #' selected_marker_genes_B = c("CD19", "MS4A1", "CD79A")
 #' set.seed(123)
-#' classifier_b <- train_classifier(train_obj = tirosh_mel80_example, 
-#' marker_genes = selected_marker_genes_B, cell_type = "B cells")
+#' classifier_b <- train_classifier(train_obj = tirosh_mel80_example,
+#' assay = 'RNA', slot = 'counts', marker_genes = selected_marker_genes_B, 
+#' cell_type = "B cells", tag_slot = 'active.ident')
 #' p_thres(classifier_b)
 #' 
 #' @export
@@ -337,8 +342,9 @@ p_thres <- function(classifier) {
 #' data("tirosh_mel80_example")
 #' selected_marker_genes_B = c("CD19", "MS4A1", "CD79A")
 #' set.seed(123)
-#' classifier_b <- train_classifier(train_obj = tirosh_mel80_example, 
-#' marker_genes = selected_marker_genes_B, cell_type = "B cells")
+#' classifier_b <- train_classifier(train_obj = tirosh_mel80_example,
+#' assay = 'RNA', slot = 'counts', marker_genes = selected_marker_genes_B, 
+#' cell_type = "B cells", tag_slot = 'active.ident')
 #' parent(classifier_b)
 #' 
 #' @export
@@ -367,8 +373,9 @@ setGeneric('cell_type<-', function(classifier, value)
 #' data("tirosh_mel80_example")
 #' selected_marker_genes_B = c("CD19", "MS4A1", "CD79A")
 #' set.seed(123)
-#' classifier_b <- train_classifier(train_obj = tirosh_mel80_example, 
-#' marker_genes = selected_marker_genes_B, cell_type = "B cells")
+#' classifier_b <- train_classifier(train_obj = tirosh_mel80_example,
+#' assay = 'RNA', slot = 'counts', marker_genes = selected_marker_genes_B, 
+#' cell_type = "B cells", tag_slot = 'active.ident')
 #' cell_type(classifier_b) <- "B cell"
 #' @rdname cell_type
 setReplaceMethod('cell_type', c("classifier" = "scAnnotatR"), 
@@ -402,10 +409,12 @@ setGeneric('p_thres<-', function(classifier, value)
 #' data("tirosh_mel80_example")
 #' selected_marker_genes_B = c("CD19", "MS4A1", "CD79A")
 #' set.seed(123)
-#' classifier_b <- train_classifier(train_obj = tirosh_mel80_example, 
-#' marker_genes = selected_marker_genes_B, cell_type = "B cells")
-#' classifier_b_test <- test_classifier(test_obj = tirosh_mel80_example, 
-#' classifier = classifier_b)
+#' classifier_b <- train_classifier(train_obj = tirosh_mel80_example,
+#' assay = 'RNA', slot = 'counts', marker_genes = selected_marker_genes_B, 
+#' cell_type = "B cells", tag_slot = 'active.ident')
+#' classifier_b_test <- test_classifier(classifier = classifier_b, 
+#' test_obj = tirosh_mel80_example, assay = 'RNA', slot = 'counts', 
+#' tag_slot = 'active.ident')
 #' # assign a new threhold probability for prediction
 #' p_thres(classifier_b) <- 0.4
 #' @rdname p_thres

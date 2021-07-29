@@ -22,11 +22,13 @@ data("tirosh_mel80_example")
 # train a classifier, for ex: B cell
 selected_marker_genes_B = c("CD19", "MS4A1", "CD79A")
 set.seed(123)
-classifier_b <- train_classifier(train_obj = tirosh_mel80_example, 
-marker_genes = selected_marker_genes_B, cell_type = "B cells")
+classifier_b <- train_classifier(train_obj = tirosh_mel80_example,
+assay = 'RNA', slot = 'counts', marker_genes = selected_marker_genes_B, 
+cell_type = "b cells", tag_slot = 'active.ident')
 
-classifier_b_test <- test_classifier(test_obj = tirosh_mel80_example, 
-classifier = classifier_b)
+classifier_b_test <- test_classifier(classifier = classifier_b, 
+test_obj = tirosh_mel80_example, assay = 'RNA', slot = 'counts', 
+tag_slot = 'active.ident', target_cell_type = c("B cell"))
 
 # run plot curve on the test result
 roc_curve <- plot_roc_curve(test_result = classifier_b_test)

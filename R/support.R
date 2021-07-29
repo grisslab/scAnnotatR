@@ -168,17 +168,8 @@ select_marker_genes <- function(mat, marker_genes) {
 #' 
 #' @return list of adjusted tag
 #' @rdname internal
-setGeneric("check_parent_child_coherence", 
-           function(mat, tag, pos_parent, parent_cell, cell_type, 
-                    target_cell_type) 
-             standardGeneric("check_parent_child_coherence"))
-
-#' @inherit check_parent_child_coherence
-#' 
-#' @rdname internal
-setMethod("check_parent_child_coherence", c("mat" = "dgCMatrix", 'tag' = 'vector'), 
-          function(mat, tag, pos_parent, parent_cell, cell_type, 
-                   target_cell_type) {
+check_parent_child_coherence <- function(mat, tag, pos_parent, parent_cell, 
+                                         cell_type, target_cell_type) {
   pos.val <- c(1, "yes", TRUE)
   
   # prepare (sub) cell type tag  
@@ -205,7 +196,7 @@ setMethod("check_parent_child_coherence", c("mat" = "dgCMatrix", 'tag' = 'vector
   #SummarizedExperiment::colData(obj)[, tag_slot] <- new.tag_slot
   
   return(new_tag)
-})
+}
 
 #' Filter cells from ambiguous chars and non applicable cells
 #' Ambiguous characters includes: "/", ",", "-", "+", ".", "and", 
@@ -216,33 +207,26 @@ setMethod("check_parent_child_coherence", c("mat" = "dgCMatrix", 'tag' = 'vector
 #' 
 #' @return filtered matrix and corresponding tag
 #' @rdname internal
-setGeneric("filter_cells", function(mat, tag) 
-  standardGeneric("filter_cells"))
-
-#' @inherit filter_cells
-#' 
-#' @rdname internal
-setMethod("filter_cells", c("mat" = "dgCMatrix", "tag" = "vector"), 
-          function(mat, tag) {
-            # define characters usually included in ambiguous cell types
-            # this is to avoid considering ambiguous cell types as negative cell_type
-            ambiguous.chars <- c("/", ",", " -", " [+]", "[.]", " and ", 
-                                 " or ", "_or_", "-or-", "[(]" ,"[)]", "ambiguous")
-            
-            # only eliminate cell labels containing cell_type and ambiguous.chars
-            ambiguous <- grepl(paste(ambiguous.chars, collapse="|"), tag)
-            n.applicable <- (grepl("not applicable", tag) | is.na(tag))
-            
-            if (any(ambiguous))
-              warning('Cell types containing "/", ",", "-", "+", ".", "and", "or", "(", ")", and "ambiguous" are considered as ambiguous. They are removed from training and testing.\n', 
-                      call. = FALSE, immediate. = TRUE)
-            #obj <- obj[, !(ambiguous | n.applicable)]
-            mat <- mat[, !(ambiguous | n.applicable), drop = FALSE]
-            tag <- tag[!(ambiguous | n.applicable)]
-            
-            filtered <- list('mat' = mat, 'tag' = tag)
-            return(filtered)
-          })
+filter_cells <- function(mat, tag) {
+  # define characters usually included in ambiguous cell types
+  # this is to avoid considering ambiguous cell types as negative cell_type
+  ambiguous.chars <- c("/", ",", " -", " [+]", "[.]", " and ", 
+                       " or ", "_or_", "-or-", "[(]" ,"[)]", "ambiguous")
+  
+  # only eliminate cell labels containing cell_type and ambiguous.chars
+  ambiguous <- grepl(paste(ambiguous.chars, collapse="|"), tag)
+  n.applicable <- (grepl("not applicable", tag) | is.na(tag))
+  
+  if (any(ambiguous))
+    warning('Cell types containing "/", ",", "-", "+", ".", "and", "or", "(", ")", and "ambiguous" are considered as ambiguous. They are removed from training and testing.\n', 
+            call. = FALSE, immediate. = TRUE)
+  #obj <- obj[, !(ambiguous | n.applicable)]
+  mat <- mat[, !(ambiguous | n.applicable), drop = FALSE]
+  tag <- tag[!(ambiguous | n.applicable)]
+  
+  filtered <- list('mat' = mat, 'tag' = tag)
+  return(filtered)
+}
 
 #' Construct tag vector
 #' 
@@ -254,25 +238,17 @@ setMethod("filter_cells", c("mat" = "dgCMatrix", "tag" = "vector"),
 #' @return a binary vector for cell tag
 #' 
 #' @rdname internal
-setGeneric("construct_tag_vect", 
-           function(tag, cell_type) 
-             standardGeneric("construct_tag_vect"))
-
-#' @inherit construct_tag_vect
-#' 
-#' @rdname internal
-setMethod("construct_tag_vect", c("tag" = "vector"), 
-          function(tag, cell_type) {
-            pos.val <- c(1, "yes", TRUE)
-            
-            # x <- SummarizedExperiment::colData(obj)[, tag_slot] 
-            test <- (tag %in% pos.val) | (tolower(tag) %in% tolower(cell_type))
-            new_tag <- ifelse(test, "yes", "no")
-            
-            named_tag = setNames(new_tag, names(tag))
-            
-            return(named_tag)
-          })
+construct_tag_vect <- function(tag, cell_type) {
+  pos.val <- c(1, "yes", TRUE)
+  
+  # x <- SummarizedExperiment::colData(obj)[, tag_slot] 
+  test <- (tag %in% pos.val) | (tolower(tag) %in% tolower(cell_type))
+  new_tag <- ifelse(test, "yes", "no")
+  
+  named_tag = setNames(new_tag, names(tag))
+  
+  return(named_tag)
+}
 
 #' Process parent classifier
 #' 
@@ -292,17 +268,8 @@ setMethod("construct_tag_vect", c("tag" = "vector"),
 #' @import dplyr
 #' 
 #' @rdname internal
-setGeneric("process_parent_classifier", 
-           function(mat, parent_tag, parent_cell_type, parent_classifier, 
-                    path_to_models, zscore = TRUE) 
-             standardGeneric("process_parent_classifier"))
-
-#' @inherit process_parent_classifier
-#' 
-#' @rdname internal
-setMethod("process_parent_classifier", c("mat" = "dgCMatrix"), 
-          function(mat, parent_tag, parent_cell_type, parent_classifier, 
-                   path_to_models, zscore = TRUE) {
+process_parent_classifier <- function(mat, parent_tag, parent_cell_type, 
+                                      parent_classifier, path_to_models, zscore) {
     pos_parent <- parent.classifier <- . <- model_list <- NULL
     
     if (is.na(parent_cell_type) && !is.null(parent_classifier))
@@ -368,7 +335,7 @@ setMethod("process_parent_classifier", c("mat" = "dgCMatrix"),
     return_val <- list('pos_parent' = pos_parent, 'parent_cell'= parent_cell_type,
                        'parent.classifier' = parent.classifier, 'model_list' = model_list)
     return(return_val)
-})
+}
 
 #' Make prediction
 #'

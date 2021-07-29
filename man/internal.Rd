@@ -13,20 +13,20 @@
 \alias{caret_model<-,scAnnotatR-method}
 \alias{marker_genes<-}
 \alias{marker_genes<-,scAnnotatR-method}
-\alias{train_classifier_func}
-\alias{test_classifier_func}
+\alias{train_classifier_seurat}
+\alias{train_classifier_sce}
+\alias{train_classifier_from_mat}
+\alias{test_classifier_seurat}
+\alias{test_classifier_sce}
+\alias{test_classifier_from_mat}
 \alias{balance_dataset}
 \alias{train_func}
 \alias{transform_to_zscore}
 \alias{select_marker_genes}
 \alias{check_parent_child_coherence}
-\alias{check_parent_child_coherence,dgCMatrix,vector-method}
 \alias{filter_cells}
-\alias{filter_cells,dgCMatrix,vector-method}
 \alias{construct_tag_vect}
-\alias{construct_tag_vect,vector-method}
 \alias{process_parent_classifier}
-\alias{process_parent_classifier,dgCMatrix-method}
 \alias{make_prediction}
 \alias{simplify_prediction}
 \alias{verify_parent}
@@ -60,7 +60,34 @@ marker_genes(classifier) <- value
 
 \S4method{marker_genes}{scAnnotatR}(classifier) <- value
 
-train_classifier_func(
+train_classifier_seurat(
+  train_obj,
+  cell_type,
+  marker_genes,
+  parent_cell = NA_character_,
+  parent_classifier = NULL,
+  path_to_models = "default",
+  zscore = TRUE,
+  seurat_tag_slot,
+  seurat_parent_tag_slot = "predicted_cell_type",
+  seurat_assay,
+  seurat_slot
+)
+
+train_classifier_sce(
+  train_obj,
+  cell_type,
+  marker_genes,
+  parent_cell = NA_character_,
+  parent_classifier = NULL,
+  path_to_models = "default",
+  zscore = TRUE,
+  sce_tag_slot,
+  sce_parent_tag_slot = "predicted_cell_type",
+  sce_assay
+)
+
+train_classifier_from_mat(
   mat,
   tag,
   cell_type,
@@ -72,7 +99,32 @@ train_classifier_func(
   zscore
 )
 
-test_classifier_func(
+test_classifier_seurat(
+  test_obj,
+  classifier,
+  target_cell_type = NULL,
+  parent_classifier = NULL,
+  path_to_models = "default",
+  zscore = TRUE,
+  seurat_tag_slot,
+  seurat_parent_tag_slot = "predicted_cell_type",
+  seurat_assay,
+  seurat_slot
+)
+
+test_classifier_sce(
+  test_obj,
+  classifier,
+  target_cell_type = NULL,
+  parent_classifier = NULL,
+  path_to_models = "default",
+  zscore = TRUE,
+  sce_tag_slot,
+  sce_parent_tag_slot = "predicted_cell_type",
+  sce_assay
+)
+
+test_classifier_from_mat(
   mat,
   tag,
   classifier,
@@ -100,22 +152,9 @@ check_parent_child_coherence(
   target_cell_type
 )
 
-\S4method{check_parent_child_coherence}{dgCMatrix,vector}(
-  mat,
-  tag,
-  pos_parent,
-  parent_cell,
-  cell_type,
-  target_cell_type
-)
-
 filter_cells(mat, tag)
 
-\S4method{filter_cells}{dgCMatrix,vector}(mat, tag)
-
 construct_tag_vect(tag, cell_type)
-
-\S4method{construct_tag_vect}{vector}(tag, cell_type)
 
 process_parent_classifier(
   mat,
@@ -123,16 +162,7 @@ process_parent_classifier(
   parent_cell_type,
   parent_classifier,
   path_to_models,
-  zscore = TRUE
-)
-
-\S4method{process_parent_classifier}{dgCMatrix}(
-  mat,
-  parent_tag,
-  parent_cell_type,
-  parent_classifier,
-  path_to_models,
-  zscore = TRUE
+  zscore
 )
 
 make_prediction(mat, classifier, pred_cells, ignore_ambiguous_result = TRUE)
@@ -166,12 +196,7 @@ download_data_file(verbose = FALSE)
 
 \item{value}{the new classifier}
 
-\item{mat}{expression matrix}
-
-\item{tag}{tag of data}
-
-\item{parent_tag}{vector, named list indicating pre-assigned/predicted 
-parent cell type}
+\item{train_obj}{SCE object}
 
 \item{parent_cell}{name of parent cell type}
 
@@ -182,6 +207,46 @@ to classification model for the parent cell type}
 
 \item{zscore}{boolean indicating the transformation of gene expression 
 in object to zscore or not}
+
+\item{seurat_tag_slot}{string, name of annotation slot 
+indicating cell tag/label in the testing object.
+Strings indicating cell types are expected in this slot. 
+Expected values are string (A-Z, a-z, 0-9, no special character accepted) 
+or binary/logical, 0/"no"/F/FALSE: not being new cell type, 
+1/"yes"/T/TRUE: being new cell type.}
+
+\item{seurat_parent_tag_slot}{string, name of tag slot in cell meta data
+indicating pre-assigned/predicted parent cell type. 
+Default field is "predicted_cell_type".
+The slot must contain only string values.}
+
+\item{seurat_assay}{name of assay to use in test_object}
+
+\item{seurat_slot}{type of expression data to use in test_object. 
+For Seurat object, some available types are: "counts", "data" and "scale.data".}
+
+\item{sce_tag_slot}{string, name of annotation slot 
+indicating cell tag/label in the testing object.
+Strings indicating cell types are expected in this slot. 
+Expected values are string (A-Z, a-z, 0-9, no special character accepted) 
+or binary/logical, 0/"no"/F/FALSE: not being new cell type, 
+1/"yes"/T/TRUE: being new cell type.}
+
+\item{sce_parent_tag_slot}{string, name of tag slot in cell meta data
+indicating pre-assigned/predicted parent cell type. 
+Default field is "predicted_cell_type".
+The slot must contain only string values.}
+
+\item{sce_assay}{name of assay to use in test_object}
+
+\item{mat}{expression matrix}
+
+\item{tag}{tag of data}
+
+\item{parent_tag}{vector, named list indicating pre-assigned/predicted 
+parent cell type}
+
+\item{test_obj}{SCE object used for testing}
 
 \item{target_cell_type}{alternative cell types (in case of testing classifier)}
 
@@ -230,7 +295,19 @@ the classifier with the new marker genes
 
 scAnnotatR object with the new marker genes.
 
+\code{\link{scAnnotatR}} object
+
+\code{\link{scAnnotatR}} object
+
 caret trained model
+
+result of testing process in form of a list, 
+including predicted values, prediction accuracy at a probability threshold, 
+and roc curve information.
+
+result of testing process in form of a list, 
+including predicted values, prediction accuracy at a probability threshold, 
+and roc curve information.
 
 model performance statistics
 
@@ -266,10 +343,22 @@ path to the downloaded file in cache
 \description{
 Check if a scAnnotatR object is valid
 
+Train a classifier for a new cell type 
+If cell type has a parent, only available for \code{\link{scAnnotatR}}
+object as parent cell classifying model.
+
+Train a classifier for a new cell type 
+If cell type has a parent, only available for \code{\link{scAnnotatR}}
+object as parent cell classifying model.
+
 Train a classifier for a new cell type from expression matrix
 and tag 
 If cell type has a parent, only available for \code{\link{scAnnotatR}}
 object as parent cell classifying model.
+
+Testing process when test object is of type Seurat
+
+Testing process when test object is of type SCE
 
 Testing process from matrix and tag
 }
