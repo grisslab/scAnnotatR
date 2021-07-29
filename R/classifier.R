@@ -146,9 +146,7 @@ train_classifier <- function(train_obj, assay, slot = NULL,
 #' @param zscore whether gene expression in train_obj is transformed to zscore
 #' 
 #' @return \code{\link{scAnnotatR}} object
-#' 
-#' @importFrom Seurat GetAssayData Idents
-#' 
+#'  
 #' @rdname internal
 train_classifier_seurat <- 
   function(train_obj, cell_type, marker_genes, parent_cell = NA_character_,
@@ -156,26 +154,29 @@ train_classifier_seurat <-
            seurat_tag_slot, seurat_parent_tag_slot = 'predicted_cell_type', 
            seurat_assay, seurat_slot) {
   # convert Seurat object to matrix
-  mat = Seurat::GetAssayData(object = train_obj, 
-                             assay = seurat_assay, slot = seurat_slot)
+  # mat = Seurat::GetAssayData(object = train_obj, 
+  #                            assay = seurat_assay, slot = seurat_slot)
+  # 
+  # if (seurat_tag_slot == "active.ident") {
+  #   tag <- Seurat::Idents(train_obj)
+  # } else {
+  #   tag <- train_obj[[seurat_tag_slot]][,1]
+  #   names(tag) <- colnames(train_obj)
+  # }
+  # 
+  # if (seurat_parent_tag_slot == "active.ident") {
+  #   parent_tag <- Seurat::Idents(train_obj)
+  # } else if (seurat_parent_tag_slot %in% colnames(train_obj[[]])) {
+  #   parent_tag <- train_obj[[seurat_parent_tag_slot]][,1]
+  #   names(parent_tag) <- colnames(train_obj)
+  # } else parent_tag <- NULL
+  preprocessed <- preprocess_seurat_object(train_obj, seurat_assay, seurat_slot,
+                                           seurat_tag_slot, seurat_parent_tag_slot)
   
-  if (seurat_tag_slot == "active.ident") {
-    tag <- Seurat::Idents(train_obj)
-  } else {
-    tag <- train_obj[[seurat_tag_slot]][,1]
-    names(tag) <- colnames(train_obj)
-  }
-  
-  if (seurat_parent_tag_slot == "active.ident") {
-    parent_tag <- Seurat::Idents(train_obj)
-  } else if (seurat_parent_tag_slot %in% colnames(train_obj[[]])) {
-    parent_tag <- train_obj[[seurat_parent_tag_slot]][,1]
-    names(parent_tag) <- colnames(train_obj)
-  } else parent_tag <- NULL
-  
-  object <- train_classifier_from_mat(mat, tag, cell_type, marker_genes,
-                                  parent_tag, parent_cell, parent_classifier,
-                                  path_to_models, zscore)
+  object <- train_classifier_from_mat(preprocessed$mat, preprocessed$tag, 
+                                      cell_type, marker_genes, 
+                                      preprocessed$parent_tag, parent_cell, 
+                                      parent_classifier, path_to_models, zscore)
   return(object)
 }
 
@@ -214,31 +215,31 @@ train_classifier_seurat <-
 #' 
 #' @return \code{\link{scAnnotatR}} object
 #'  
-#' @import SingleCellExperiment
-#' @importFrom SummarizedExperiment assay
-#' 
 #' @rdname internal
 train_classifier_sce <- 
   function(train_obj, cell_type, marker_genes, parent_cell = NA_character_,
            parent_classifier = NULL, path_to_models = "default", zscore = TRUE, 
            sce_tag_slot, sce_parent_tag_slot = "predicted_cell_type", sce_assay) {
-  # solve duplication of cell names
-  colnames(train_obj) <- make.unique(colnames(train_obj), sep = '_')
-  
-  # convert SCE object to matrix
-  mat = SummarizedExperiment::assay(train_obj, sce_assay)
-  
-  tag = SummarizedExperiment::colData(train_obj)[, sce_tag_slot]
-  names(tag) <- colnames(train_obj)
-  
-  if (sce_parent_tag_slot %in% colnames(SummarizedExperiment::colData(train_obj))) {
-    parent_tag <- SummarizedExperiment::colData(train_obj)[, sce_parent_tag_slot]
-    names(parent_tag) <- colnames(train_obj)
-  } else parent_tag <- NULL
-  
-  object <- train_classifier_from_mat(mat, tag, cell_type, marker_genes, 
-                                  parent_tag, parent_cell, parent_classifier,
-                                  path_to_models, zscore)
+  # # solve duplication of cell names
+  # colnames(train_obj) <- make.unique(colnames(train_obj), sep = '_')
+  # 
+  # # convert SCE object to matrix
+  # mat = SummarizedExperiment::assay(train_obj, sce_assay)
+  # 
+  # tag = SummarizedExperiment::colData(train_obj)[, sce_tag_slot]
+  # names(tag) <- colnames(train_obj)
+  # 
+  # if (sce_parent_tag_slot %in% colnames(SummarizedExperiment::colData(train_obj))) {
+  #   parent_tag <- SummarizedExperiment::colData(train_obj)[, sce_parent_tag_slot]
+  #   names(parent_tag) <- colnames(train_obj)
+  # } else parent_tag <- NULL
+  # 
+  preprocessed <- preprocess_sce_object(train_obj, sce_assay, sce_tag_slot, 
+                                        sce_parent_tag_slot)  
+  object <- train_classifier_from_mat(preprocessed$mat, preprocessed$tag, 
+                                      cell_type, marker_genes, 
+                                      preprocessed$parent_tag, parent_cell, 
+                                      parent_classifier, path_to_models, zscore)
   
   return(object)
 }
@@ -340,6 +341,102 @@ train_classifier_from_mat <- function(mat, tag, cell_type, marker_genes,
   if (parent_check) parent(object) <- processed_parent$parent_cell
   
   return(object)
+}
+
+#' Preprocess Seurat object
+#' 
+#' @description Preprocess Seurat object to produce expression matrix,
+#' tag, parent cell tag.
+#' 
+#' @param seurat_obj Seurat object 
+#' @param seurat_assay name of assay to use in training object. 
+#' @param seurat_slot type of expression data to use in training object
+#' @param seurat_tag_slot string, name of slot in cell meta data 
+#' indicating cell tag/label in the training object.
+#' Strings indicating cell types are expected in this slot.
+#' For \code{\link{Seurat}} object, default value is "active.ident".  
+#' Expected values are string (A-Z, a-z, 0-9, no special character accepted) 
+#' or binary/logical, 0/"no"/F/FALSE: not being new cell type, 
+#' 1/"yes"/T/TRUE: being new cell type.
+#' @param seurat_parent_tag_slot string, name of a slot in cell meta data 
+#' indicating assigned/predicted cell type. Default is "predicted_cell_type". 
+#' This slot would have been filled automatically 
+#' if user have called classify_cells function.
+#' The slot must contain only string values. 
+#' @return a list containing: expression matrix of size n x m, n: genes, m: cells;
+#' a vector indicating cell type, and a vector containing parent cell type.
+#' 
+#' @importFrom Seurat GetAssayData Idents
+#' 
+#' @rdname internal
+preprocess_seurat_object <- function(seurat_obj, seurat_assay, seurat_slot,
+                                     seurat_tag_slot, seurat_parent_tag_slot) {
+  # convert Seurat object to matrix
+  mat = Seurat::GetAssayData(object = seurat_obj, 
+                             assay = seurat_assay, slot = seurat_slot)
+  
+  if (seurat_tag_slot == "active.ident") {
+    tag <- Seurat::Idents(seurat_obj)
+  } else {
+    tag <- seurat_obj[[seurat_tag_slot]][,1]
+    names(tag) <- colnames(seurat_obj)
+  }
+  
+  if (seurat_parent_tag_slot == "active.ident") {
+    parent_tag <- Seurat::Idents(seurat_obj)
+  } else if (seurat_parent_tag_slot %in% colnames(seurat_obj[[]])) {
+    parent_tag <- seurat_obj[[seurat_parent_tag_slot]][,1]
+    names(parent_tag) <- colnames(seurat_obj)
+  } else parent_tag <- NULL
+  
+  return_val <- list('mat' = mat, 'tag' = tag, 'parent_tag' = parent_tag)
+  return(return_val)
+}
+
+#' Preprocess Seurat object
+#' 
+#' @description Preprocess Seurat object to produce expression matrix,
+#' tag, parent cell tag.
+#' 
+#' @param sce_obj Seurat object 
+#' @param sce_assay name of assay to use in training object. 
+#' @param sce_tag_slot string, name of slot in cell meta data 
+#' indicating cell tag/label in the training object.
+#' Strings indicating cell types are expected in this slot.
+#' Expected values are string (A-Z, a-z, 0-9, no special character accepted) 
+#' or binary/logical, 0/"no"/F/FALSE: not being new cell type, 
+#' 1/"yes"/T/TRUE: being new cell type.
+#' @param sce_parent_tag_slot string, name of a slot in cell meta data 
+#' indicating assigned/predicted cell type. Default is "predicted_cell_type". 
+#' This slot would have been filled automatically 
+#' if user have called classify_cells function.
+#' The slot must contain only string values. 
+#' @return a list containing: expression matrix of size n x m, n: genes, m: cells;
+#' a vector indicating cell type, and a vector containing parent cell type.
+#' 
+#' @import SingleCellExperiment
+#' @importFrom SummarizedExperiment assay
+#' 
+#' @rdname internal
+preprocess_sce_object <- function(sce_obj, sce_assay, sce_tag_slot, 
+                                  sce_parent_tag_slot) {
+  # solve duplication of cell names
+  colnames(sce_obj) <- make.unique(colnames(sce_obj), sep = '_')
+  
+  # convert SCE object to matrix
+  mat = SummarizedExperiment::assay(sce_obj, sce_assay)
+  
+  tag = SummarizedExperiment::colData(sce_obj)[, sce_tag_slot]
+  names(tag) <- colnames(sce_obj)
+  
+  if (sce_parent_tag_slot %in% colnames(SummarizedExperiment::colData(sce_obj))) {
+    parent_tag <- SummarizedExperiment::colData(sce_obj)[, sce_parent_tag_slot]
+    names(parent_tag) <- colnames(sce_obj)
+  } else parent_tag <- NULL
+  
+  return_val <- list('mat' = mat, 'tag' = tag, 'parent_tag' = parent_tag)
+  
+  return(return_val)
 }
 
 #' Testing process.
@@ -470,8 +567,6 @@ setMethod('test_classifier', c('classifier' = 'scAnnotatR'),
 #' including predicted values, prediction accuracy at a probability threshold, 
 #' and roc curve information.
 #' 
-#' @importFrom Seurat GetAssayData
-#'
 #' @rdname internal
 test_classifier_seurat <- 
   function(test_obj, classifier, target_cell_type = NULL, 
@@ -480,26 +575,30 @@ test_classifier_seurat <-
            seurat_assay, seurat_slot) {
   . <- fpr <- tpr <- NULL
   # convert Seurat object to matrix
-  mat = Seurat::GetAssayData(
-    object = test_obj, assay = seurat_assay, slot = seurat_slot)
+  # mat = Seurat::GetAssayData(
+  #   object = test_obj, assay = seurat_assay, slot = seurat_slot)
+  # 
+  # if (seurat_tag_slot == "active.ident") {
+  #   tag <- Seurat::Idents(test_obj)
+  # } else {
+  #   tag <- test_obj[[seurat_tag_slot]][,1]
+  #   names(tag) <- colnames(test_obj)
+  # }
+  # 
+  # if (seurat_parent_tag_slot == "active.ident") {
+  #   parent_tag <- Seurat::Idents(test_obj)
+  # } else if (seurat_parent_tag_slot %in% colnames(test_obj[[]])) {
+  #   parent_tag <- test_obj[[seurat_parent_tag_slot]][,1]
+  #   names(parent_tag) <- colnames(test_obj)
+  # } else parent_tag <- NULL
   
-  if (seurat_tag_slot == "active.ident") {
-    tag <- Seurat::Idents(test_obj)
-  } else {
-    tag <- test_obj[[seurat_tag_slot]][,1]
-    names(tag) <- colnames(test_obj)
-  }
+  preprocessed <- preprocess_seurat_object(test_obj, seurat_assay, seurat_slot,
+                                           seurat_tag_slot, seurat_parent_tag_slot)
   
-  if (seurat_parent_tag_slot == "active.ident") {
-    parent_tag <- Seurat::Idents(test_obj)
-  } else if (seurat_parent_tag_slot %in% colnames(test_obj[[]])) {
-    parent_tag <- test_obj[[seurat_parent_tag_slot]][,1]
-    names(parent_tag) <- colnames(test_obj)
-  } else parent_tag <- NULL
-  
-  return_val <- test_classifier_from_mat(mat, tag, classifier, parent_tag,
-                                     target_cell_type, parent_classifier,
-                                     path_to_models, zscore)
+  return_val <- test_classifier_from_mat(preprocessed$mat, preprocessed$tag, 
+                                         classifier, preprocessed$parent_tag,
+                                         target_cell_type, parent_classifier,
+                                         path_to_models, zscore)
   return(return_val)
 }
 
@@ -536,32 +635,32 @@ test_classifier_seurat <-
 #' including predicted values, prediction accuracy at a probability threshold, 
 #' and roc curve information.
 #' 
-#' @import SingleCellExperiment
-#' @importFrom SummarizedExperiment assay
-#' 
 #' @rdname internal
 test_classifier_sce <- 
   function(test_obj, classifier, target_cell_type = NULL, 
            parent_classifier = NULL, path_to_models = "default", zscore = TRUE, 
            sce_tag_slot, sce_parent_tag_slot = "predicted_cell_type", sce_assay) {
   # solve duplication of cell names
-  colnames(test_obj) <- make.unique(colnames(test_obj), sep = '_')
-  . <- fpr <- tpr <- NULL
-  
-  # convert SCE object to matrix
-  mat = SummarizedExperiment::assay(test_obj, sce_assay)
-  
-  tag = SummarizedExperiment::colData(test_obj)[, sce_tag_slot]
-  names(tag) <- colnames(test_obj)
-  
-  if (sce_parent_tag_slot %in% colnames(SummarizedExperiment::colData(test_obj))) {
-    parent_tag <- SummarizedExperiment::colData(test_obj)[, sce_parent_tag_slot]
-    names(parent_tag) <- colnames(test_obj)
-  } else parent_tag <- NULL
-  
-  return_val <- test_classifier_from_mat(mat, tag, classifier, parent_tag,
-                                     target_cell_type, parent_classifier,
-                                     path_to_models, zscore)
+  # colnames(test_obj) <- make.unique(colnames(test_obj), sep = '_')
+  # . <- fpr <- tpr <- NULL
+  # 
+  # # convert SCE object to matrix
+  # mat = SummarizedExperiment::assay(test_obj, sce_assay)
+  # 
+  # tag = SummarizedExperiment::colData(test_obj)[, sce_tag_slot]
+  # names(tag) <- colnames(test_obj)
+  # 
+  # if (sce_parent_tag_slot %in% colnames(SummarizedExperiment::colData(test_obj))) {
+  #   parent_tag <- SummarizedExperiment::colData(test_obj)[, sce_parent_tag_slot]
+  #   names(parent_tag) <- colnames(test_obj)
+  # } else parent_tag <- NULL
+  preprocessed <- preprocess_sce_object(test_obj, sce_assay, sce_tag_slot, 
+                                        sce_parent_tag_slot)  
+    
+  return_val <- test_classifier_from_mat(preprocessed$mat, preprocessed$tag, 
+                                         classifier, preprocessed$parent_tag,
+                                         target_cell_type, parent_classifier,
+                                         path_to_models, zscore)
   
   return(return_val)
 }
@@ -915,7 +1014,7 @@ setMethod("classify_cells", c("classify_obj" = "SingleCellExperiment"),
     for (classifier in classifiers) {
       if (!is.na(parent(classifier))) { 
         applicable_mat <- verify_parent(mat.chunk, classifier, 
-                                        colData(obj.chunk))
+                                        SummarizedExperiment::colData(obj.chunk))
         # no parent classifier provided or no positive to parent classifier
         if (is.null(applicable_mat)) next 
       } else applicable_mat <- mat.chunk

@@ -16,6 +16,8 @@
 \alias{train_classifier_seurat}
 \alias{train_classifier_sce}
 \alias{train_classifier_from_mat}
+\alias{preprocess_seurat_object}
+\alias{preprocess_sce_object}
 \alias{test_classifier_seurat}
 \alias{test_classifier_sce}
 \alias{test_classifier_from_mat}
@@ -98,6 +100,16 @@ train_classifier_from_mat(
   path_to_models,
   zscore
 )
+
+preprocess_seurat_object(
+  seurat_obj,
+  seurat_assay,
+  seurat_slot,
+  seurat_tag_slot,
+  seurat_parent_tag_slot
+)
+
+preprocess_sce_object(sce_obj, sce_assay, sce_tag_slot, sce_parent_tag_slot)
 
 test_classifier_seurat(
   test_obj,
@@ -246,6 +258,10 @@ The slot must contain only string values.}
 \item{parent_tag}{vector, named list indicating pre-assigned/predicted 
 parent cell type}
 
+\item{seurat_obj}{Seurat object}
+
+\item{sce_obj}{Seurat object}
+
 \item{test_obj}{SCE object used for testing}
 
 \item{target_cell_type}{alternative cell types (in case of testing classifier)}
@@ -301,6 +317,12 @@ scAnnotatR object with the new marker genes.
 
 caret trained model
 
+a list containing: expression matrix of size n x m, n: genes, m: cells;
+a vector indicating cell type, and a vector containing parent cell type.
+
+a list containing: expression matrix of size n x m, n: genes, m: cells;
+a vector indicating cell type, and a vector containing parent cell type.
+
 result of testing process in form of a list, 
 including predicted values, prediction accuracy at a probability threshold, 
 and roc curve information.
@@ -355,6 +377,12 @@ Train a classifier for a new cell type from expression matrix
 and tag 
 If cell type has a parent, only available for \code{\link{scAnnotatR}}
 object as parent cell classifying model.
+
+Preprocess Seurat object to produce expression matrix,
+tag, parent cell tag.
+
+Preprocess Seurat object to produce expression matrix,
+tag, parent cell tag.
 
 Testing process when test object is of type Seurat
 
