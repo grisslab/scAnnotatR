@@ -619,17 +619,25 @@ classify_clust <- function(clusts, most_probable_cell_type) {
 download_data_file <-
   function(verbose = FALSE)
   {
-    fileURL <- "https://github.com/grisslab/scAnnotatR-models/blob/main/default_models.rda?raw=true"
+    fileURL <- "https://github.com/grisslab/scAnnotatR-models/raw/main/default_models.rda"
     
     bfc <- .get_cache()
-    rid <- BiocFileCache::bfcquery(bfc, "default_models", "rname")$rid
+    rid <- BiocFileCache::bfcquery(bfc, "scannotatr_default_models", "rname")$rid
+    
+    # download the file if it hasn't been dowloaded before
     if (!length(rid)) {
       if (verbose)
         message("Downloading default models..." )
-      rid <- names(BiocFileCache::bfcadd(bfc, "default_models", fileURL))
+      
+      rid <- names(BiocFileCache::bfcadd(bfc, "scannotatr_default_models", fileURL))
     }
-    if (isFALSE(BiocFileCache::bfcneedsupdate(bfc, rid)))
-      BiocFileCache::bfcdownload(bfc, rid)
+    # TODO: bfcneedsupdate does not work with GitHub. Therefore, always use the 
+    # cached file for now.
+    # Later: Add additional check using GitHub's API to test whether the file was updated
+    # 
+    # else if (!isFALSE(BiocFileCache::bfcneedsupdate(bfc, rid))) {
+    #   BiocFileCache::bfcdownload(bfc, rid)
+    # }
     
     BiocFileCache::bfcrpath(bfc, rids = rid)
   }
