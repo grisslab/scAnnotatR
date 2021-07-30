@@ -69,7 +69,7 @@
 #' # classify cell types using B cell classifier, 
 #' # a test classifier process may be used before applying the classifier 
 #' tirosh_mel80_example <- classify_cells(classify_obj = tirosh_mel80_example, 
-#' classifiers = c(classifier_b))
+#' classifiers = c(classifier_b), assay = 'RNA', slot = 'counts')
 #' 
 #' # tag all cells that are plasma cells (random example here)
 #' tirosh_mel80_example[['plasma_cell_tag']] <- c(rep(1, 80), rep(0, 400))
@@ -153,23 +153,7 @@ train_classifier_seurat <-
            parent_classifier = NULL, path_to_models = "default", zscore = TRUE,
            seurat_tag_slot, seurat_parent_tag_slot = 'predicted_cell_type', 
            seurat_assay, seurat_slot) {
-  # convert Seurat object to matrix
-  # mat = Seurat::GetAssayData(object = train_obj, 
-  #                            assay = seurat_assay, slot = seurat_slot)
-  # 
-  # if (seurat_tag_slot == "active.ident") {
-  #   tag <- Seurat::Idents(train_obj)
-  # } else {
-  #   tag <- train_obj[[seurat_tag_slot]][,1]
-  #   names(tag) <- colnames(train_obj)
-  # }
-  # 
-  # if (seurat_parent_tag_slot == "active.ident") {
-  #   parent_tag <- Seurat::Idents(train_obj)
-  # } else if (seurat_parent_tag_slot %in% colnames(train_obj[[]])) {
-  #   parent_tag <- train_obj[[seurat_parent_tag_slot]][,1]
-  #   names(parent_tag) <- colnames(train_obj)
-  # } else parent_tag <- NULL
+  
   preprocessed <- preprocess_seurat_object(train_obj, seurat_assay, seurat_slot,
                                            seurat_tag_slot, seurat_parent_tag_slot)
   
@@ -220,21 +204,8 @@ train_classifier_sce <-
   function(train_obj, cell_type, marker_genes, parent_cell = NA_character_,
            parent_classifier = NULL, path_to_models = "default", zscore = TRUE, 
            sce_tag_slot, sce_parent_tag_slot = "predicted_cell_type", sce_assay) {
-  # # solve duplication of cell names
-  # colnames(train_obj) <- make.unique(colnames(train_obj), sep = '_')
-  # 
-  # # convert SCE object to matrix
-  # mat = SummarizedExperiment::assay(train_obj, sce_assay)
-  # 
-  # tag = SummarizedExperiment::colData(train_obj)[, sce_tag_slot]
-  # names(tag) <- colnames(train_obj)
-  # 
-  # if (sce_parent_tag_slot %in% colnames(SummarizedExperiment::colData(train_obj))) {
-  #   parent_tag <- SummarizedExperiment::colData(train_obj)[, sce_parent_tag_slot]
-  #   names(parent_tag) <- colnames(train_obj)
-  # } else parent_tag <- NULL
-  # 
-  preprocessed <- preprocess_sce_object(train_obj, sce_assay, sce_tag_slot, 
+  
+    preprocessed <- preprocess_sce_object(train_obj, sce_assay, sce_tag_slot, 
                                         sce_parent_tag_slot)  
   object <- train_classifier_from_mat(preprocessed$mat, preprocessed$tag, 
                                       cell_type, marker_genes, 
@@ -573,25 +544,6 @@ test_classifier_seurat <-
            parent_classifier = NULL, path_to_models = "default", zscore = TRUE, 
            seurat_tag_slot, seurat_parent_tag_slot = "predicted_cell_type", 
            seurat_assay, seurat_slot) {
-  . <- fpr <- tpr <- NULL
-  # convert Seurat object to matrix
-  # mat = Seurat::GetAssayData(
-  #   object = test_obj, assay = seurat_assay, slot = seurat_slot)
-  # 
-  # if (seurat_tag_slot == "active.ident") {
-  #   tag <- Seurat::Idents(test_obj)
-  # } else {
-  #   tag <- test_obj[[seurat_tag_slot]][,1]
-  #   names(tag) <- colnames(test_obj)
-  # }
-  # 
-  # if (seurat_parent_tag_slot == "active.ident") {
-  #   parent_tag <- Seurat::Idents(test_obj)
-  # } else if (seurat_parent_tag_slot %in% colnames(test_obj[[]])) {
-  #   parent_tag <- test_obj[[seurat_parent_tag_slot]][,1]
-  #   names(parent_tag) <- colnames(test_obj)
-  # } else parent_tag <- NULL
-  
   preprocessed <- preprocess_seurat_object(test_obj, seurat_assay, seurat_slot,
                                            seurat_tag_slot, seurat_parent_tag_slot)
   
@@ -640,20 +592,7 @@ test_classifier_sce <-
   function(test_obj, classifier, target_cell_type = NULL, 
            parent_classifier = NULL, path_to_models = "default", zscore = TRUE, 
            sce_tag_slot, sce_parent_tag_slot = "predicted_cell_type", sce_assay) {
-  # solve duplication of cell names
-  # colnames(test_obj) <- make.unique(colnames(test_obj), sep = '_')
-  # . <- fpr <- tpr <- NULL
-  # 
-  # # convert SCE object to matrix
-  # mat = SummarizedExperiment::assay(test_obj, sce_assay)
-  # 
-  # tag = SummarizedExperiment::colData(test_obj)[, sce_tag_slot]
-  # names(tag) <- colnames(test_obj)
-  # 
-  # if (sce_parent_tag_slot %in% colnames(SummarizedExperiment::colData(test_obj))) {
-  #   parent_tag <- SummarizedExperiment::colData(test_obj)[, sce_parent_tag_slot]
-  #   names(parent_tag) <- colnames(test_obj)
-  # } else parent_tag <- NULL
+  
   preprocessed <- preprocess_sce_object(test_obj, sce_assay, sce_tag_slot, 
                                         sce_parent_tag_slot)  
     
@@ -781,6 +720,10 @@ plot_roc_curve <- function(test_result) {
 #' Classify cells from multiple models
 #' 
 #' @param classify_obj the object containing cells to be classified
+#' @param assay name of assay to use in classify_object
+#' @param slot type of expression data to use in classify_object. 
+#' For Seurat object, some available types are: 
+#' "counts", "data" and "scale.data". 
 #' @param classifiers list of classification models. 
 #' The model is obtained from train_classifier function or available in current 
 #' working space. 
@@ -805,28 +748,11 @@ plot_roc_curve <- function(test_result) {
 #' @param cluster_slot name of slot in meta data containing cluster 
 #' information, in case users want to have additional cluster-level 
 #' prediction
-#' @param ... arguments passed to other methods
 #' 
 #' @return the input object with new slots in cells meta data
 #' New slots are: predicted_cell_type, most_probable_cell_type,
-#' slots in form of [cell_type]_p and [cell_type]_class 
-#' 
-#' @export
-setGeneric("classify_cells", function(classify_obj, classifiers = NULL, 
-                                      cell_types = "all", chunk_size = 5000,
-                                      path_to_models = "default",
-                                      ignore_ambiguous_result = FALSE, 
-                                      cluster_slot = NULL, ...) 
-  standardGeneric("classify_cells"))
-
-#' @inherit classify_cells
-#' 
-#' @param seurat_assay name of assay to use in 
-#' \code{\link{Seurat}} object, defaults to 'RNA' assay.
-#' @param seurat_slot type of expression data to use in 
-#' \code{\link{Seurat}} object. Some available types are: 
-#' "counts", "data" and "scale.data". 
-#' Default to "counts", which is unnormalized data.
+#' slots in form of [cell_type]_p, [cell_type]_class, and clust_pred 
+#' (if cluster_slot was provided). 
 #' 
 #' @examples
 #' # load small example dataset
@@ -854,20 +780,75 @@ setGeneric("classify_cells", function(classify_obj, classifiers = NULL,
 #' 
 #' # classify cells with list of classifiers
 #' seurat.obj <- classify_cells(classify_obj = tirosh_mel80_example, 
-#' classifiers = classifier_ls)
+#' assay = 'RNA', slot = 'counts', classifiers = classifier_ls)
+#' 
+#' @export
+classify_cells <- function(classify_obj, assay, slot = NULL, classifiers = NULL, 
+                           cell_types = "all", chunk_size = 5000,
+                           path_to_models = "default",
+                           ignore_ambiguous_result = FALSE, 
+                           cluster_slot = 'clusters') {
+  if (is(classify_obj, 'Seurat')) {
+    classify_obj <- classify_cells_seurat(classify_obj, classifiers, cell_types, 
+                                          chunk_size, path_to_models,
+                                          ignore_ambiguous_result, cluster_slot, 
+                                          assay, slot)
+  } else if (is(classify_obj, 'SingleCellExperiment')) {
+    classify_obj <- classify_cells_sce(classify_obj, classifiers, cell_types, 
+                                       chunk_size, path_to_models, 
+                                       ignore_ambiguous_result, assay, cluster_slot)
+  } else 
+    stop('Classified object of not supported class', call. = FALSE)
+  
+  return(classify_obj)
+}
+
+#' Classify cells from multiple models for Seurat object as input
+#' 
+#' @param classify_obj the Seurat object containing cells to be classified
+#' @param seurat_assay name of assay to use in Seurat object
+#' @param seurat_slot type of expression data to use in Seurat object. 
+#' Some available types are: "counts", "data" and "scale.data". 
+#' @param classifiers list of classification models. 
+#' The model is obtained from train_classifier function or available in current 
+#' working space. 
+#' Users may test the model using test_classifier before using this function.
+#' If classifiers contain classifiers for sub cell types, classifiers for
+#' parent cell type must be indicated first in order to be applied before
+#' children classifiers.
+#' If classifiers is NULL, the method will use all classifiers in database.
+#' @param cell_types list of cell types containing models to be used
+#' for classification, only applicable if the models have been saved to package.
+#' @param path_to_models path to the folder containing the list of models. 
+#' As default value, the pretrained models in the package will be used. 
+#' If user has trained new models, indicate the folder containing the 
+#' new_models.rda file.
+#' @param chunk_size size of data chunks to be predicted separately.
+#' This option is recommended for large datasets to reduce running time.
+#' Default value at 5000, because smaller datasets can be predicted rapidly.
+#' @param ignore_ambiguous_result return all ambiguous predictions
+#' (multiple cell types) to empty
+#' When this parameter turns to TRUE, 
+#' most probably predicted cell types will be ignored.  
+#' @param cluster_slot name of slot in meta data containing cluster 
+#' information, in case users want to have additional cluster-level 
+#' prediction
+#' 
+#' @return the input object with new slots in cells meta data
+#' New slots are: predicted_cell_type, most_probable_cell_type,
+#' slots in form of [cell_type]_p, [cell_type]_class, and clust_pred 
+#' (if cluster_slot was provided).  
 #' 
 #' @importFrom Seurat GetAssayData
 #' @import dplyr
 #' @importFrom stats predict
 #' 
-#' @rdname classify_cells
-#' 
-setMethod("classify_cells", c("classify_obj" = "Seurat"), 
-          function(classify_obj, classifiers = NULL, cell_types = "all", 
-                   chunk_size = 5000, path_to_models = "default", 
-                   ignore_ambiguous_result = FALSE, 
-                   cluster_slot = 'seurat_clusters', 
-                   seurat_assay = 'RNA', seurat_slot = 'counts', ...) {
+#' @rdname internal
+classify_cells_seurat <- 
+  function(classify_obj, classifiers = NULL, cell_types = "all", 
+           chunk_size = 5000, path_to_models = "default",
+           ignore_ambiguous_result = FALSE, cluster_slot, 
+           seurat_assay, seurat_slot) {
   if (is.null(classifiers)) { 
     model_list <- load_models(path_to_models)
     
@@ -959,24 +940,52 @@ setMethod("classify_cells", c("classify_obj" = "Seurat"),
                                            %in% colnames(classify_obj[[]])]
   for (colname in new.cols)
     classify_obj[[colname]] <- classified_obj[[colname]]
+  
   return(classify_obj)
-})
+}
 
-#' @inherit classify_cells
+#' Classify cells from multiple models for SCE object as input
 #' 
-#' @param sce_assay name of assay to use in 
-#' \code{\link{SingleCellExperiment}} object, 
-#' defaults to 'logcounts' assay.
+#' @param classify_obj the SCE object containing cells to be classified
+#' @param sce_assay name of assay to use in SCE object
+#' @param classifiers list of classification models. 
+#' The model is obtained from train_classifier function or available in current 
+#' working space. 
+#' Users may test the model using test_classifier before using this function.
+#' If classifiers contain classifiers for sub cell types, classifiers for
+#' parent cell type must be indicated first in order to be applied before
+#' children classifiers.
+#' If classifiers is NULL, the method will use all classifiers in database.
+#' @param cell_types list of cell types containing models to be used
+#' for classification, only applicable if the models have been saved to package.
+#' @param path_to_models path to the folder containing the list of models. 
+#' As default value, the pretrained models in the package will be used. 
+#' If user has trained new models, indicate the folder containing the 
+#' new_models.rda file.
+#' @param chunk_size size of data chunks to be predicted separately.
+#' This option is recommended for large datasets to reduce running time.
+#' Default value at 5000, because smaller datasets can be predicted rapidly.
+#' @param ignore_ambiguous_result return all ambiguous predictions
+#' (multiple cell types) to empty
+#' When this parameter turns to TRUE, 
+#' most probably predicted cell types will be ignored.  
+#' @param cluster_slot name of slot in meta data containing cluster 
+#' information, in case users want to have additional cluster-level 
+#' prediction
+#' 
+#' @return the input object with new slots in cells meta data
+#' New slots are: predicted_cell_type, most_probable_cell_type,
+#' slots in form of [cell_type]_p, [cell_type]_class, and clust_pred 
+#' (if cluster_slot was provided). 
 #' 
 #' @import SingleCellExperiment
 #' @importFrom SummarizedExperiment assay colData
 #' 
-#' @rdname classify_cells
-setMethod("classify_cells", c("classify_obj" = "SingleCellExperiment"), 
-          function(classify_obj, classifiers = NULL, cell_types = "all", 
-                   chunk_size = 5000, path_to_models = "default", 
-                   ignore_ambiguous_result = FALSE, 
-                   sce_assay = 'logcounts', cluster_slot = NULL, ...) {
+#' @rdname internal
+classify_cells_sce <- 
+  function(classify_obj, classifiers = NULL, cell_types = "all", 
+           chunk_size = 5000, path_to_models = "default", 
+           ignore_ambiguous_result = FALSE, sce_assay, cluster_slot = NULL) {
   # solve duplication of cell names
   colnames(classify_obj) <- make.unique(colnames(classify_obj), sep = '_')
   
@@ -1062,11 +1071,13 @@ setMethod("classify_cells", c("classify_obj" = "SingleCellExperiment"),
     else classified_obj <- cbind(classified_obj, obj.chunk)
   }
   
-  if (!is.null(cluster_slot) & !ignore_ambiguous_result) {
+  if (!is.null(cluster_slot) 
+      & cluster_slot %in% colnames(SummarizedExperiment::colData(classified_obj))
+      & !ignore_ambiguous_result) {
     clusts <- SummarizedExperiment::colData(classified_obj)[, cluster_slot]
     classified_obj$clust_pred <- 
       classify_clust(clusts, classified_obj$most_probable_cell_type)
   }
   
   return(classified_obj)
-})
+}

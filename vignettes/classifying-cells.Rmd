@@ -109,7 +109,7 @@ computational cost of this vignette. If users want to use all pretrained
 classifiers on their dataset, `cell_types = 'all'` can be used.
 ```{r}
 seurat.obj <- classify_cells(classify_obj = tirosh_mel80_example, 
-                             seurat_assay = 'RNA', seurat_slot = 'data',
+                             assay = 'RNA', slot = 'counts',
                              cell_types = c('B cells', 'NK', 'T cells'), 
                              path_to_models = 'default')
 ```

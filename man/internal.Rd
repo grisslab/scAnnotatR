@@ -21,6 +21,8 @@
 \alias{test_classifier_seurat}
 \alias{test_classifier_sce}
 \alias{test_classifier_from_mat}
+\alias{classify_cells_seurat}
+\alias{classify_cells_sce}
 \alias{balance_dataset}
 \alias{train_func}
 \alias{transform_to_zscore}
@@ -147,6 +149,29 @@ test_classifier_from_mat(
   zscore
 )
 
+classify_cells_seurat(
+  classify_obj,
+  classifiers = NULL,
+  cell_types = "all",
+  chunk_size = 5000,
+  path_to_models = "default",
+  ignore_ambiguous_result = FALSE,
+  cluster_slot,
+  seurat_assay,
+  seurat_slot
+)
+
+classify_cells_sce(
+  classify_obj,
+  classifiers = NULL,
+  cell_types = "all",
+  chunk_size = 5000,
+  path_to_models = "default",
+  ignore_ambiguous_result = FALSE,
+  sce_assay,
+  cluster_slot = NULL
+)
+
 balance_dataset(mat, tag)
 
 train_func(mat, tag)
@@ -232,10 +257,10 @@ indicating pre-assigned/predicted parent cell type.
 Default field is "predicted_cell_type".
 The slot must contain only string values.}
 
-\item{seurat_assay}{name of assay to use in test_object}
+\item{seurat_assay}{name of assay to use in Seurat object}
 
-\item{seurat_slot}{type of expression data to use in test_object. 
-For Seurat object, some available types are: "counts", "data" and "scale.data".}
+\item{seurat_slot}{type of expression data to use in Seurat object. 
+Some available types are: "counts", "data" and "scale.data".}
 
 \item{sce_tag_slot}{string, name of annotation slot 
 indicating cell tag/label in the testing object.
@@ -249,7 +274,7 @@ indicating pre-assigned/predicted parent cell type.
 Default field is "predicted_cell_type".
 The slot must contain only string values.}
 
-\item{sce_assay}{name of assay to use in test_object}
+\item{sce_assay}{name of assay to use in SCE object}
 
 \item{mat}{expression matrix}
 
@@ -266,19 +291,32 @@ parent cell type}
 
 \item{target_cell_type}{alternative cell types (in case of testing classifier)}
 
+\item{classify_obj}{the SCE object containing cells to be classified}
+
+\item{classifiers}{classifiers}
+
+\item{cell_types}{list of cell types containing models to be used
+for classification, only applicable if the models have been saved to package.}
+
+\item{chunk_size}{size of data chunks to be predicted separately.
+This option is recommended for large datasets to reduce running time.
+Default value at 5000, because smaller datasets can be predicted rapidly.}
+
+\item{ignore_ambiguous_result}{whether ignore ambigouous result}
+
+\item{cluster_slot}{name of slot in meta data containing cluster 
+information, in case users want to have additional cluster-level 
+prediction}
+
 \item{pos_parent}{a vector indicating parent classifier prediction}
 
 \item{parent_cell_type}{name of parent cell type}
 
 \item{pred_cells}{a whole prediction for all cells}
 
-\item{ignore_ambiguous_result}{whether ignore ambigouous result}
-
 \item{meta.data}{object meta data}
 
 \item{full_pred}{full prediction}
-
-\item{classifiers}{classifiers}
 
 \item{clusts}{cluster info}
 
@@ -332,6 +370,16 @@ including predicted values, prediction accuracy at a probability threshold,
 and roc curve information.
 
 model performance statistics
+
+the input object with new slots in cells meta data
+New slots are: predicted_cell_type, most_probable_cell_type,
+slots in form of [cell_type]_p, [cell_type]_class, and clust_pred 
+(if cluster_slot was provided).
+
+the input object with new slots in cells meta data
+New slots are: predicted_cell_type, most_probable_cell_type,
+slots in form of [cell_type]_p, [cell_type]_class, and clust_pred 
+(if cluster_slot was provided).
 
 a list of balanced count matrix
 and corresponding tags of balanced count matrix

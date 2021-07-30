@@ -101,7 +101,7 @@ cell_type = "b cells", tag_slot = 'active.ident')
 # classify cell types using B cell classifier, 
 # a test classifier process may be used before applying the classifier 
 tirosh_mel80_example <- classify_cells(classify_obj = tirosh_mel80_example, 
-classifiers = c(classifier_b))
+classifiers = c(classifier_b), assay = 'RNA', slot = 'counts')
 
 # tag all cells that are plasma cells (random example here)
 tirosh_mel80_example[['plasma_cell_tag']] <- c(rep(1, 80), rep(0, 400))

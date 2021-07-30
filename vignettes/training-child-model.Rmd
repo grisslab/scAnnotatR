@@ -224,7 +224,7 @@ database.
 
 ```{r}
 # see list of available model in package
-data("default_models")
+default_models <- load_models('default')
 names(default_models)
 ```
 
@@ -248,7 +248,7 @@ When we save the B cells' classifier and the plasma cells' classifier, a local d
 
 Let's try to classify cells in the test set:
 ```{r}
-classified <- classify_cells(classify_obj = test_set, sce_assay = 'counts', 
+classified <- classify_cells(classify_obj = test_set, assay = 'counts', 
                              cell_types = 'all', path_to_models = tempdir())
 ```
 
@@ -275,7 +275,7 @@ The number of identified plasma cells is different in the *predicted_cell_type* 
 To have all plasma cells specified as plasma cells, we can set the *ignore_ambiguous_result* to TRUE. This option will hide all ambiguous predictions where we have more than one possible cell type. In the parent-chid(ren) relationship of cell types, the more specified cell types/phenotypes will be reported.
 
 ```{r}
-classified <- classify_cells(classify_obj = test_set, sce_assay = 'counts',
+classified <- classify_cells(classify_obj = test_set, assay = 'counts',
                              cell_types = 'all', path_to_models = tempdir(),
                              ignore_ambiguous_result = TRUE)
 table(classified$predicted_cell_type, classified$plasma)

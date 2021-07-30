@@ -2,48 +2,28 @@
 % Please edit documentation in R/classifier.R
 \name{classify_cells}
 \alias{classify_cells}
-\alias{classify_cells,Seurat-method}
-\alias{classify_cells,SingleCellExperiment-method}
 \title{Classify cells from multiple models}
 \usage{
 classify_cells(
   classify_obj,
+  assay,
+  slot = NULL,
   classifiers = NULL,
   cell_types = "all",
   chunk_size = 5000,
   path_to_models = "default",
   ignore_ambiguous_result = FALSE,
-  cluster_slot = NULL,
-  ...
-)
-
-\S4method{classify_cells}{Seurat}(
-  classify_obj,
-  classifiers = NULL,
-  cell_types = "all",
-  chunk_size = 5000,
-  path_to_models = "default",
-  ignore_ambiguous_result = FALSE,
-  cluster_slot = "seurat_clusters",
-  seurat_assay = "RNA",
-  seurat_slot = "counts",
-  ...
-)
-
-\S4method{classify_cells}{SingleCellExperiment}(
-  classify_obj,
-  classifiers = NULL,
-  cell_types = "all",
-  chunk_size = 5000,
-  path_to_models = "default",
-  ignore_ambiguous_result = FALSE,
-  sce_assay = "logcounts",
-  cluster_slot = NULL,
-  ...
+  cluster_slot = "clusters"
 )
 }
 \arguments{
 \item{classify_obj}{the object containing cells to be classified}
+
+\item{assay}{name of assay to use in classify_object}
+
+\item{slot}{type of expression data to use in classify_object. 
+For Seurat object, some available types are: 
+"counts", "data" and "scale.data".}
 
 \item{classifiers}{list of classification models. 
 The model is obtained from train_classifier function or available in current 
@@ -74,25 +54,12 @@ most probably predicted cell types will be ignored.}
 \item{cluster_slot}{name of slot in meta data containing cluster 
 information, in case users want to have additional cluster-level 
 prediction}
-
-\item{...}{arguments passed to other methods}
-
-\item{seurat_assay}{name of assay to use in 
-\code{\link{Seurat}} object, defaults to 'RNA' assay.}
-
-\item{seurat_slot}{type of expression data to use in 
-\code{\link{Seurat}} object. Some available types are: 
-"counts", "data" and "scale.data". 
-Default to "counts", which is unnormalized data.}
-
-\item{sce_assay}{name of assay to use in 
-\code{\link{SingleCellExperiment}} object, 
-defaults to 'logcounts' assay.}
 }
 \value{
 the input object with new slots in cells meta data
 New slots are: predicted_cell_type, most_probable_cell_type,
-slots in form of [cell_type]_p and [cell_type]_class
+slots in form of [cell_type]_p, [cell_type]_class, and clust_pred 
+(if cluster_slot was provided).
 }
 \description{
 Classify cells from multiple models
@@ -123,6 +90,6 @@ classifier_ls <- list(classifier_b, classifier_t)
 
 # classify cells with list of classifiers
 seurat.obj <- classify_cells(classify_obj = tirosh_mel80_example, 
-classifiers = classifier_ls)
+assay = 'RNA', slot = 'counts', classifiers = classifier_ls)
 
 }
