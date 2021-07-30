@@ -485,7 +485,9 @@ setReplaceMethod('caret_model', c("classifier" = "scAnnotatR"),
     # set new marker_genes
     new_marker_genes <- labels(value$terms)
     # convert underscore to hyphen if exists
-    new_marker_genes <- gsub('_', '-', new_marker_genes) 
+    new_marker_genes <- gsub('^G_', '', new_marker_genes) 
+    new_marker_genes <- gsub('_', '-', new_marker_genes)
+    
     marker_genes(classifier) <- new_marker_genes
   } else {
     stop("Can only assign new classifier for a cell type that has no parent.

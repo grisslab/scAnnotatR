@@ -205,7 +205,7 @@ train_classifier_sce <-
            parent_classifier = NULL, path_to_models = "default", zscore = TRUE, 
            sce_tag_slot, sce_parent_tag_slot = "predicted_cell_type", sce_assay) {
   
-    preprocessed <- preprocess_sce_object(train_obj, sce_assay, sce_tag_slot, 
+  preprocessed <- preprocess_sce_object(train_obj, sce_assay, sce_tag_slot, 
                                         sce_parent_tag_slot)  
   object <- train_classifier_from_mat(preprocessed$mat, preprocessed$tag, 
                                       cell_type, marker_genes, 
@@ -286,6 +286,10 @@ train_classifier_from_mat <- function(mat, tag, cell_type, marker_genes,
   
   # convert hyphen (-) by underscore (_)
   colnames(train_mat) <- gsub('-', '_', colnames(train_mat))
+  # add G_ to beginning of gene names to prevent starting by digits
+  colnames(train_mat) <- unlist(lapply(colnames(train_mat), 
+                                function(x) if(grepl('^[[:digit:]]', x)) 
+                                  {paste0('G_', x)} else {x}))
   
   # train
   caret_model <- train_func(train_mat, train_tag)
@@ -295,7 +299,8 @@ train_classifier_from_mat <- function(mat, tag, cell_type, marker_genes,
   p_thres <- 0.5
   
   marker_genes <- labels(caret_model$terms)
-  marker_genes <- gsub('_', '-', marker_genes) # convert back underscore to hyphen
+  marker_genes <- gsub('^G_', '', marker_genes) # convert back underscore to hyphen
+  marker_genes <- gsub('_', '-', marker_genes)
   object <- scAnnotatR(cell_type, caret_model, marker_genes, p_thres, 
                        NA_character_)
   

@@ -310,6 +310,12 @@ process_parent_classifier <- function(mat, parent_tag, parent_cell_type,
         
         # to avoid problem triggered by '-' in gene names
         colnames(filtered_mat) <- gsub('-', '_', colnames(filtered_mat))
+        # add G_ to beginning of gene names to prevent starting by digits
+        colnames(filtered_mat) <- unlist(lapply(colnames(filtered_mat), 
+                                             function(x) 
+                                               if(grepl('^[[:digit:]]', x)) 
+                                                 {paste0('G_', x)} 
+                                             else {x}))
         
         # predict
         pred = stats::predict(caret_model(parent.classifier), filtered_mat, type = "prob") %>% 
@@ -357,6 +363,11 @@ make_prediction <- function(mat, classifier, pred_cells,
   
   # to avoid problem triggered by '-' in gene names
   colnames(mat) <- gsub('-', '_', colnames(mat))
+  colnames(mat) <- unlist(lapply(colnames(mat), 
+                                 function(x) 
+                                   if(grepl('^[[:digit:]]', x)) 
+                                     {paste0('G_', x)}
+                                 else {x}))
   
   # predict
   pred = stats::predict(caret_model(classifier), mat, type = "prob") %>%
@@ -504,7 +515,12 @@ test_performance <- function(mat, classifier, tag) {
   
   # to avoid problem triggered by '-' in gene names
   colnames(mat) <- gsub('-', '_', colnames(mat))
-    
+  colnames(mat) <- unlist(lapply(colnames(mat), 
+                                 function(x) 
+                                   if(grepl('^[[:digit:]]', x)) 
+                                     {paste0('G_', x)}
+                                 else {x}))
+  
   tag <- unlist(lapply(tag, function(x) if (x == 'yes') {1} else {0}))
   
   iter <- unique(sort(c(p_thres(classifier), seq(0.1, 0.9, by = 0.1))))
