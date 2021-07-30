@@ -24,7 +24,7 @@ easy tools to train their own model classifying new cell types from labeled
 scRNA-seq data.
 
 This vignette shows how to train a basic 
-classification model for an independant cell type, which is not a child of 
+classification model for an independent cell type, which is not a child of 
 any other cell type.
 
 ## Preparing train object and test object
