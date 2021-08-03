@@ -28,7 +28,9 @@
 #' 
 #' # save the trained classifier to system 
 #' # test classifier can be used before this step
-#' save_new_model(new_model = classifier_t, path_to_models = tempdir())
+#' # Note: We do not include the default models here to runtime of the example
+#' save_new_model(new_model = classifier_t, path_to_models = tempdir(), 
+#'                include.default = FALSE)
 #' 
 #' # verify if new model has been saved
 #' print(names(load(file.path(tempdir(), "new_models.rda"))))
@@ -37,6 +39,11 @@
 #' @export
 save_new_model <- function(new_model, include.default = TRUE, 
                     path_to_models = tempdir()) {
+  # create the model directory if it doesn't exist
+  if (!dir.exists(path_to_models)) {
+    dir.create(path_to_models)
+  }
+  
   default_models <- NULL
   data_env <- new.env(parent = emptyenv())
   
@@ -76,6 +83,7 @@ save_new_model <- function(new_model, include.default = TRUE,
   names(new_models) <- names
   
   # save to rda file
+  message("Saving new models to ", new_models.file.path, "...")
   save(new_models, file = new_models.file.path, compress = 'xz')
   message("Finished saving new model")
 } 
@@ -156,7 +164,8 @@ plant_tree <- function(path_to_models = "default") {
 #' cell_type = "t cells", tag_slot = 'active.ident')
 #' 
 #' # save a classifier to system
-#' save_new_model(new_model = classifier_t, path_to_models = tempdir())
+#' save_new_model(new_model = classifier_t, path_to_models = tempdir(), 
+#'                include.default = FALSE)
 #' 
 #' # delete classifier from system
 #' delete_model("t cells", path_to_models = tempdir())
