@@ -36,8 +36,6 @@
 \alias{verify_parent}
 \alias{test_performance}
 \alias{classify_clust}
-\alias{.get_cache}
-\alias{download_data_file}
 \title{Internal functions of scAnnotatR package}
 \usage{
 checkObjectValidity(object)
@@ -211,10 +209,6 @@ verify_parent(mat, classifier, meta.data)
 test_performance(mat, classifier, tag)
 
 classify_clust(clusts, most_probable_cell_type)
-
-.get_cache()
-
-download_data_file(verbose = FALSE)
 }
 \arguments{
 \item{object}{The request classifier to check.}
@@ -321,8 +315,6 @@ prediction}
 \item{clusts}{cluster info}
 
 \item{most_probable_cell_type}{predicted cell type}
-
-\item{verbose}{logical indicating downloading the file or not}
 }
 \value{
 TRUE if the classifier is valid or the reason why it is not
@@ -405,10 +397,6 @@ simplified prediction
 applicable matrix
 
 classifier performance
-
-BiocFileCache object
-
-path to the downloaded file in cache
 }
 \description{
 Check if a scAnnotatR object is valid

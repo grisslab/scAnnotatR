@@ -595,49 +595,49 @@ classify_clust <- function(clusts, most_probable_cell_type) {
   return(converted_pred)
 }
 
-#' Create a BiocFileCache object
-#'
-#' @return BiocFileCache object 
-#' @import tools
-#' @import BiocFileCache
-#' 
-#' @rdname internal
-.get_cache <-
-  function()
-  {
-    cache <- tools::R_user_dir("scAnnotatR", which="cache")
-    BiocFileCache::BiocFileCache(cache)
-  }
+#' #' Create a BiocFileCache object
+#' #'
+#' #' @return BiocFileCache object 
+#' #' @import tools
+#' #' @import BiocFileCache
+#' #' 
+#' #' @rdname internal
+#' .get_cache <-
+#'   function()
+#'   {
+#'     cache <- tools::R_user_dir("scAnnotatR", which="cache")
+#'     BiocFileCache::BiocFileCache(cache)
+#'   }
 
-#' Download and store default models in cache
-#' @param verbose logical indicating downloading the file or not 
-#'
-#' @return path to the downloaded file in cache 
-#' @import BiocFileCache
-#' 
-#' @rdname internal
-download_data_file <-
-  function(verbose = FALSE)
-  {
-    fileURL <- "https://github.com/grisslab/scAnnotatR-models/raw/main/default_models.rda"
-    
-    bfc <- .get_cache()
-    rid <- BiocFileCache::bfcquery(bfc, "scannotatr_default_models", "rname")$rid
-    
-    # download the file if it hasn't been dowloaded before
-    if (!length(rid)) {
-      if (verbose)
-        message("Downloading default models..." )
-      
-      rid <- names(BiocFileCache::bfcadd(bfc, "scannotatr_default_models", fileURL))
-    }
-    # TODO: bfcneedsupdate does not work with GitHub. Therefore, always use the 
-    # cached file for now.
-    # Later: Add additional check using GitHub's API to test whether the file was updated
-    # 
-    # else if (!isFALSE(BiocFileCache::bfcneedsupdate(bfc, rid))) {
-    #   BiocFileCache::bfcdownload(bfc, rid)
-    # }
-    
-    BiocFileCache::bfcrpath(bfc, rids = rid)
-  }
+#' #' Download and store default models in cache
+#' #' @param verbose logical indicating downloading the file or not 
+#' #'
+#' #' @return path to the downloaded file in cache 
+#' #' @import BiocFileCache
+#' #' 
+#' #' @rdname internal
+#' download_data_file <-
+#'   function(verbose = FALSE)
+#'   {
+#'     fileURL <- "https://github.com/grisslab/scAnnotatR-models/raw/main/default_models.rda"
+#'     
+#'     bfc <- .get_cache()
+#'     rid <- BiocFileCache::bfcquery(bfc, "scannotatr_default_models", "rname")$rid
+#'     
+#'     # download the file if it hasn't been dowloaded before
+#'     if (!length(rid)) {
+#'       if (verbose)
+#'         message("Downloading default models..." )
+#'       
+#'       rid <- names(BiocFileCache::bfcadd(bfc, "scannotatr_default_models", fileURL))
+#'     }
+#'     # TODO: bfcneedsupdate does not work with GitHub. Therefore, always use the 
+#'     # cached file for now.
+#'     # Later: Add additional check using GitHub's API to test whether the file was updated
+#'     # 
+#'     # else if (!isFALSE(BiocFileCache::bfcneedsupdate(bfc, rid))) {
+#'     #   BiocFileCache::bfcdownload(bfc, rid)
+#'     # }
+#'     
+#'     BiocFileCache::bfcrpath(bfc, rids = rid)
+#'   }

@@ -30,8 +30,6 @@ Imports:
     e1071, 
     ape, 
     kernlab,
-    tools,
-    BiocFileCache,
     utils
 Suggests: 
     knitr,

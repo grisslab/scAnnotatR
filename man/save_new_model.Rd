@@ -39,7 +39,9 @@ cell_type = "t cells", tag_slot = 'active.ident')
 
 # save the trained classifier to system 
 # test classifier can be used before this step
-save_new_model(new_model = classifier_t, path_to_models = tempdir())
+# Note: We do not include the default models here to runtime of the example
+save_new_model(new_model = classifier_t, path_to_models = tempdir(), 
+               include.default = FALSE)
 
 # verify if new model has been saved
 print(names(load(file.path(tempdir(), "new_models.rda"))))
