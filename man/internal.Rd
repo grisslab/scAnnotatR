@@ -36,7 +36,6 @@
 \alias{verify_parent}
 \alias{test_performance}
 \alias{classify_clust}
-\alias{.get_cache}
 \alias{download_data_file}
 \title{Internal functions of scAnnotatR package}
 \usage{
@@ -211,8 +210,6 @@ verify_parent(mat, classifier, meta.data)
 test_performance(mat, classifier, tag)
 
 classify_clust(clusts, most_probable_cell_type)
-
-.get_cache()
 
 download_data_file(verbose = FALSE)
 }
@@ -406,9 +403,7 @@ applicable matrix
 
 classifier performance
 
-BiocFileCache object
-
-path to the downloaded file in cache
+model list object
 }
 \description{
 Check if a scAnnotatR object is valid

@@ -115,9 +115,7 @@ load_models <- function(path_to_models) {
   data_env <- new.env(parent = emptyenv())
   
   if (path_to_models == "default") {
-    models_path <- download_data_file(TRUE) # more function: if user want to save cache
-    load(models_path, envir = data_env)
-    model_list <- data_env[["default_models"]]
+    model_list <- download_data_file() # more function: if user want to save cache
   } else {
     models_path <- file.path(path_to_models, "new_models.rda")
     if (!file.exists(models_path)) {
@@ -595,49 +593,23 @@ classify_clust <- function(clusts, most_probable_cell_type) {
   return(converted_pred)
 }
 
-#' Create a BiocFileCache object
-#'
-#' @return BiocFileCache object 
-#' @import tools
-#' @import BiocFileCache
-#' 
-#' @rdname internal
-.get_cache <-
-  function()
-  {
-    cache <- tools::R_user_dir("scAnnotatR", which="cache")
-    BiocFileCache::BiocFileCache(cache)
-  }
-
 #' Download and store default models in cache
 #' @param verbose logical indicating downloading the file or not 
 #'
-#' @return path to the downloaded file in cache 
-#' @import BiocFileCache
+#' @return model list object 
+#' @import AnnotationHub
 #' 
 #' @rdname internal
 download_data_file <-
   function(verbose = FALSE)
   {
-    fileURL <- "https://github.com/grisslab/scAnnotatR-models/raw/main/default_models.rda"
-    
-    bfc <- .get_cache()
-    rid <- BiocFileCache::bfcquery(bfc, "scannotatr_default_models", "rname")$rid
-    
-    # download the file if it hasn't been dowloaded before
-    if (!length(rid)) {
-      if (verbose)
-        message("Downloading default models..." )
-      
-      rid <- names(BiocFileCache::bfcadd(bfc, "scannotatr_default_models", fileURL))
+    models <- NULL
+    if (!verbose) {
+      eh <- AnnotationHub::AnnotationHub()
+      # load the stored models
+      query <- AnnotationHub::query(eh, "scAnnotatR.models")
+      models <- query[["AH95906"]]
     }
-    # TODO: bfcneedsupdate does not work with GitHub. Therefore, always use the 
-    # cached file for now.
-    # Later: Add additional check using GitHub's API to test whether the file was updated
-    # 
-    # else if (!isFALSE(BiocFileCache::bfcneedsupdate(bfc, rid))) {
-    #   BiocFileCache::bfcdownload(bfc, rid)
-    # }
     
-    BiocFileCache::bfcrpath(bfc, rids = rid)
+    return(models)
   }

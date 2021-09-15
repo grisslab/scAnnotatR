@@ -2,7 +2,7 @@ Package: scAnnotatR
 Type: Package
 Title: Pretrained learning models for cell type prediction on single cell 
        RNA-sequencing data 
-Version: 0.99.6
+Version: 0.99.7
 Authors@R: 
     c(person("Vy", "Nguyen", email = "thi-tuong-vy.nguyen@meduniwien.ac.at", 
       role = c("aut"), comment = c(ORCID = "0000-0003-3436-3662")),
@@ -30,8 +30,7 @@ Imports:
     e1071, 
     ape, 
     kernlab,
-    tools,
-    BiocFileCache,
+    AnnotationHub,
     utils
 Suggests: 
     knitr,
@@ -41,6 +40,6 @@ Suggests:
 VignetteBuilder: knitr
 Depends: R (>= 4.1), Seurat, SingleCellExperiment, SummarizedExperiment
 LazyData: true
-RoxygenNote: 7.1.1
+RoxygenNote: 7.1.2
 URL: https://github.com/grisslab/scAnnotatR
 BugReports: https://github.com/grisslab/scAnnotatR/issues/new

@@ -58,9 +58,7 @@ save_new_model <- function(new_model, include.default = TRUE,
   
   if (include.default == TRUE) {
     # default models not in new_models will be added to new_models
-    path_to_default_models <- download_data_file(TRUE)
-    load(path_to_default_models, envir = data_env)
-    default_models <- data_env[["default_models"]]
+    default_models <- download_data_file()
     to.be.added <- default_models[!names(default_models)%in%names(new_models)]
     new_models <- append(to.be.added, new_models)
   }

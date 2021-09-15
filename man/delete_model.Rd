@@ -32,7 +32,8 @@ assay = 'RNA', slot = 'counts', marker_genes = selected_marker_genes_T,
 cell_type = "t cells", tag_slot = 'active.ident')
 
 # save a classifier to system
-save_new_model(new_model = classifier_t, path_to_models = tempdir())
+save_new_model(new_model = classifier_t, path_to_models = tempdir(), 
+               include.default = FALSE)
 
 # delete classifier from system
 delete_model("t cells", path_to_models = tempdir())
