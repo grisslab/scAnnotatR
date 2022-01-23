@@ -27,3 +27,8 @@ The complete usage is shown in the vignettes:
 
 For more questions / feedback please simply post an [Issue](https://github.com/grisslab/scAnnotatR/issues/new).
 
+## Citation
+
+If you used scAnnotatR in your research, we would be grateful if you could cite the following manuscript:
+
+Nguyen, V., Griss, J. scAnnotatR: framework to accurately classify cell types in single-cell RNA-sequencing data. BMC Bioinformatics 23, 44 (2022). https://doi.org/10.1186/s12859-022-04574-5
