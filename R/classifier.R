@@ -857,13 +857,13 @@ classify_cells_seurat <-
   if (is.null(classifiers)) { 
     model_list <- load_models(path_to_models)
     
-    if (length(cell_types) >= 1 | all(cell_types != "all")) 
+    if (length(cell_types) >= 1 & all(cell_types != "all")) 
       classifiers = model_list[cell_types]
     else classifiers <- model_list
   }
   
   union.marker_genes <- unique(unname(unlist(lapply(classifiers, 
-                                                function(x) marker_genes(x)))))
+                                                    function(x) marker_genes(x)))))
   mat = Seurat::GetAssayData(object = classify_obj, 
                              assay = seurat_assay, slot = seurat_slot)
   # if expression matrix is not dgCMatrix: DelayedMatrix for ex.
