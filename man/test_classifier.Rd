@@ -38,51 +38,51 @@ test_classifier(
 
 \item{assay}{name of assay to use in test_object}
 
-\item{slot}{type of expression data to use in test_object. 
+\item{slot}{type of expression data to use in test_object.
 For Seurat object, some available types are: "counts", "data" and "scale.data".
 Ignore this if test_obj is \code{\link{SingleCellExperiment}} object.}
 
-\item{tag_slot}{string, name of annotation slot 
+\item{tag_slot}{string, name of annotation slot
 indicating cell tag/label in the testing object.
-Strings indicating cell types are expected in this slot. 
-Expected values are string (A-Z, a-z, 0-9, no special character accepted) 
-or binary/logical, 0/"no"/F/FALSE: not being new cell type, 
+Strings indicating cell types are expected in this slot.
+Expected values are string (A-Z, a-z, 0-9, no special character accepted)
+or binary/logical, 0/"no"/F/FALSE: not being new cell type,
 1/"yes"/T/TRUE: being new cell type.}
 
-\item{target_cell_type}{vector indicating other cell types than cell labels 
-that can be considered as the main cell type in classifier, 
-for example, c("plasma cell", "b cell", "b cells", "activating b cell"). 
+\item{target_cell_type}{vector indicating other cell types than cell labels
+that can be considered as the main cell type in classifier,
+for example, c("plasma cell", "b cell", "b cells", "activating b cell").
 Default as NULL.}
 
 \item{parent_classifier}{\code{\link{scAnnotatR}} object
 corresponding to classification model for the parent cell type}
 
 \item{parent_tag_slot}{string, name of tag slot in cell meta data
-indicating pre-assigned/predicted parent cell type. 
+indicating pre-assigned/predicted parent cell type.
 Default field is "predicted_cell_type".
 The slot must contain only string values.}
 
-\item{path_to_models}{path to the folder containing the list of models. 
-As default, the pretrained models in the package will be used. 
-If user has trained new models, indicate the folder containing 
+\item{path_to_models}{path to the folder containing the list of models.
+As default, the pretrained models in the package will be used.
+If user has trained new models, indicate the folder containing
 the new_models.rda file.}
 
 \item{zscore}{boolean, whether gene expression is transformed to zscore}
 }
 \value{
-result of testing process in form of a list, 
-including predicted values, prediction accuracy at a probability threshold, 
+result of testing process in form of a list,
+including predicted values, prediction accuracy at a probability threshold,
 and roc curve information.
 }
 \description{
 Testing process.
 }
 \note{
-Only one cell type is expected for each cell. 
+Only one cell type is expected for each cell.
 Ambiguous cell type, such as: "T cells/NK cells/ILC", will be ignored.
-Subtypes used in testing model for parent cell types can be indicated 
-as parent cell type, or can be indicated in target_cell_type. 
-For example, when testing for B cells, plasma cells can be annotated as 
+Subtypes used in testing model for parent cell types can be indicated
+as parent cell type, or can be indicated in target_cell_type.
+For example, when testing for B cells, plasma cells can be annotated as
 B cells, or target_cell_type is set c("plasma cells").
 }
 \examples{
@@ -93,13 +93,13 @@ data("tirosh_mel80_example")
 selected_marker_genes_B = c("CD19", "MS4A1", "CD79A")
 set.seed(123)
 classifier_b <- train_classifier(train_obj = tirosh_mel80_example,
-assay = 'RNA', slot = 'counts', marker_genes = selected_marker_genes_B, 
+assay = 'RNA', slot = 'counts', marker_genes = selected_marker_genes_B,
 cell_type = "b cells", tag_slot = 'active.ident')
 
 # test the classifier, target cell type can be in other formats or
-# alternative cell type that can be considered as the classified cell type 
-classifier_b_test <- test_classifier(classifier = classifier_b, 
-test_obj = tirosh_mel80_example, assay = 'RNA', slot = 'counts', 
+# alternative cell type that can be considered as the classified cell type
+classifier_b_test <- test_classifier(classifier = classifier_b,
+test_obj = tirosh_mel80_example, assay = 'RNA', slot = 'counts',
 tag_slot = 'active.ident', target_cell_type = c("B cell"))
 classifier_b_test
 

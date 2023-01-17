@@ -40,6 +40,6 @@ Suggests:
 VignetteBuilder: knitr
 Depends: R (>= 4.1), Seurat, SingleCellExperiment, SummarizedExperiment
 LazyData: true
-RoxygenNote: 7.1.2
+RoxygenNote: 7.2.1
 URL: https://github.com/grisslab/scAnnotatR
 BugReports: https://github.com/grisslab/scAnnotatR/issues/new
