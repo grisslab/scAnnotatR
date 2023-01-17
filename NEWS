@@ -1,2 +1,5 @@
+Changes in version 1.55.1 (2023-01-17)
++ Added check to ignore any classifiers / cell types for which genes are missing in the dataset.
+
 Changes in version 0.99.2 (2021-23-07)
 + Adapted code based on Bioconductor review
