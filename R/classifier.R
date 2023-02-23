@@ -865,7 +865,7 @@ classify_cells_seurat <-
   cell_types <- names(classifiers)
   for (cell_type in cell_types) {
     if (any(!marker_genes(classifiers[[cell_type]]) %in% rownames(classify_obj))) {
-      warning('Some genes to classify ', cell_type, ' are not available in the dataset. ',
+      warning('All genes from ', cell_type, ' classifier model must be present in the dataset to perform classification. ',
               'Classification of ', cell_type, ' skipped.\n', call. = FALSE, immediate. = TRUE)
       classifiers <- classifiers[!names(classifiers) %in% cell_type]
     }
