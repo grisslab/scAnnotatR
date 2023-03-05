@@ -109,6 +109,7 @@ transform_to_zscore <- function(mat) {
 #' @param model_names The names of the models to retain
 #' 
 #' @return The list containing the selected models
+#' @rdname internal
 subset_models <- function(model_list, model_names) {
   # make sure the number of selected models is
   # smaller than the ones available
