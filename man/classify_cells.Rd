@@ -21,13 +21,13 @@ classify_cells(
 
 \item{assay}{name of assay to use in classify_object}
 
-\item{slot}{type of expression data to use in classify_object. 
-For Seurat object, some available types are: 
+\item{slot}{type of expression data to use in classify_object.
+For Seurat object, some available types are:
 "counts", "data" and "scale.data".}
 
-\item{classifiers}{list of classification models. 
-The model is obtained from train_classifier function or available in current 
-working space. 
+\item{classifiers}{list of classification models.
+The model is obtained from train_classifier function or available in current
+working space.
 Users may test the model using test_classifier before using this function.
 If classifiers contain classifiers for sub cell types, classifiers for
 parent cell type must be indicated first in order to be applied before
@@ -41,24 +41,24 @@ for classification, only applicable if the models have been saved to package.}
 This option is recommended for large datasets to reduce running time.
 Default value at 5000, because smaller datasets can be predicted rapidly.}
 
-\item{path_to_models}{path to the folder containing the list of models. 
-As default value, the pretrained models in the package will be used. 
-If user has trained new models, indicate the folder containing the 
+\item{path_to_models}{path to the folder containing the list of models.
+As default value, the pretrained models in the package will be used.
+If user has trained new models, indicate the folder containing the
 new_models.rda file.}
 
 \item{ignore_ambiguous_result}{return all ambiguous predictions
 (multiple cell types) to empty
-When this parameter turns to TRUE, 
+When this parameter turns to TRUE,
 most probably predicted cell types will be ignored.}
 
-\item{cluster_slot}{name of slot in meta data containing cluster 
-information, in case users want to have additional cluster-level 
+\item{cluster_slot}{name of slot in meta data containing cluster
+information, in case users want to have additional cluster-level
 prediction}
 }
 \value{
 the input object with new slots in cells meta data
 New slots are: predicted_cell_type, most_probable_cell_type,
-slots in form of [cell_type]_p, [cell_type]_class, and clust_pred 
+slots in form of [cell_type]_p, [cell_type]_class, and clust_pred
 (if cluster_slot was provided).
 }
 \description{
@@ -75,21 +75,21 @@ selected_marker_genes_B = c("CD19", "MS4A1", "CD79A")
 # train the classifier
 set.seed(123)
 classifier_b <- train_classifier(train_obj = tirosh_mel80_example,
-assay = 'RNA', slot = 'counts', marker_genes = selected_marker_genes_B, 
+assay = 'RNA', slot = 'counts', marker_genes = selected_marker_genes_B,
 cell_type = "b cells", tag_slot = 'active.ident')
 
 # do the same thing with other cell types, for example, T cells
 selected_marker_genes_T = c("CD4", "CD8A", "CD8B")
 set.seed(123)
 classifier_t <- train_classifier(train_obj = tirosh_mel80_example,
-assay = 'RNA', slot = 'counts', marker_genes = selected_marker_genes_T, 
+assay = 'RNA', slot = 'counts', marker_genes = selected_marker_genes_T,
 cell_type = "T cells", tag_slot = 'active.ident')
 
 # create a list of classifiers
 classifier_ls <- list(classifier_b, classifier_t)
 
 # classify cells with list of classifiers
-seurat.obj <- classify_cells(classify_obj = tirosh_mel80_example, 
+seurat.obj <- classify_cells(classify_obj = tirosh_mel80_example,
 assay = 'RNA', slot = 'counts', classifiers = classifier_ls)
 
 }

@@ -19,18 +19,18 @@ train_classifier(
 )
 }
 \arguments{
-\item{train_obj}{object that can be used for training the new model. 
+\item{train_obj}{object that can be used for training the new model.
 \code{\link{Seurat}} object or \code{\link{SingleCellExperiment}} object
 is supported.
-If the training model has parent, parent_tag_slot may have been indicated. 
-This field would have been filled out automatically 
-if user precedently run classify_cells function. 
-If no (predicted) cell type annotation provided, 
+If the training model has parent, parent_tag_slot may have been indicated.
+This field would have been filled out automatically
+if user precedently run classify_cells function.
+If no (predicted) cell type annotation provided,
 the function can be run if 1- parent_cell or 2- parent_classifier is provided.}
 
 \item{assay}{name of assay to use in training object.}
 
-\item{slot}{type of expression data to use in training object, omitted if 
+\item{slot}{type of expression data to use in training object, omitted if
 train_obj is \code{\link{SingleCellExperiment}} object.}
 
 \item{cell_type}{string indicating the name of the subtype
@@ -38,29 +38,29 @@ This must exactly match cell tag/label if cell tag/label is a string.}
 
 \item{marker_genes}{list of marker genes used for the new training model}
 
-\item{tag_slot}{string, name of slot in cell meta data 
+\item{tag_slot}{string, name of slot in cell meta data
 indicating cell tag/label in the training object.
 Strings indicating cell types are expected in this slot.
-For \code{\link{Seurat}} object, default value is "active.ident".  
-Expected values are string (A-Z, a-z, 0-9, no special character accepted) 
-or binary/logical, 0/"no"/F/FALSE: not being new cell type, 
+For \code{\link{Seurat}} object, default value is "active.ident".
+Expected values are string (A-Z, a-z, 0-9, no special character accepted)
+or binary/logical, 0/"no"/F/FALSE: not being new cell type,
 1/"yes"/T/TRUE: being new cell type.}
 
-\item{parent_cell}{string indicated the name of the parent cell type, 
+\item{parent_cell}{string indicated the name of the parent cell type,
 if parent cell type classifier has already been saved in model database.
 Adjust path_to_models for exact database.}
 
-\item{parent_tag_slot}{string, name of a slot in cell meta data 
-indicating assigned/predicted cell type. Default is "predicted_cell_type". 
-This slot would have been filled automatically 
+\item{parent_tag_slot}{string, name of a slot in cell meta data
+indicating assigned/predicted cell type. Default is "predicted_cell_type".
+This slot would have been filled automatically
 if user have called classify_cells function.
 The slot must contain only string values.}
 
 \item{parent_classifier}{classification model for the parent cell type}
 
-\item{path_to_models}{path to the folder containing the model database. 
-As default, the pretrained models in the package will be used. 
-If user has trained new models, indicate the folder containing the 
+\item{path_to_models}{path to the folder containing the model database.
+As default, the pretrained models in the package will be used.
+If user has trained new models, indicate the folder containing the
 new_models.rda file.}
 
 \item{zscore}{whether gene expression in train_obj is transformed to zscore}
@@ -69,16 +69,16 @@ new_models.rda file.}
 \code{\link{scAnnotatR}} object
 }
 \description{
-Train a classifier for a new cell type. 
+Train a classifier for a new cell type.
 If cell type has a parent, only available for \code{\link{scAnnotatR}}
 object as parent cell classifying model.
 }
 \note{
-Only one cell type is expected for each cell in object. 
-Ambiguous cell type, such as: "T cells/NK cells/ILC", 
+Only one cell type is expected for each cell in object.
+Ambiguous cell type, such as: "T cells/NK cells/ILC",
 will be ignored from training.
 Subtypes used in training model for parent cell types must be indicated
-as parent cell type. For example, when training for B cells, 
+as parent cell type. For example, when training for B cells,
 plasma cells must be annotated as B cells in order to be used.
 }
 \examples{
@@ -91,16 +91,16 @@ table(Seurat::Idents(tirosh_mel80_example))
 # define genes to use to classify this cell type (B cells in this example)
 selected_marker_genes_B = c("CD19", "MS4A1", "CD79A")
 
-# train the classifier, the "cell_type" argument must match 
+# train the classifier, the "cell_type" argument must match
 # the cell labels in the data, except upper/lower case
 set.seed(123)
 classifier_b <- train_classifier(train_obj = tirosh_mel80_example,
-assay = 'RNA', slot = 'counts', marker_genes = selected_marker_genes_B, 
+assay = 'RNA', slot = 'counts', marker_genes = selected_marker_genes_B,
 cell_type = "b cells", tag_slot = 'active.ident')
 
-# classify cell types using B cell classifier, 
-# a test classifier process may be used before applying the classifier 
-tirosh_mel80_example <- classify_cells(classify_obj = tirosh_mel80_example, 
+# classify cell types using B cell classifier,
+# a test classifier process may be used before applying the classifier
+tirosh_mel80_example <- classify_cells(classify_obj = tirosh_mel80_example,
 classifiers = c(classifier_b), assay = 'RNA', slot = 'counts')
 
 # tag all cells that are plasma cells (random example here)
@@ -109,13 +109,13 @@ tirosh_mel80_example[['plasma_cell_tag']] <- c(rep(1, 80), rep(0, 400))
 # set new marker genes for the subtype
 p_marker_genes = c("SDC1", "CD19", "CD79A")
 
-# train the classifier, the "B cell" classifier is used as parent. 
+# train the classifier, the "B cell" classifier is used as parent.
 # This means, only cells already classified as "B cells" will be evaluated.
 # the "tag_slot" parameter tells the classifier to use this cell meta data
 # for the training process.
 set.seed(123)
-plasma_classifier <- train_classifier(train_obj = tirosh_mel80_example, 
-assay = 'RNA', slot = 'counts', cell_type = 'Plasma cell', 
+plasma_classifier <- train_classifier(train_obj = tirosh_mel80_example,
+assay = 'RNA', slot = 'counts', cell_type = 'Plasma cell',
 marker_genes = p_marker_genes, tag_slot = 'plasma_cell_tag',
 parent_classifier = classifier_b)
 

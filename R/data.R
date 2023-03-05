@@ -1,7 +1,9 @@
 #' @name tirosh_mel80_example
 #' @title A Seurat Object Sample
-#' @description A Seurat object sample was made from the dataset GSE72056,
-#' samples corresponding to patient CY80.
+#' @description An example Seurat object shipped with the package as an example
+#' data. The expression data was originally from the dataset GSE72056, with
+#' samples corresponding to patient CY80. The Seurat object was then adapted to
+#' be used in \code{\link{scAnnotatR}}.
 #' @docType data
 #' @usage tirosh_mel80_example
 #' @format a \code{\link{Seurat}} object

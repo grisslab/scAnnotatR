@@ -14,8 +14,10 @@ WEIZMANN INSTITUTE OF SCIENCE
 tirosh_mel80_example
 }
 \description{
-A Seurat object sample was made from the dataset GSE72056,
-samples corresponding to patient CY80.
+An example Seurat object shipped with the package as an example
+data. The expression data was originally from the dataset GSE72056, with
+samples corresponding to patient CY80. The Seurat object was then adapted to
+be used in \code{\link{scAnnotatR}}.
 }
 \author{
 Itay Tirosh, 2016-04-05

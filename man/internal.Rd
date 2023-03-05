@@ -26,6 +26,7 @@
 \alias{balance_dataset}
 \alias{train_func}
 \alias{transform_to_zscore}
+\alias{subset_models}
 \alias{select_marker_genes}
 \alias{check_parent_child_coherence}
 \alias{filter_cells}
@@ -177,6 +178,8 @@ train_func(mat, tag)
 
 transform_to_zscore(mat)
 
+subset_models(model_list, model_names)
+
 select_marker_genes(mat, marker_genes)
 
 check_parent_child_coherence(
@@ -234,40 +237,40 @@ download_data_file(verbose = FALSE)
 
 \item{parent_cell}{name of parent cell type}
 
-\item{parent_classifier}{\code{\link{scAnnotatR}} object corresponding 
+\item{parent_classifier}{\code{\link{scAnnotatR}} object corresponding
 to classification model for the parent cell type}
 
 \item{path_to_models}{path to databases, or by default}
 
-\item{zscore}{boolean indicating the transformation of gene expression 
+\item{zscore}{boolean indicating the transformation of gene expression
 in object to zscore or not}
 
-\item{seurat_tag_slot}{string, name of annotation slot 
+\item{seurat_tag_slot}{string, name of annotation slot
 indicating cell tag/label in the testing object.
-Strings indicating cell types are expected in this slot. 
-Expected values are string (A-Z, a-z, 0-9, no special character accepted) 
-or binary/logical, 0/"no"/F/FALSE: not being new cell type, 
+Strings indicating cell types are expected in this slot.
+Expected values are string (A-Z, a-z, 0-9, no special character accepted)
+or binary/logical, 0/"no"/F/FALSE: not being new cell type,
 1/"yes"/T/TRUE: being new cell type.}
 
 \item{seurat_parent_tag_slot}{string, name of tag slot in cell meta data
-indicating pre-assigned/predicted parent cell type. 
+indicating pre-assigned/predicted parent cell type.
 Default field is "predicted_cell_type".
 The slot must contain only string values.}
 
 \item{seurat_assay}{name of assay to use in Seurat object}
 
-\item{seurat_slot}{type of expression data to use in Seurat object. 
+\item{seurat_slot}{type of expression data to use in Seurat object.
 Some available types are: "counts", "data" and "scale.data".}
 
-\item{sce_tag_slot}{string, name of annotation slot 
+\item{sce_tag_slot}{string, name of annotation slot
 indicating cell tag/label in the testing object.
-Strings indicating cell types are expected in this slot. 
-Expected values are string (A-Z, a-z, 0-9, no special character accepted) 
-or binary/logical, 0/"no"/F/FALSE: not being new cell type, 
+Strings indicating cell types are expected in this slot.
+Expected values are string (A-Z, a-z, 0-9, no special character accepted)
+or binary/logical, 0/"no"/F/FALSE: not being new cell type,
 1/"yes"/T/TRUE: being new cell type.}
 
 \item{sce_parent_tag_slot}{string, name of tag slot in cell meta data
-indicating pre-assigned/predicted parent cell type. 
+indicating pre-assigned/predicted parent cell type.
 Default field is "predicted_cell_type".
 The slot must contain only string values.}
 
@@ -277,7 +280,7 @@ The slot must contain only string values.}
 
 \item{tag}{tag of data}
 
-\item{parent_tag}{vector, named list indicating pre-assigned/predicted 
+\item{parent_tag}{vector, named list indicating pre-assigned/predicted
 parent cell type}
 
 \item{seurat_obj}{Seurat object}
@@ -301,9 +304,13 @@ Default value at 5000, because smaller datasets can be predicted rapidly.}
 
 \item{ignore_ambiguous_result}{whether ignore ambigouous result}
 
-\item{cluster_slot}{name of slot in meta data containing cluster 
-information, in case users want to have additional cluster-level 
+\item{cluster_slot}{name of slot in meta data containing cluster
+information, in case users want to have additional cluster-level
 prediction}
+
+\item{model_list}{A list of models}
+
+\item{model_names}{The names of the models to retain}
 
 \item{pos_parent}{a vector indicating parent classifier prediction}
 
@@ -358,24 +365,24 @@ a vector indicating cell type, and a vector containing parent cell type.
 a list containing: expression matrix of size n x m, n: genes, m: cells;
 a vector indicating cell type, and a vector containing parent cell type.
 
-result of testing process in form of a list, 
-including predicted values, prediction accuracy at a probability threshold, 
+result of testing process in form of a list,
+including predicted values, prediction accuracy at a probability threshold,
 and roc curve information.
 
-result of testing process in form of a list, 
-including predicted values, prediction accuracy at a probability threshold, 
+result of testing process in form of a list,
+including predicted values, prediction accuracy at a probability threshold,
 and roc curve information.
 
 model performance statistics
 
 the input object with new slots in cells meta data
 New slots are: predicted_cell_type, most_probable_cell_type,
-slots in form of [cell_type]_p, [cell_type]_class, and clust_pred 
+slots in form of [cell_type]_p, [cell_type]_class, and clust_pred
 (if cluster_slot was provided).
 
 the input object with new slots in cells meta data
 New slots are: predicted_cell_type, most_probable_cell_type,
-slots in form of [cell_type]_p, [cell_type]_class, and clust_pred 
+slots in form of [cell_type]_p, [cell_type]_class, and clust_pred
 (if cluster_slot was provided).
 
 a list of balanced count matrix
@@ -384,6 +391,8 @@ and corresponding tags of balanced count matrix
 the classification model (caret object)
 
 row wise center-scaled count matrix
+
+The list containing the selected models
 
 filtered matrix
 
@@ -408,16 +417,16 @@ model list object
 \description{
 Check if a scAnnotatR object is valid
 
-Train a classifier for a new cell type 
+Train a classifier for a new cell type
 If cell type has a parent, only available for \code{\link{scAnnotatR}}
 object as parent cell classifying model.
 
-Train a classifier for a new cell type 
+Train a classifier for a new cell type
 If cell type has a parent, only available for \code{\link{scAnnotatR}}
 object as parent cell classifying model.
 
 Train a classifier for a new cell type from expression matrix
-and tag 
+and tag
 If cell type has a parent, only available for \code{\link{scAnnotatR}}
 object as parent cell classifying model.
 
@@ -432,4 +441,7 @@ Testing process when test object is of type Seurat
 Testing process when test object is of type SCE
 
 Testing process from matrix and tag
+
+This function ensures that parent classifiers
+are also selected.
 }
