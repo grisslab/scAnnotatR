@@ -265,27 +265,40 @@ check_parent_child_coherence <- function(mat, tag, pos_parent, parent_cell,
 #'
 #' @param mat expression matrix of size n x m, n: genes, m: cells
 #' @param tag named list indicating cell type
+#' @param ambiguous_chars Vector of character (sequences) that if 
+#'                        contained within a cell type mark this
+#'                        cell type as being ambiguous. If NULL
+#'                        default values are used. Charactes with
+#'                        a meaning in REGEX must be enclosed by
+#'                        []. F.e. "[+]". Default value is
+#'                        "/", ",", " -", " [+]", "[.]", " and ",
+#'                        " or ", "_or_", "-or-", "[(]" ,"[)]", 
+#'                        "ambiguous"
 #'
 #' @return filtered matrix and corresponding tag
 #' @rdname internal
-filter_cells <- function(mat, tag) {
+filter_cells <- function(mat, tag, ambiguous_chars = NULL) {
   # define characters usually included in ambiguous cell types
   # this is to avoid considering ambiguous cell types as negative cell_type
-  ambiguous.chars <- c("/", ",", " -", " [+]", "[.]", " and ",
+  if (is.null(ambiguous_chars)) {
+    ambiguous_chars <- c("/", ",", " -", " [+]", "[.]", " and ",
                        " or ", "_or_", "-or-", "[(]" ,"[)]", "ambiguous")
+  }
 
   # only eliminate cell labels containing cell_type and ambiguous.chars
-  ambiguous <- grepl(paste(ambiguous.chars, collapse="|"), tag)
+  ambiguous <- grepl(paste(ambiguous_chars, collapse="|"), tag)
   n.applicable <- (grepl("not applicable", tag) | is.na(tag))
 
   if (any(ambiguous))
-    warning('Cell types containing "/", ",", "-", "+", ".", "and", "or", "(", ")", and "ambiguous" are considered as ambiguous. They are removed from training and testing.\n',
+    warning("Cell types containing ", paste0(ambiguous_chars, collapse = ", "),
+            " are considered as ambiguous. They are removed from ",
+            "training and testing.\n",
             call. = FALSE, immediate. = TRUE)
-  #obj <- obj[, !(ambiguous | n.applicable)]
+
   mat <- mat[, !(ambiguous | n.applicable), drop = FALSE]
   tag <- tag[!(ambiguous | n.applicable)]
 
-  filtered <- list('mat' = mat, 'tag' = tag)
+  filtered <- list("mat" = mat, "tag" = tag)
   return(filtered)
 }
 

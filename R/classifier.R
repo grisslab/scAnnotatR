@@ -39,6 +39,8 @@
 #' If user has trained new models, indicate the folder containing the
 #' new_models.rda file.
 #' @param zscore whether gene expression in train_obj is transformed to zscore
+#' @param ambiguous_chars List of characters to indicate ambiguous cells. For
+#'                        more details see \code{\link{filter_cells}}.
 #'
 #' @return \code{\link{scAnnotatR}} object
 #'
@@ -93,17 +95,19 @@ train_classifier <- function(train_obj, assay, slot = NULL,
                              parent_cell = NA_character_,
                              parent_tag_slot = 'predicted_cell_type',
                              parent_classifier = NULL, path_to_models = "default",
-                             zscore = TRUE) {
+                             zscore = TRUE, ambiguous_chars = NULL) {
   if (is(train_obj, 'Seurat')) {
     object <-
       train_classifier_seurat(train_obj, cell_type, marker_genes,
                               parent_cell, parent_classifier, path_to_models,
-                              zscore, tag_slot, parent_tag_slot, assay, slot)
+                              zscore, tag_slot, parent_tag_slot, assay, slot,
+                              ambiguous_chars)
   } else if (is(train_obj, 'SingleCellExperiment')) {
     object <-
       train_classifier_sce(train_obj, cell_type, marker_genes,
                               parent_cell, parent_classifier, path_to_models,
-                              zscore, tag_slot, parent_tag_slot, assay)
+                              zscore, tag_slot, parent_tag_slot, assay,
+                              ambiguous_chars)
   } else {
     stop('Training object of not supported class', call. = FALSE)
   }
@@ -144,6 +148,8 @@ train_classifier <- function(train_obj, assay, slot = NULL,
 #' If user has trained new models, indicate the folder containing the
 #' new_models.rda file.
 #' @param zscore whether gene expression in train_obj is transformed to zscore
+#' @param ambiguous_chars List of characters to indicate ambiguous cells. For
+#'                        more details see \code{\link{filter_cells}}.
 #'
 #' @return \code{\link{scAnnotatR}} object
 #'
@@ -152,7 +158,7 @@ train_classifier_seurat <-
   function(train_obj, cell_type, marker_genes, parent_cell = NA_character_,
            parent_classifier = NULL, path_to_models = "default", zscore = TRUE,
            seurat_tag_slot, seurat_parent_tag_slot = 'predicted_cell_type',
-           seurat_assay, seurat_slot) {
+           seurat_assay, seurat_slot, ambiguous_chars) {
 
   preprocessed <- preprocess_seurat_object(train_obj, seurat_assay, seurat_slot,
                                            seurat_tag_slot, seurat_parent_tag_slot)
@@ -160,7 +166,8 @@ train_classifier_seurat <-
   object <- train_classifier_from_mat(preprocessed$mat, preprocessed$tag,
                                       cell_type, marker_genes,
                                       preprocessed$parent_tag, parent_cell,
-                                      parent_classifier, path_to_models, zscore)
+                                      parent_classifier, path_to_models, zscore,
+                                      ambiguous_chars)
   return(object)
 }
 
@@ -196,6 +203,8 @@ train_classifier_seurat <-
 #' If user has trained new models, indicate the folder containing the
 #' new_models.rda file.
 #' @param zscore whether gene expression in train_obj is transformed to zscore
+#' @param ambiguous_chars List of characters to indicate ambiguous cells. For
+#'                        more details see \code{\link{filter_cells}}.
 #'
 #' @return \code{\link{scAnnotatR}} object
 #'
@@ -203,14 +212,16 @@ train_classifier_seurat <-
 train_classifier_sce <-
   function(train_obj, cell_type, marker_genes, parent_cell = NA_character_,
            parent_classifier = NULL, path_to_models = "default", zscore = TRUE,
-           sce_tag_slot, sce_parent_tag_slot = "predicted_cell_type", sce_assay) {
+           sce_tag_slot, sce_parent_tag_slot = "predicted_cell_type", sce_assay,
+           ambiguous_chars = NULL) {
 
   preprocessed <- preprocess_sce_object(train_obj, sce_assay, sce_tag_slot,
                                         sce_parent_tag_slot)
   object <- train_classifier_from_mat(preprocessed$mat, preprocessed$tag,
                                       cell_type, marker_genes,
                                       preprocessed$parent_tag, parent_cell,
-                                      parent_classifier, path_to_models, zscore)
+                                      parent_classifier, path_to_models, zscore,
+                                      ambiguous_chars)
 
   return(object)
 }
@@ -236,13 +247,16 @@ train_classifier_sce <-
 #' If user has trained new models, indicate the folder containing the
 #' new_models.rda file.
 #' @param zscore whether gene expression in train_obj is transformed to zscore
+#' @param ambiguous_chars List of characters to indicate ambiguous cells. For
+#'                        more details see \code{\link{filter_cells}}.
 #'
 #' @return caret trained model
 #'
 #' @rdname internal
 train_classifier_from_mat <- function(mat, tag, cell_type, marker_genes,
                                   parent_tag, parent_cell, parent_classifier,
-                                  path_to_models, zscore) {
+                                  path_to_models, zscore,
+                                  ambiguous_chars = NULL) {
   #--- part of parent cell type
   processed_parent <- process_parent_classifier(
     mat, parent_tag, parent_cell, parent_classifier, path_to_models, zscore
@@ -258,7 +272,7 @@ train_classifier_from_mat <- function(mat, tag, cell_type, marker_genes,
 
   #--- part of cell type
   # filter cells
-  filt <- filter_cells(mat, tag)
+  filt <- filter_cells(mat, tag, ambiguous_chars)
   train_mat <- filt$mat
   train_tag <- filt$tag
 
@@ -446,6 +460,8 @@ preprocess_sce_object <- function(sce_obj, sce_assay, sce_tag_slot,
 #' If user has trained new models, indicate the folder containing
 #' the new_models.rda file.
 #' @param zscore boolean, whether gene expression is transformed to zscore
+#' @param ambiguous_chars List of characters to indicate ambiguous cells. For
+#'                        more details see \code{\link{filter_cells}}.
 #'
 #' @return result of testing process in form of a list,
 #' including predicted values, prediction accuracy at a probability threshold,
@@ -481,7 +497,8 @@ setGeneric("test_classifier",
            function(classifier, test_obj, assay, slot = NULL, tag_slot,
                     target_cell_type = NULL, parent_classifier = NULL,
                     parent_tag_slot = 'predicted_cell_type',
-                    path_to_models = "default", zscore = TRUE)
+                    path_to_models = "default", zscore = TRUE,
+                    ambiguous_chars = NULL)
   standardGeneric("test_classifier"))
 
 #' @inherit test_classifier
@@ -491,17 +508,19 @@ setMethod('test_classifier', c('classifier' = 'scAnnotatR'),
           function(classifier, test_obj, assay, slot = NULL, tag_slot,
                    target_cell_type = NULL, parent_classifier = NULL,
                    parent_tag_slot = 'predicted_cell_type',
-                   path_to_models = "default", zscore = TRUE) {
+                   path_to_models = "default", zscore = TRUE,
+                   ambiguous_chars = NULL) {
   if (is(test_obj, 'Seurat')) {
     return_val <-
       test_classifier_seurat(test_obj, classifier, target_cell_type,
                              parent_classifier, path_to_models, zscore,
-                             tag_slot, parent_tag_slot, assay, slot)
+                             tag_slot, parent_tag_slot, assay, slot,
+                             ambiguous_chars)
   } else if (is(test_obj, 'SingleCellExperiment')) {
     return_val <-
       test_classifier_sce(test_obj, classifier, target_cell_type,
                           parent_classifier, path_to_models, zscore,
-                          tag_slot, parent_tag_slot, assay)
+                          tag_slot, parent_tag_slot, assay, ambiguous_chars)
   } else {
     stop('Testing object of not supported class', call. = FALSE)
   }
@@ -538,6 +557,8 @@ setMethod('test_classifier', c('classifier' = 'scAnnotatR'),
 #' If user has trained new models, indicate the folder containing
 #' the new_models.rda file.
 #' @param zscore boolean, whether gene expression is transformed to zscore
+#' @param ambiguous_chars List of characters to indicate ambiguous cells. For
+#'                        more details see \code{\link{filter_cells}}.
 #'
 #' @return result of testing process in form of a list,
 #' including predicted values, prediction accuracy at a probability threshold,
@@ -548,14 +569,14 @@ test_classifier_seurat <-
   function(test_obj, classifier, target_cell_type = NULL,
            parent_classifier = NULL, path_to_models = "default", zscore = TRUE,
            seurat_tag_slot, seurat_parent_tag_slot = "predicted_cell_type",
-           seurat_assay, seurat_slot) {
+           seurat_assay, seurat_slot, ambiguous_chars = NULL) {
   preprocessed <- preprocess_seurat_object(test_obj, seurat_assay, seurat_slot,
                                            seurat_tag_slot, seurat_parent_tag_slot)
 
   return_val <- test_classifier_from_mat(preprocessed$mat, preprocessed$tag,
                                          classifier, preprocessed$parent_tag,
                                          target_cell_type, parent_classifier,
-                                         path_to_models, zscore)
+                                         path_to_models, zscore, ambiguous_chars)
   return(return_val)
 }
 
@@ -587,6 +608,8 @@ test_classifier_seurat <-
 #' If user has trained new models, indicate the folder containing
 #' the new_models.rda file.
 #' @param zscore boolean, whether gene expression is transformed to zscore
+#' @param ambiguous_chars List of characters to indicate ambiguous cells. For
+#'                        more details see \code{\link{filter_cells}}.
 #'
 #' @return result of testing process in form of a list,
 #' including predicted values, prediction accuracy at a probability threshold,
@@ -596,7 +619,8 @@ test_classifier_seurat <-
 test_classifier_sce <-
   function(test_obj, classifier, target_cell_type = NULL,
            parent_classifier = NULL, path_to_models = "default", zscore = TRUE,
-           sce_tag_slot, sce_parent_tag_slot = "predicted_cell_type", sce_assay) {
+           sce_tag_slot, sce_parent_tag_slot = "predicted_cell_type", sce_assay,
+           ambiguous_chars = NULL) {
 
   preprocessed <- preprocess_sce_object(test_obj, sce_assay, sce_tag_slot,
                                         sce_parent_tag_slot)
@@ -604,7 +628,7 @@ test_classifier_sce <-
   return_val <- test_classifier_from_mat(preprocessed$mat, preprocessed$tag,
                                          classifier, preprocessed$parent_tag,
                                          target_cell_type, parent_classifier,
-                                         path_to_models, zscore)
+                                         path_to_models, zscore, ambiguous_chars)
 
   return(return_val)
 }
@@ -626,13 +650,16 @@ test_classifier_sce <-
 #' If user has trained new models, indicate the folder containing the
 #' new_models.rda file.
 #' @param zscore whether gene expression in train_obj is transformed to zscore
+#' @param ambiguous_chars List of characters to indicate ambiguous cells. For
+#'                        more details see \code{\link{filter_cells}}.
 #'
 #' @return model performance statistics
 #'
 #' @rdname internal
 test_classifier_from_mat <- function(mat, tag, classifier, parent_tag,
                                  target_cell_type, parent_classifier,
-                                 path_to_models, zscore) {
+                                 path_to_models, zscore,
+                                 ambiguous_chars = NULL) {
   # target_cell_type check
   if (!tolower(cell_type(classifier)) %in% tolower(target_cell_type)) {
     target_cell_type <- append(target_cell_type, cell_type(classifier))
@@ -653,7 +680,7 @@ test_classifier_from_mat <- function(mat, tag, classifier, parent_tag,
 
   #--- children cell type
   # filter cells
-  filt <- filter_cells(mat, tag)
+  filt <- filter_cells(mat, tag, ambiguous_chars)
   test_mat <- filt$mat
   test_tag <- filt$tag
 
@@ -678,7 +705,7 @@ test_classifier_from_mat <- function(mat, tag, classifier, parent_tag,
          call. = FALSE)
   }
 
-  return_val = test_performance(test_mat, classifier, test_tag)
+  return_val <- test_performance(test_mat, classifier, test_tag)
   return(return_val)
 }
 
@@ -1016,7 +1043,8 @@ classify_cells_sce <-
   cell_types <- names(classifiers)
   for (cell_type in cell_types) {
     if (any(!marker_genes(classifiers[[cell_type]]) %in% rownames(classify_obj))) {
-      warning('Feature genes for ', cell_type, ' is not available in the input SCE object. Classification of ', cell_type, ' skipped.\n', call. = FALSE, immediate. = TRUE)
+      warning('Feature genes for ', cell_type, ' is not available in the input SCE object. ',
+              'Classification of ', cell_type, ' skipped.\n', call. = FALSE, immediate. = TRUE)
       classifiers <- classifiers[!names(classifiers) %in% cell_type]
     }
   }

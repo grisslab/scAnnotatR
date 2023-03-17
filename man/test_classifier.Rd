@@ -15,7 +15,8 @@ test_classifier(
   parent_classifier = NULL,
   parent_tag_slot = "predicted_cell_type",
   path_to_models = "default",
-  zscore = TRUE
+  zscore = TRUE,
+  ambiguous_chars = NULL
 )
 
 \S4method{test_classifier}{scAnnotatR}(
@@ -28,7 +29,8 @@ test_classifier(
   parent_classifier = NULL,
   parent_tag_slot = "predicted_cell_type",
   path_to_models = "default",
-  zscore = TRUE
+  zscore = TRUE,
+  ambiguous_chars = NULL
 )
 }
 \arguments{
@@ -68,6 +70,9 @@ If user has trained new models, indicate the folder containing
 the new_models.rda file.}
 
 \item{zscore}{boolean, whether gene expression is transformed to zscore}
+
+\item{ambiguous_chars}{List of characters to indicate ambiguous cells. For
+more details see \code{\link{filter_cells}}.}
 }
 \value{
 result of testing process in form of a list,

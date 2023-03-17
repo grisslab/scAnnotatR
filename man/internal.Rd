@@ -75,7 +75,8 @@ train_classifier_seurat(
   seurat_tag_slot,
   seurat_parent_tag_slot = "predicted_cell_type",
   seurat_assay,
-  seurat_slot
+  seurat_slot,
+  ambiguous_chars
 )
 
 train_classifier_sce(
@@ -88,7 +89,8 @@ train_classifier_sce(
   zscore = TRUE,
   sce_tag_slot,
   sce_parent_tag_slot = "predicted_cell_type",
-  sce_assay
+  sce_assay,
+  ambiguous_chars = NULL
 )
 
 train_classifier_from_mat(
@@ -100,7 +102,8 @@ train_classifier_from_mat(
   parent_cell,
   parent_classifier,
   path_to_models,
-  zscore
+  zscore,
+  ambiguous_chars = NULL
 )
 
 preprocess_seurat_object(
@@ -123,7 +126,8 @@ test_classifier_seurat(
   seurat_tag_slot,
   seurat_parent_tag_slot = "predicted_cell_type",
   seurat_assay,
-  seurat_slot
+  seurat_slot,
+  ambiguous_chars = NULL
 )
 
 test_classifier_sce(
@@ -135,7 +139,8 @@ test_classifier_sce(
   zscore = TRUE,
   sce_tag_slot,
   sce_parent_tag_slot = "predicted_cell_type",
-  sce_assay
+  sce_assay,
+  ambiguous_chars = NULL
 )
 
 test_classifier_from_mat(
@@ -146,7 +151,8 @@ test_classifier_from_mat(
   target_cell_type,
   parent_classifier,
   path_to_models,
-  zscore
+  zscore,
+  ambiguous_chars = NULL
 )
 
 classify_cells_seurat(
@@ -191,7 +197,7 @@ check_parent_child_coherence(
   target_cell_type
 )
 
-filter_cells(mat, tag)
+filter_cells(mat, tag, ambiguous_chars = NULL)
 
 construct_tag_vect(tag, cell_type)
 
@@ -261,6 +267,16 @@ The slot must contain only string values.}
 
 \item{seurat_slot}{type of expression data to use in Seurat object.
 Some available types are: "counts", "data" and "scale.data".}
+
+\item{ambiguous_chars}{Vector of character (sequences) that if 
+contained within a cell type mark this
+cell type as being ambiguous. If NULL
+default values are used. Charactes with
+a meaning in REGEX must be enclosed by
+[]. F.e. "[+]". Default value is
+"/", ",", " -", " [+]", "[.]", " and ",
+" or ", "_or_", "-or-", "[(]" ,"[)]", 
+"ambiguous"}
 
 \item{sce_tag_slot}{string, name of annotation slot
 indicating cell tag/label in the testing object.

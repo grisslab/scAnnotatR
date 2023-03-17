@@ -15,7 +15,8 @@ train_classifier(
   parent_tag_slot = "predicted_cell_type",
   parent_classifier = NULL,
   path_to_models = "default",
-  zscore = TRUE
+  zscore = TRUE,
+  ambiguous_chars = NULL
 )
 }
 \arguments{
@@ -64,6 +65,9 @@ If user has trained new models, indicate the folder containing the
 new_models.rda file.}
 
 \item{zscore}{whether gene expression in train_obj is transformed to zscore}
+
+\item{ambiguous_chars}{List of characters to indicate ambiguous cells. For
+more details see \code{\link{filter_cells}}.}
 }
 \value{
 \code{\link{scAnnotatR}} object
