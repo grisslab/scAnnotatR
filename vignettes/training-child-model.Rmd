@@ -95,6 +95,10 @@ First, we load the dataset. To reduce the computational complexity of this vigne
 ```{r}
 zilionis <- ZilionisLungData()
 zilionis <- zilionis[, 1:5000]
+
+# now we add simple colnames (= cell ids) to the dataset
+# Note: This is normally not necessary
+colnames(zilionis) <- paste0("Cell", 1:ncol(zilionis))
 ```
 
 We split this dataset into two parts, one for the training and the other for the testing.
