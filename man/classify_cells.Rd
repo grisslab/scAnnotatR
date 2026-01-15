@@ -7,7 +7,7 @@
 classify_cells(
   classify_obj,
   assay,
-  slot = NULL,
+  layer = NULL,
   classifiers = NULL,
   cell_types = "all",
   chunk_size = 5000,
@@ -21,7 +21,7 @@ classify_cells(
 
 \item{assay}{name of assay to use in classify_object}
 
-\item{slot}{type of expression data to use in classify_object.
+\item{layer}{type of expression data to use in classify_object.
 For Seurat object, some available types are:
 "counts", "data" and "scale.data".}
 
@@ -75,14 +75,14 @@ selected_marker_genes_B = c("CD19", "MS4A1", "CD79A")
 # train the classifier
 set.seed(123)
 classifier_b <- train_classifier(train_obj = tirosh_mel80_example,
-assay = 'RNA', slot = 'counts', marker_genes = selected_marker_genes_B,
+assay = 'RNA', layer = 'counts', marker_genes = selected_marker_genes_B,
 cell_type = "b cells", tag_slot = 'active.ident')
 
 # do the same thing with other cell types, for example, T cells
 selected_marker_genes_T = c("CD4", "CD8A", "CD8B")
 set.seed(123)
 classifier_t <- train_classifier(train_obj = tirosh_mel80_example,
-assay = 'RNA', slot = 'counts', marker_genes = selected_marker_genes_T,
+assay = 'RNA', layer = 'counts', marker_genes = selected_marker_genes_T,
 cell_type = "T cells", tag_slot = 'active.ident')
 
 # create a list of classifiers
@@ -90,6 +90,6 @@ classifier_ls <- list(classifier_b, classifier_t)
 
 # classify cells with list of classifiers
 seurat.obj <- classify_cells(classify_obj = tirosh_mel80_example,
-assay = 'RNA', slot = 'counts', classifiers = classifier_ls)
+assay = 'RNA', layer = 'counts', classifiers = classifier_ls)
 
 }

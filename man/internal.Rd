@@ -109,7 +109,7 @@ train_classifier_from_mat(
 preprocess_seurat_object(
   seurat_obj,
   seurat_assay,
-  seurat_slot,
+  seurat_layer,
   seurat_tag_slot,
   seurat_parent_tag_slot
 )
@@ -126,7 +126,7 @@ test_classifier_seurat(
   seurat_tag_slot,
   seurat_parent_tag_slot = "predicted_cell_type",
   seurat_assay,
-  seurat_slot,
+  seurat_layer,
   ambiguous_chars = NULL
 )
 
@@ -164,7 +164,7 @@ classify_cells_seurat(
   ignore_ambiguous_result = FALSE,
   cluster_slot,
   seurat_assay,
-  seurat_slot
+  seurat_layer
 )
 
 classify_cells_sce(
@@ -265,8 +265,7 @@ The slot must contain only string values.}
 
 \item{seurat_assay}{name of assay to use in Seurat object}
 
-\item{seurat_slot}{type of expression data to use in Seurat object.
-Some available types are: "counts", "data" and "scale.data".}
+\item{seurat_slot}{type of expression data to use in training object}
 
 \item{ambiguous_chars}{Vector of character (sequences) that if 
 contained within a cell type mark this
@@ -300,6 +299,9 @@ The slot must contain only string values.}
 parent cell type}
 
 \item{seurat_obj}{Seurat object}
+
+\item{seurat_layer}{type of expression data to use in Seurat object.
+Some available types are: "counts", "data" and "scale.data".}
 
 \item{sce_obj}{Seurat object}
 

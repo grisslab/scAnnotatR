@@ -13,7 +13,7 @@
 #' If no (predicted) cell type annotation provided,
 #' the function can be run if 1- parent_cell or 2- parent_classifier is provided.
 #' @param assay name of assay to use in training object.
-#' @param slot type of expression data to use in training object, omitted if
+#' @param layer type of expression data to use in training object, omitted if
 #' train_obj is \code{\link{SingleCellExperiment}} object.
 #' @param cell_type string indicating the name of the subtype
 #' This must exactly match cell tag/label if cell tag/label is a string.
@@ -65,13 +65,13 @@
 #' # the cell labels in the data, except upper/lower case
 #' set.seed(123)
 #' classifier_b <- train_classifier(train_obj = tirosh_mel80_example,
-#' assay = 'RNA', slot = 'counts', marker_genes = selected_marker_genes_B,
+#' assay = 'RNA', layer = 'counts', marker_genes = selected_marker_genes_B,
 #' cell_type = "b cells", tag_slot = 'active.ident')
 #'
 #' # classify cell types using B cell classifier,
 #' # a test classifier process may be used before applying the classifier
 #' tirosh_mel80_example <- classify_cells(classify_obj = tirosh_mel80_example,
-#' classifiers = c(classifier_b), assay = 'RNA', slot = 'counts')
+#' classifiers = c(classifier_b), assay = 'RNA', layer = 'counts')
 #'
 #' # tag all cells that are plasma cells (random example here)
 #' tirosh_mel80_example[['plasma_cell_tag']] <- c(rep(1, 80), rep(0, 400))
@@ -85,12 +85,12 @@
 #' # for the training process.
 #' set.seed(123)
 #' plasma_classifier <- train_classifier(train_obj = tirosh_mel80_example,
-#' assay = 'RNA', slot = 'counts', cell_type = 'Plasma cell',
+#' assay = 'RNA', layer = 'counts', cell_type = 'Plasma cell',
 #' marker_genes = p_marker_genes, tag_slot = 'plasma_cell_tag',
 #' parent_classifier = classifier_b)
 #'
 #' @export
-train_classifier <- function(train_obj, assay, slot = NULL,
+train_classifier <- function(train_obj, assay, layer = NULL,
                              cell_type, marker_genes, tag_slot,
                              parent_cell = NA_character_,
                              parent_tag_slot = 'predicted_cell_type',
@@ -100,7 +100,7 @@ train_classifier <- function(train_obj, assay, slot = NULL,
     object <-
       train_classifier_seurat(train_obj, cell_type, marker_genes,
                               parent_cell, parent_classifier, path_to_models,
-                              zscore, tag_slot, parent_tag_slot, assay, slot,
+                              zscore, tag_slot, parent_tag_slot, assay, layer,
                               ambiguous_chars)
   } else if (is(train_obj, 'SingleCellExperiment')) {
     object <-
@@ -340,7 +340,7 @@ train_classifier_from_mat <- function(mat, tag, cell_type, marker_genes,
 #'
 #' @param seurat_obj Seurat object
 #' @param seurat_assay name of assay to use in training object.
-#' @param seurat_slot type of expression data to use in training object
+#' @param seurat_layer type of expression data to use in training object
 #' @param seurat_tag_slot string, name of slot in cell meta data
 #' indicating cell tag/label in the training object.
 #' Strings indicating cell types are expected in this slot.
@@ -359,11 +359,11 @@ train_classifier_from_mat <- function(mat, tag, cell_type, marker_genes,
 #' @importFrom Seurat GetAssayData Idents
 #'
 #' @rdname internal
-preprocess_seurat_object <- function(seurat_obj, seurat_assay, seurat_slot,
+preprocess_seurat_object <- function(seurat_obj, seurat_assay, seurat_layer,
                                      seurat_tag_slot, seurat_parent_tag_slot) {
   # convert Seurat object to matrix
   mat = Seurat::GetAssayData(object = seurat_obj,
-                             assay = seurat_assay, slot = seurat_slot)
+                             assay = seurat_assay, layer = seurat_layer)
 
   if (seurat_tag_slot == "active.ident") {
     tag <- Seurat::Idents(seurat_obj)
@@ -435,7 +435,7 @@ preprocess_sce_object <- function(sce_obj, sce_assay, sce_tag_slot,
 #'
 #' @param test_obj object that can be used for testing
 #' @param assay name of assay to use in test_object
-#' @param slot type of expression data to use in test_object.
+#' @param layer type of expression data to use in test_object.
 #' For Seurat object, some available types are: "counts", "data" and "scale.data".
 #' Ignore this if test_obj is \code{\link{SingleCellExperiment}} object.
 #' @param classifier scAnnotatR classification model
@@ -482,19 +482,19 @@ preprocess_sce_object <- function(sce_obj, sce_assay, sce_tag_slot,
 #' selected_marker_genes_B = c("CD19", "MS4A1", "CD79A")
 #' set.seed(123)
 #' classifier_b <- train_classifier(train_obj = tirosh_mel80_example,
-#' assay = 'RNA', slot = 'counts', marker_genes = selected_marker_genes_B,
+#' assay = 'RNA', layer = 'counts', marker_genes = selected_marker_genes_B,
 #' cell_type = "b cells", tag_slot = 'active.ident')
 #'
 #' # test the classifier, target cell type can be in other formats or
 #' # alternative cell type that can be considered as the classified cell type
 #' classifier_b_test <- test_classifier(classifier = classifier_b,
-#' test_obj = tirosh_mel80_example, assay = 'RNA', slot = 'counts',
+#' test_obj = tirosh_mel80_example, assay = 'RNA', layer = 'counts',
 #' tag_slot = 'active.ident', target_cell_type = c("B cell"))
 #' classifier_b_test
 #'
 #' @export
 setGeneric("test_classifier",
-           function(classifier, test_obj, assay, slot = NULL, tag_slot,
+           function(classifier, test_obj, assay, layer = NULL, tag_slot,
                     target_cell_type = NULL, parent_classifier = NULL,
                     parent_tag_slot = 'predicted_cell_type',
                     path_to_models = "default", zscore = TRUE,
@@ -505,7 +505,7 @@ setGeneric("test_classifier",
 #'
 #' @rdname test_classifier
 setMethod('test_classifier', c('classifier' = 'scAnnotatR'),
-          function(classifier, test_obj, assay, slot = NULL, tag_slot,
+          function(classifier, test_obj, assay, layer = NULL, tag_slot,
                    target_cell_type = NULL, parent_classifier = NULL,
                    parent_tag_slot = 'predicted_cell_type',
                    path_to_models = "default", zscore = TRUE,
@@ -514,7 +514,7 @@ setMethod('test_classifier', c('classifier' = 'scAnnotatR'),
     return_val <-
       test_classifier_seurat(test_obj, classifier, target_cell_type,
                              parent_classifier, path_to_models, zscore,
-                             tag_slot, parent_tag_slot, assay, slot,
+                             tag_slot, parent_tag_slot, assay, layer,
                              ambiguous_chars)
   } else if (is(test_obj, 'SingleCellExperiment')) {
     return_val <-
@@ -533,7 +533,7 @@ setMethod('test_classifier', c('classifier' = 'scAnnotatR'),
 #'
 #' @param test_obj Seurat object used for testing
 #' @param seurat_assay name of assay to use in test_object
-#' @param seurat_slot type of expression data to use in test_object.
+#' @param seurat_layer type of expression data to use in test_object.
 #' For Seurat object, some available types are: "counts", "data" and "scale.data".
 #' @param classifier scAnnotatR classification model
 #' @param seurat_tag_slot string, name of annotation slot
@@ -569,8 +569,8 @@ test_classifier_seurat <-
   function(test_obj, classifier, target_cell_type = NULL,
            parent_classifier = NULL, path_to_models = "default", zscore = TRUE,
            seurat_tag_slot, seurat_parent_tag_slot = "predicted_cell_type",
-           seurat_assay, seurat_slot, ambiguous_chars = NULL) {
-  preprocessed <- preprocess_seurat_object(test_obj, seurat_assay, seurat_slot,
+           seurat_assay, seurat_layer, ambiguous_chars = NULL) {
+  preprocessed <- preprocess_seurat_object(test_obj, seurat_assay, seurat_layer,
                                            seurat_tag_slot, seurat_parent_tag_slot)
 
   return_val <- test_classifier_from_mat(preprocessed$mat, preprocessed$tag,
@@ -722,11 +722,11 @@ test_classifier_from_mat <- function(mat, tag, classifier, parent_tag,
 #' selected_marker_genes_B = c("CD19", "MS4A1", "CD79A")
 #' set.seed(123)
 #' classifier_b <- train_classifier(train_obj = tirosh_mel80_example,
-#' assay = 'RNA', slot = 'counts', marker_genes = selected_marker_genes_B,
+#' assay = 'RNA', layer = 'counts', marker_genes = selected_marker_genes_B,
 #' cell_type = "b cells", tag_slot = 'active.ident')
 #'
 #' classifier_b_test <- test_classifier(classifier = classifier_b,
-#' test_obj = tirosh_mel80_example, assay = 'RNA', slot = 'counts',
+#' test_obj = tirosh_mel80_example, assay = 'RNA', layer = 'counts',
 #' tag_slot = 'active.ident', target_cell_type = c("B cell"))
 #'
 #' # run plot curve on the test result
@@ -753,7 +753,7 @@ plot_roc_curve <- function(test_result) {
 #'
 #' @param classify_obj the object containing cells to be classified
 #' @param assay name of assay to use in classify_object
-#' @param slot type of expression data to use in classify_object.
+#' @param layer type of expression data to use in classify_object.
 #' For Seurat object, some available types are:
 #' "counts", "data" and "scale.data".
 #' @param classifiers list of classification models.
@@ -797,14 +797,14 @@ plot_roc_curve <- function(test_result) {
 #' # train the classifier
 #' set.seed(123)
 #' classifier_b <- train_classifier(train_obj = tirosh_mel80_example,
-#' assay = 'RNA', slot = 'counts', marker_genes = selected_marker_genes_B,
+#' assay = 'RNA', layer = 'counts', marker_genes = selected_marker_genes_B,
 #' cell_type = "b cells", tag_slot = 'active.ident')
 #'
 #' # do the same thing with other cell types, for example, T cells
 #' selected_marker_genes_T = c("CD4", "CD8A", "CD8B")
 #' set.seed(123)
 #' classifier_t <- train_classifier(train_obj = tirosh_mel80_example,
-#' assay = 'RNA', slot = 'counts', marker_genes = selected_marker_genes_T,
+#' assay = 'RNA', layer = 'counts', marker_genes = selected_marker_genes_T,
 #' cell_type = "T cells", tag_slot = 'active.ident')
 #'
 #' # create a list of classifiers
@@ -812,10 +812,10 @@ plot_roc_curve <- function(test_result) {
 #'
 #' # classify cells with list of classifiers
 #' seurat.obj <- classify_cells(classify_obj = tirosh_mel80_example,
-#' assay = 'RNA', slot = 'counts', classifiers = classifier_ls)
+#' assay = 'RNA', layer = 'counts', classifiers = classifier_ls)
 #'
 #' @export
-classify_cells <- function(classify_obj, assay, slot = NULL, classifiers = NULL,
+classify_cells <- function(classify_obj, assay, layer = NULL, classifiers = NULL,
                            cell_types = "all", chunk_size = 5000,
                            path_to_models = "default",
                            ignore_ambiguous_result = FALSE,
@@ -824,7 +824,7 @@ classify_cells <- function(classify_obj, assay, slot = NULL, classifiers = NULL,
     classify_obj <- classify_cells_seurat(classify_obj, classifiers, cell_types,
                                           chunk_size, path_to_models,
                                           ignore_ambiguous_result, cluster_slot,
-                                          assay, slot)
+                                          assay, layer)
   } else if (is(classify_obj, 'SingleCellExperiment')) {
     classify_obj <- classify_cells_sce(classify_obj, classifiers, cell_types,
                                        chunk_size, path_to_models,
@@ -839,7 +839,7 @@ classify_cells <- function(classify_obj, assay, slot = NULL, classifiers = NULL,
 #'
 #' @param classify_obj the Seurat object containing cells to be classified
 #' @param seurat_assay name of assay to use in Seurat object
-#' @param seurat_slot type of expression data to use in Seurat object.
+#' @param seurat_layer type of expression data to use in Seurat object.
 #' Some available types are: "counts", "data" and "scale.data".
 #' @param classifiers list of classification models.
 #' The model is obtained from train_classifier function or available in current
@@ -880,7 +880,7 @@ classify_cells_seurat <-
   function(classify_obj, classifiers = NULL, cell_types = "all",
            chunk_size = 5000, path_to_models = "default",
            ignore_ambiguous_result = FALSE, cluster_slot,
-           seurat_assay, seurat_slot) {
+           seurat_assay, seurat_layer) {
   if (is.null(classifiers)) {
     model_list <- load_models(path_to_models)
 
@@ -902,7 +902,7 @@ classify_cells_seurat <-
   union.marker_genes <- unique(unname(unlist(lapply(classifiers,
                                                     function(x) marker_genes(x)))))
   mat = Seurat::GetAssayData(object = classify_obj,
-                             assay = seurat_assay, slot = seurat_slot)
+                             assay = seurat_assay, layer = seurat_layer)
   # if expression matrix is not dgCMatrix: DelayedMatrix for ex.
   if (!is(mat, 'dgCMatrix'))
     mat <- as(mat, "dgCMatrix")

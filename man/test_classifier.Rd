@@ -9,7 +9,7 @@ test_classifier(
   classifier,
   test_obj,
   assay,
-  slot = NULL,
+  layer = NULL,
   tag_slot,
   target_cell_type = NULL,
   parent_classifier = NULL,
@@ -23,7 +23,7 @@ test_classifier(
   classifier,
   test_obj,
   assay,
-  slot = NULL,
+  layer = NULL,
   tag_slot,
   target_cell_type = NULL,
   parent_classifier = NULL,
@@ -40,7 +40,7 @@ test_classifier(
 
 \item{assay}{name of assay to use in test_object}
 
-\item{slot}{type of expression data to use in test_object.
+\item{layer}{type of expression data to use in test_object.
 For Seurat object, some available types are: "counts", "data" and "scale.data".
 Ignore this if test_obj is \code{\link{SingleCellExperiment}} object.}
 
@@ -98,13 +98,13 @@ data("tirosh_mel80_example")
 selected_marker_genes_B = c("CD19", "MS4A1", "CD79A")
 set.seed(123)
 classifier_b <- train_classifier(train_obj = tirosh_mel80_example,
-assay = 'RNA', slot = 'counts', marker_genes = selected_marker_genes_B,
+assay = 'RNA', layer = 'counts', marker_genes = selected_marker_genes_B,
 cell_type = "b cells", tag_slot = 'active.ident')
 
 # test the classifier, target cell type can be in other formats or
 # alternative cell type that can be considered as the classified cell type
 classifier_b_test <- test_classifier(classifier = classifier_b,
-test_obj = tirosh_mel80_example, assay = 'RNA', slot = 'counts',
+test_obj = tirosh_mel80_example, assay = 'RNA', layer = 'counts',
 tag_slot = 'active.ident', target_cell_type = c("B cell"))
 classifier_b_test
 

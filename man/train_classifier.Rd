@@ -7,7 +7,7 @@
 train_classifier(
   train_obj,
   assay,
-  slot = NULL,
+  layer = NULL,
   cell_type,
   marker_genes,
   tag_slot,
@@ -31,7 +31,7 @@ the function can be run if 1- parent_cell or 2- parent_classifier is provided.}
 
 \item{assay}{name of assay to use in training object.}
 
-\item{slot}{type of expression data to use in training object, omitted if
+\item{layer}{type of expression data to use in training object, omitted if
 train_obj is \code{\link{SingleCellExperiment}} object.}
 
 \item{cell_type}{string indicating the name of the subtype
@@ -99,13 +99,13 @@ selected_marker_genes_B = c("CD19", "MS4A1", "CD79A")
 # the cell labels in the data, except upper/lower case
 set.seed(123)
 classifier_b <- train_classifier(train_obj = tirosh_mel80_example,
-assay = 'RNA', slot = 'counts', marker_genes = selected_marker_genes_B,
+assay = 'RNA', layer = 'counts', marker_genes = selected_marker_genes_B,
 cell_type = "b cells", tag_slot = 'active.ident')
 
 # classify cell types using B cell classifier,
 # a test classifier process may be used before applying the classifier
 tirosh_mel80_example <- classify_cells(classify_obj = tirosh_mel80_example,
-classifiers = c(classifier_b), assay = 'RNA', slot = 'counts')
+classifiers = c(classifier_b), assay = 'RNA', layer = 'counts')
 
 # tag all cells that are plasma cells (random example here)
 tirosh_mel80_example[['plasma_cell_tag']] <- c(rep(1, 80), rep(0, 400))
@@ -119,7 +119,7 @@ p_marker_genes = c("SDC1", "CD19", "CD79A")
 # for the training process.
 set.seed(123)
 plasma_classifier <- train_classifier(train_obj = tirosh_mel80_example,
-assay = 'RNA', slot = 'counts', cell_type = 'Plasma cell',
+assay = 'RNA', layer = 'counts', cell_type = 'Plasma cell',
 marker_genes = p_marker_genes, tag_slot = 'plasma_cell_tag',
 parent_classifier = classifier_b)
 

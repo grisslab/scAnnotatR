@@ -1,3 +1,6 @@
+Changes in version 1.17.1 (2026-01-15)
++ Adapted to address changes in Seurat object structure.
+
 Changes in version 1.9.2 (2024-04-01)
 + Fixed bug in classify_cells_sce.
 

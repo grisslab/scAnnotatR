@@ -28,7 +28,7 @@ data("tirosh_mel80_example")
 selected_marker_genes_B = c("CD19", "MS4A1", "CD79A")
 set.seed(123)
 classifier_b <- train_classifier(train_obj = tirosh_mel80_example,
-assay = 'RNA', slot = 'counts', marker_genes = selected_marker_genes_B, 
+assay = 'RNA', layer = 'counts', marker_genes = selected_marker_genes_B, 
 cell_type = "B cells", tag_slot = 'active.ident')
 p_thres(classifier_b)
 
@@ -36,10 +36,10 @@ data("tirosh_mel80_example")
 selected_marker_genes_B = c("CD19", "MS4A1", "CD79A")
 set.seed(123)
 classifier_b <- train_classifier(train_obj = tirosh_mel80_example,
-assay = 'RNA', slot = 'counts', marker_genes = selected_marker_genes_B, 
+assay = 'RNA', layer = 'counts', marker_genes = selected_marker_genes_B, 
 cell_type = "B cells", tag_slot = 'active.ident')
 classifier_b_test <- test_classifier(classifier = classifier_b, 
-test_obj = tirosh_mel80_example, assay = 'RNA', slot = 'counts', 
+test_obj = tirosh_mel80_example, assay = 'RNA', layer = 'counts', 
 tag_slot = 'active.ident')
 # assign a new threhold probability for prediction
 p_thres(classifier_b) <- 0.4
