@@ -23,7 +23,7 @@
 #' selected_marker_genes_T = c("CD4", "CD8A", "CD8B")
 #' set.seed(123)
 #' classifier_t <- train_classifier(train_obj = tirosh_mel80_example,
-#' assay = 'RNA', slot = 'counts', marker_genes = selected_marker_genes_T, 
+#' assay = 'RNA', layer = 'counts', marker_genes = selected_marker_genes_T, 
 #' cell_type = "t cells", tag_slot = 'active.ident')
 #' 
 #' # save the trained classifier to system 
@@ -158,7 +158,7 @@ plant_tree <- function(path_to_models = "default") {
 #' set.seed(123)
 #' selected_marker_genes_T = c("CD4", "CD8A", "CD8B")
 #' classifier_t <- train_classifier(train_obj = tirosh_mel80_example,
-#' assay = 'RNA', slot = 'counts', marker_genes = selected_marker_genes_T, 
+#' assay = 'RNA', layer = 'counts', marker_genes = selected_marker_genes_T, 
 #' cell_type = "t cells", tag_slot = 'active.ident')
 #' 
 #' # save a classifier to system
